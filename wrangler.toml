@@ -1,0 +1,23 @@
+# Children of Finances – Cloudflare Worker
+# database_id wird beim Deployment automatisch von scripts/setup.mjs eingetragen.
+
+name = "children-of-finances"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = false
+
+# Eigene Domain: erst aktivieren, wenn children-of-mathare.de in diesem Cloudflare-Konto liegt.
+# routes = [{ pattern = "children-of-finances.children-of-mathare.de", custom_domain = true }]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "children-of-finances"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[observability]
+enabled = true

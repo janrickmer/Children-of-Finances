@@ -1,0 +1,222 @@
+// Ansicht für den Schatzmeister von Children of Mathare Germany.
+import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes } from './util.js';
+import { t } from './i18n.js';
+import * as store from './store.js';
+import { computePeriods, ledgerAfterArchive } from './ledger.js';
+import {
+  thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge,
+} from './components.js';
+import { buildBackupPdf } from './pdf-export.js';
+import { mountBackupView } from './backup-import.js';
+
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+const DB_LIMIT = 500_000_000;
+
+export function mountAdmin(root) {
+  let exported = null; // { ids, filename } nach erfolgreichem Download
+
+  // ---------------------------------------------------------------- Kopfleiste
+  const backupInput = h('input', { type: 'file', accept: 'application/pdf,.pdf', multiple: true, class: 'file-input' });
+  const backupPanel = h('section', { class: 'backup-panel', hidden: true });
+  backupInput.addEventListener('change', () => {
+    const files = [...backupInput.files];
+    backupInput.value = '';
+    if (files.length) mountBackupView(backupPanel, files);
+  });
+  const storage = h('div', { class: 'storage' });
+  const topBar = h('div', { class: 'admin-top' },
+    h('label', { class: 'btn btn-primary' }, backupInput, t('admin.uploadBackups')),
+    storage);
+
+  // ---------------------------------------------------------------- Bereiche
+  const sidebar = h('aside', { class: 'sidebar' });
+  const redBox = h('section', { class: 'section' });
+  const successBox = h('section', { class: 'section' });
+  const downloadBox = h('section', { class: 'section download-box' });
+
+  clear(root).append(
+    h('h1', { class: 'view-title' }, t('admin.title')),
+    topBar,
+    backupPanel,
+    h('div', { class: 'admin-grid' }, sidebar, h('div', { class: 'admin-main' }, redBox, successBox, downloadBox)),
+  );
+
+  // ---------------------------------------------------------------- Geldeingänge links
+  function renderSidebar() {
+    const { pre, periods } = computePeriods(store.list(), store.state.ledger);
+    clear(sidebar).append(h('h2', {}, t('admin.incomes')));
+    if (!periods.length) sidebar.append(h('p', { class: 'muted' }, t('admin.noIncome')));
+    for (const p of [...periods].reverse()) {
+      const inc = p.income;
+      sidebar.append(h('div', { class: 'income-card' },
+        h('div', { class: 'income-line' },
+          h('span', { class: 'income-date' }, fmtDate(inc.date)),
+          h('span', { class: 'income-amount' }, `+ KSH ${fmtAmount(inc.amount)}`)),
+        h('div', { class: 'income-from' }, inc.from || '–', inc.archived ? h('span', { class: 'muted small' }, ` (${t('admin.archivedIncome')})`) : null),
+        h('div', { class: 'spent-line' }, `${t('admin.spent')}: − KSH ${fmtAmount(p.spent)}`),
+        h('div', { class: p.remaining < 0 ? 'remaining-line negative' : 'remaining-line' },
+          `${t('admin.remaining')}: KSH ${fmtAmount(p.remaining)}`)));
+    }
+    if (pre.spent > 0) {
+      sidebar.append(h('div', { class: 'income-card pre' },
+        h('div', { class: 'income-from' }, t('period.pre')),
+        h('div', { class: 'spent-line' }, `${t('admin.spent')}: − KSH ${fmtAmount(pre.spent)}`)));
+    }
+    sidebar.append(h('p', { class: 'muted small' }, t('admin.sumHint')));
+  }
+
+  // ---------------------------------------------------------------- Rote Tabelle
+  async function approve(e) {
+    const ok = await confirmDialog({ message: t('admin.approveConfirm'), confirmLabel: t('admin.approve') });
+    if (!ok) return;
+    try {
+      await store.approve(e);
+    } catch {
+      toast(t('error.generic'), 'error');
+    }
+  }
+
+  function renderRed() {
+    const list = store.list()
+      .filter((e) => e.kind === 'expense' && (e.status === 'incomplete' || e.status === 'draft'))
+      .sort((a, b) => a.createdAt - b.createdAt);
+    clear(redBox);
+    if (!list.length) {
+      redBox.append(h('p', { class: 'all-good' }, t('incomplete.none')));
+      return;
+    }
+    const now = Date.now();
+    const rows = list.map((e) => {
+      const old = now - e.createdAt > WEEK;
+      const miss = store.missing(e);
+      const cell = (key, content, label) => h('td', { class: miss.includes(key) ? 'is-missing' : '' },
+        h('span', { class: 'cell-label' }, label), content);
+      return h('tr', {},
+        h('td', { class: 'flag-cell' }, old ? h('span', { class: 'overdue', title: t('admin.olderThanWeek'), 'aria-label': t('admin.olderThanWeek') }, '!') : null),
+        cell('what', e.d.what || '–', t('col.whatOrFrom')),
+        cell('date', fmtDate(e.d.payDate) || '–', t('col.dateShort')),
+        cell('amount', e.d.amount ? fmtAmount(e.d.amount) : '–', t('col.amountShort')),
+        cell('receipt', thumbList(e.d.receipts, t('col.receiptShort')), t('col.receiptShort')),
+        cell('transfer', thumbList(e.d.transfers, t('col.transferShort')), t('col.transferShort')),
+        cell('note', e.d.note || '–', t('col.noteShort')),
+        h('td', {}, h('span', { class: 'cell-label' }, t('col.name')), h('div', {},
+          h('div', {}, e.d.createdBy || '–'),
+          e.d.editedBy && e.d.editedBy !== e.d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: e.d.editedBy })) : null,
+          h('div', { class: 'muted small' }, `${t('col.started')}: ${fmtDateTime(e.createdAt)}`))),
+        h('td', {}, h('span', { class: 'cell-label' }, t('col.status')), statusBadge(e),
+          miss.length ? h('div', { class: 'missing-text' }, t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null),
+        h('td', {}, h('span', { class: 'cell-label' }, t('col.action')),
+          h('button', { type: 'button', class: 'btn btn-small btn-approve', onclick: () => approve(e) }, t('admin.approve'))),
+      );
+    });
+    redBox.append(h('div', { class: 'red-wrap' },
+      h('h2', { class: 'red-title' }, t('incomplete.title')),
+      h('div', { class: 'table-scroll' }, h('table', { class: 'data-table cards-on-mobile red-table' },
+        h('thead', {}, h('tr', {},
+          h('th', { class: 'flag-cell' }, h('span', { class: 'sr-only' }, '!')),
+          h('th', {}, t('col.what')),
+          h('th', {}, t('col.dateShort')),
+          h('th', { class: 'num' }, t('col.amountShort')),
+          h('th', {}, t('col.receiptShort')),
+          h('th', {}, t('col.transferShort')),
+          h('th', {}, t('col.noteShort')),
+          h('th', {}, t('col.name')),
+          h('th', {}, t('col.status')),
+          h('th', {}, t('col.action')))),
+        h('tbody', {}, rows)))));
+  }
+
+  // ---------------------------------------------------------------- Erfolgreiche Einträge
+  function renderSuccess() {
+    clear(successBox).append(h('h2', {}, t('success.title')));
+    const archive = store.state.lastArchive;
+    if (archive) {
+      successBox.append(h('p', { class: 'archive-note' }, t('success.archived', {
+        date: fmtDate(new Date(archive.at).toISOString().slice(0, 10)), n: archive.count,
+      })));
+    }
+    const groups = successGroups();
+    if (!groups.length) successBox.append(h('p', { class: 'muted' }, t('success.empty')));
+    for (const g of groups) {
+      successBox.append(h('h3', { class: g.current ? 'period-title current' : 'period-title' }, periodTitle(g)), successTable(g.items, { admin: true }));
+    }
+  }
+
+  // ---------------------------------------------------------------- Herunterladen & Löschen
+  const progress = h('p', { class: 'muted', role: 'status' });
+  const downloadBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: download }, t('admin.download'));
+
+  async function download() {
+    const entries = orderedSuccessEntries();
+    if (!entries.length) {
+      toast(t('admin.nothingToDownload'));
+      return;
+    }
+    downloadBtn.disabled = true;
+    try {
+      const { bytes, filename } = await buildBackupPdf(entries, (done, total) => {
+        progress.textContent = t('admin.preparing', { done, total });
+      });
+      downloadBytes(bytes, filename, 'application/pdf');
+      exported = { ids: entries.map((e) => e.id), filename };
+      progress.textContent = '';
+      renderDownload();
+    } catch (err) {
+      console.error(err);
+      progress.textContent = '';
+      toast(t('error.generic'), 'error');
+    } finally {
+      downloadBtn.disabled = false;
+    }
+  }
+
+  async function deleteExported() {
+    const ok = await confirmDialog({
+      message: t('admin.deleteConfirm', { n: exported.ids.length }),
+      confirmLabel: t('admin.deleteYes'),
+      checkboxLabel: t('admin.deleteCheck'),
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const ledger = ledgerAfterArchive(store.list(), store.state.ledger, exported.ids);
+      const deleted = await store.archive(exported.ids, ledger);
+      exported = null;
+      toast(t('admin.deleted', { n: deleted }), 'success');
+      renderDownload();
+    } catch (err) {
+      console.error(err);
+      toast(t('error.generic'), 'error');
+    }
+  }
+
+  function renderDownload() {
+    clear(downloadBox).append(downloadBtn, progress);
+    if (exported) {
+      downloadBox.append(
+        h('p', { class: 'download-done' }, t('admin.downloaded', { file: exported.filename, n: exported.ids.length })),
+        h('button', { type: 'button', class: 'btn btn-danger', onclick: deleteExported }, t('admin.delete')),
+      );
+    }
+  }
+
+  function renderStorage() {
+    const size = store.state.dbSize;
+    clear(storage);
+    if (size == null) return;
+    storage.append(t('admin.storage', { used: fmtBytes(size) }));
+    if (size > DB_LIMIT * 0.8) storage.append(h('span', { class: 'form-error block' }, t('admin.storageWarn')));
+  }
+
+  function update(reason) {
+    renderStorage();
+    if (reason === 'sync') return;
+    renderSidebar();
+    renderRed();
+    renderSuccess();
+  }
+
+  update();
+  renderDownload();
+  return { update };
+}

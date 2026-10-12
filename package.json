@@ -1,0 +1,17 @@
+{
+  "name": "children-of-finances",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Finanzprotokoll von Children of Mathare Kenya und Germany",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "setup:local": "node scripts/setup.mjs --local",
+    "setup:remote": "node scripts/setup.mjs",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "pdf-lib": "1.17.1",
+    "wrangler": "4.149.0"
+  }
+}
