@@ -68,7 +68,7 @@ export function emptyData(kind, name) {
 export function createEntry(kind, name) {
   const e = {
     id: crypto.randomUUID(), kind, status: 'draft', createdAt: Date.now(), updatedAt: 0,
-    d: emptyData(kind, name), rev: 0, syncedRev: 0, onServer: false,
+    d: emptyData(kind, name), rev: 0, syncedRev: 0, onServer: false, touched: new Set(),
   };
   state.entries.set(e.id, e);
   return e;
@@ -77,7 +77,11 @@ export function createEntry(kind, name) {
 export function update(e, patch, name) {
   if (SAVED.includes(e.status)) return;
   Object.assign(e.d, patch);
-  if (name) e.d.editedBy = name;
+  Object.keys(patch).forEach((k) => e.touched.add(k));
+  if (name) {
+    e.d.editedBy = name;
+    e.touched.add('editedBy');
+  }
   e.rev++;
   persistQueue.add(e.id);
 }
@@ -132,7 +136,9 @@ async function persistLocal() {
     const e = state.entries.get(id);
     if (!e || !isDirty(e)) continue;
     const cipher = await encryptJson(e.d, `entry:${e.id}`);
-    await idb.put('entries', e.id, { id: e.id, kind: e.kind, status: e.status, createdAt: e.createdAt, cipher });
+    await idb.put('entries', e.id, {
+      id: e.id, kind: e.kind, status: e.status, createdAt: e.createdAt, updatedAt: e.updatedAt, touched: [...e.touched], cipher,
+    });
   }
 }
 
@@ -143,8 +149,8 @@ export async function loadFromDevice() {
     try {
       const d = await decryptJson(item.cipher, `entry:${item.id}`);
       state.entries.set(item.id, {
-        id: item.id, kind: item.kind, status: item.status, createdAt: item.createdAt, updatedAt: 0,
-        d, rev: 1, syncedRev: 0, onServer: false,
+        id: item.id, kind: item.kind, status: item.status, createdAt: item.createdAt, updatedAt: item.updatedAt || 0,
+        d, rev: 1, syncedRev: 0, onServer: Boolean(item.updatedAt), touched: new Set(item.touched || Object.keys(d)),
       });
     } catch (err) {
       console.warn('Lokaler Eintrag nicht lesbar', err);
@@ -154,42 +160,89 @@ export async function loadFromDevice() {
 
 // ------------------------------------------------------------------ Synchronisation
 
+// Jemand anderes hat denselben Eintrag inzwischen gespeichert: Serverstand holen und nur die Felder
+// darüberlegen, die auf diesem Gerät geändert wurden. Der Eintrag bleibt "dirty" und wird erneut gesendet.
+async function mergeWithServer(e) {
+  let row;
+  try {
+    row = await request(`/api/entries/${e.id}`);
+  } catch (err) {
+    if (err.status !== 404) throw err;
+    e.onServer = false;
+    e.updatedAt = 0;
+    return;
+  }
+  const server = await decryptJson(row.data, `entry:${e.id}`);
+  if (SAVED.includes(row.status)) {
+    Object.assign(e, { d: server, status: row.status, updatedAt: row.updated_at, syncedRev: e.rev });
+    e.touched.clear();
+    await idb.remove('entries', e.id);
+    conflictHandler();
+  } else {
+    const merged = { ...server };
+    for (const k of e.touched) merged[k] = e.d[k];
+    e.d = merged;
+    if (e.status === 'draft' && row.status !== 'draft') e.status = row.status;
+    Object.assign(e, { updatedAt: row.updated_at, createdAt: row.created_at, onServer: true });
+    persistQueue.add(e.id);
+  }
+  emit('remote');
+}
+
 async function pushChanges() {
   for (const id of [...pendingDeletes]) {
     try {
       await request(`/api/entries/${id}`, { method: 'DELETE' });
     } catch (err) {
-      if (err instanceof NetworkError || err.status === 401) throw err;
+      if (!images.isFinalRejection(err)) throw err;
     }
     pendingDeletes.delete(id);
     await idb.remove('deletes', `entry:${id}`);
   }
 
-  await images.flush();
-
+  // Einträge vor den Bildern senden, damit kein Bild ohne zugehörigen Eintrag auf dem Server liegt.
   for (const e of list().filter(isDirty)) {
     const rev = e.rev;
     const data = await encryptJson(e.d, `entry:${e.id}`);
     try {
-      const res = await request(`/api/entries/${e.id}`, { method: 'PUT', body: { kind: e.kind, status: e.status, data } });
+      const res = await request(`/api/entries/${e.id}`, {
+        method: 'PUT', body: { kind: e.kind, status: e.status, data, base: e.updatedAt || null },
+      });
       e.syncedRev = Math.max(e.syncedRev, rev);
       e.onServer = true;
       e.createdAt = res.created_at;
       e.updatedAt = res.updated_at;
+      if (e.rev === rev) e.touched.clear();
     } catch (err) {
-      if (err instanceof NetworkError || err.status === 401) throw err;
-      // Eintrag wurde inzwischen abgeschlossen/gelöscht oder abgelehnt: Serverstand gilt.
+      if (!images.isFinalRejection(err)) throw err;
+      const code = err.body?.error;
+      if (code === 'stale') {
+        await mergeWithServer(e);
+        continue;
+      }
+      if (code === 'archived') {
+        // Wurde bereits gesichert und gelöscht – die veraltete Kopie auf diesem Gerät verwerfen.
+        state.entries.delete(e.id);
+        await idb.remove('entries', e.id);
+        conflictHandler();
+        emit('remote');
+        continue;
+      }
+      // Eintrag wurde inzwischen abgeschlossen oder abgelehnt: Serverstand gilt.
       e.syncedRev = e.rev;
+      e.touched.clear();
       refreshNeeded = true;
       if (err.status === 409) conflictHandler();
       else console.error('Eintrag abgelehnt', err);
     }
     if (!isDirty(e)) await idb.remove('entries', e.id);
   }
+
+  await images.flush();
 }
 
 async function tick() {
-  if (busy) return;
+  if (busy || refreshing || getRole() !== 'user') return;
   busy = true;
   try {
     if (persistQueue.size) await persistLocal();
@@ -208,7 +261,7 @@ async function tick() {
       refreshNeeded = false;
       await refresh(true);
     }
-    setSync(list().some(isDirty) ? 'saving' : 'saved');
+    setSync(list().some(isDirty) || images.hasWork() ? 'saving' : 'saved');
   } catch (err) {
     if (err instanceof NetworkError) {
       failures++;
@@ -235,7 +288,8 @@ export async function refresh(full = false) {
 }
 
 async function doRefresh(full) {
-  const params = new URLSearchParams({ since: String(full ? 0 : state.since) });
+  // 2 Minuten Überlappung, damit kein Schreibvorgang übersprungen wird, der zeitgleich gespeichert wurde.
+  const params = new URLSearchParams({ since: String(full ? 0 : Math.max(0, state.since - 120_000)) });
   if (!full && state.seq) params.set('seq', state.seq);
   const res = await request(`/api/state?${params}`);
   if (res.dbSize != null) state.dbSize = res.dbSize;
@@ -256,15 +310,18 @@ async function doRefresh(full) {
     }
     let e = state.entries.get(row.id);
     const locked = SAVED.includes(row.status);
+    state.since = Math.max(state.since, row.updated_at);
     if (e && isDirty(e) && !locked) continue; // eigene, noch nicht übertragene Änderungen haben Vorrang
+    if (e && !isDirty(e) && e.updatedAt && row.updated_at < e.updatedAt) continue; // Antwort ist älter als unser Stand
     if (e && isDirty(e) && locked) {
       e.syncedRev = e.rev; // jemand anderes hat abgeschlossen
+      e.touched.clear();
       idb.remove('entries', e.id);
       if (d == null) needFull = true;
     }
     if (d != null) {
       if (!e) {
-        e = { id: row.id, kind: row.kind, rev: 0, syncedRev: 0 };
+        e = { id: row.id, kind: row.kind, rev: 0, syncedRev: 0, touched: new Set() };
         state.entries.set(row.id, e);
       }
       Object.assign(e, { status: row.status, createdAt: row.created_at, updatedAt: row.updated_at, d, onServer: true });
@@ -273,7 +330,6 @@ async function doRefresh(full) {
     } else {
       needFull = true;
     }
-    state.since = Math.max(state.since, row.updated_at);
   }
   for (const [id, e] of state.entries) {
     if (!seen.has(id) && e.onServer && !isDirty(e)) state.entries.delete(id);
@@ -328,6 +384,12 @@ function warnUnsaved(ev) {
 }
 
 export function reset() {
+  pendingDeletes.clear();
+  persistQueue.clear();
+  images.resetMemory();
+  refreshNeeded = false;
+  failures = 0;
+  nextAttempt = 0;
   state.entries.clear();
   state.ledger = emptyLedger();
   state.lastArchive = null;
@@ -338,7 +400,7 @@ export function reset() {
 // ------------------------------------------------------------------ Schatzmeister
 
 export async function approve(e) {
-  await request(`/api/entries/${e.id}/approve`, { method: 'POST' });
+  await request(`/api/entries/${e.id}/approve`, { method: 'POST', body: { updatedAt: e.updatedAt } });
   await refresh(true);
 }
 

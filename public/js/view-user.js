@@ -2,6 +2,7 @@
 import { h, clear, toast, confirmDialog, fmtDate, normName } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
+import * as images from './images.js';
 import {
   ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable,
 } from './components.js';
@@ -42,11 +43,21 @@ export function mountUser(root, { getName }) {
   const incomeAmount = amountInput((v) => store.update(incomeDraft(true), { amount: v }, getName()));
   const incomeDate = dateInput((v) => store.update(incomeDraft(true), { date: v }, getName()));
   const incomeError = h('p', { class: 'form-error', role: 'alert' });
+  const incomeUnsaved = h('p', { class: 'unsaved-hint', hidden: true }, t('income.unsaved'));
+  const refreshIncomeHint = () => {
+    const e = incomeDraft(false);
+    incomeUnsaved.hidden = !e || store.isEmpty(e);
+  };
+  for (const input of [incomeFrom, incomeAmount, incomeDate]) {
+    input.addEventListener('input', refreshIncomeHint);
+    input.addEventListener('change', refreshIncomeHint);
+  }
   const incomeForm = h('div', { class: 'form-card', hidden: true },
     h('label', { class: 'field' }, h('span', {}, t('income.from')), incomeFrom),
     h('label', { class: 'field' }, h('span', {}, t('income.amount')), incomeAmount),
     h('label', { class: 'field' }, h('span', {}, t('income.date')), incomeDate),
     incomeError,
+    incomeUnsaved,
     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncome }, t('save'))),
   );
 
@@ -55,6 +66,7 @@ export function mountUser(root, { getName }) {
     for (const [input, value] of [[incomeFrom, e?.d.from], [incomeAmount, e?.d.amount], [incomeDate, e?.d.date]]) {
       if (document.activeElement !== input) input.value = value || '';
     }
+    refreshIncomeHint();
   }
 
   async function saveIncome() {
@@ -94,7 +106,15 @@ export function mountUser(root, { getName }) {
     renderDrafts();
   }
 
+  // Solange ein Foto noch verarbeitet wird, würde es beim Speichern fehlen.
+  function imagesBusy() {
+    if (!images.processing()) return false;
+    toast(t('upload.wait'), 'error');
+    return true;
+  }
+
   async function saveDrafts() {
+    if (imagesBusy()) return;
     const drafts = myDrafts('expense');
     const filled = drafts.filter((e) => !store.isEmpty(e));
     if (!filled.length) {
@@ -120,6 +140,11 @@ export function mountUser(root, { getName }) {
   }
 
   async function saveIncomplete() {
+    if (imagesBusy()) return;
+    // Erst den neuesten Stand holen, damit keine veraltete Fassung fremder Einträge gespeichert wird.
+    try {
+      await store.refresh();
+    } catch { /* offline: mit dem lokalen Stand weiter */ }
     const list = store.list().filter((e) => e.kind === 'expense' && e.status === 'incomplete');
     const ready = list.filter((e) => !store.missing(e).length);
     const withoutTransfer = ready.filter((e) => !e.d.transfers.length).length;

@@ -3,9 +3,11 @@
 // Der Server sieht nie ein Passwort und nie Klartext-Daten. Er prüft nur den aus dem Passwort
 // abgeleiteten authKey gegen einen geheimen Prüfwert in D1 und speichert verschlüsselte Blöcke.
 
-const SESSION_MS = 24 * 60 * 60 * 1000;
-const MAX_FAILS = 5;
-const LOCK_MS = 15 * 60 * 1000;
+const SESSION_MS = 12 * 60 * 60 * 1000;
+const MAX_FAILS = 5; // Anmeldeversuche pro IP-Adresse (IPv6: pro /64-Netz) …
+const LOCK_MS = 15 * 60 * 1000; // … innerhalb von 15 Minuten
+const GLOBAL_MAX = 100; // Fehlversuche aller Adressen zusammen …
+const GLOBAL_WINDOW_MS = 60 * 60 * 1000; // … innerhalb einer Stunde
 const MAX_ENTRY_CHARS = 200_000;
 const MAX_IMAGE_CHARS = 1_950_000; // D1 erlaubt max. 2 MB pro Zeile
 const MAX_ARCHIVE_IDS = 5000;
@@ -78,10 +80,11 @@ async function handleApi(request, env, url) {
   const session = await authenticate(request, env);
 
   if (route === 'GET state') return getState(env, url);
+  if (parts[0] === 'entries' && parts.length === 2 && method === 'GET') return getEntry(env, parts[1]);
   if (parts[0] === 'entries' && parts.length === 2 && method === 'PUT') return putEntry(request, env, session, parts[1]);
   if (parts[0] === 'entries' && parts.length === 2 && method === 'DELETE') return deleteEntry(env, session, parts[1]);
   if (parts[0] === 'entries' && parts.length === 3 && parts[2] === 'approve' && method === 'POST') {
-    return approveEntry(env, session, parts[1]);
+    return approveEntry(request, env, session, parts[1]);
   }
   if (parts[0] === 'images' && parts.length === 2 && method === 'PUT') return putImage(request, env, session, parts[1], url);
   if (parts[0] === 'images' && parts.length === 2 && method === 'GET') return getImage(env, parts[1]);
@@ -113,16 +116,28 @@ async function getParams(env) {
   return json({ salt: cfg.salt, iterations: Number(cfg.iterations) });
 }
 
+// Zählt einen Anmeldeversuch atomar (auch bei vielen parallelen Anfragen) und liefert den neuen Stand.
+const COUNT_ATTEMPT = 'INSERT INTO login_attempts (ip, fails, window_start, locked_until) VALUES (?1, 1, ?2, 0) '
+  + 'ON CONFLICT(ip) DO UPDATE SET '
+  + 'fails = CASE WHEN window_start <= ?2 - ?3 THEN 1 ELSE fails + 1 END, '
+  + 'window_start = CASE WHEN window_start <= ?2 - ?3 THEN ?2 ELSE window_start END '
+  + 'RETURNING fails, window_start';
+const UNCOUNT_ATTEMPT = 'UPDATE login_attempts SET fails = MAX(fails - 1, 0) WHERE ip = ?';
+
+// IPv6-Anschlüsse bekommen meist ein ganzes /64-Netz – darum wird dort pro Netz gezählt.
+function ipKey(ip) {
+  if (!ip.includes(':')) return ip;
+  const [head, tail] = ip.toLowerCase().split('::');
+  const h = head ? head.split(':') : [];
+  const t = tail ? tail.split(':') : [];
+  const full = tail === undefined ? h : [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t];
+  return `${full.slice(0, 4).map((x) => x.replace(/^0+(?=.)/, '')).join(':')}::/64`;
+}
+
 async function login(request, env) {
   const { cfg, hmacKey } = await loadAuthConfig(env);
-  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const key = ipKey(request.headers.get('CF-Connecting-IP') || 'unknown');
   const now = Date.now();
-
-  const attempt = await env.DB.prepare('SELECT fails, window_start, locked_until FROM login_attempts WHERE ip = ?')
-    .bind(ip).first();
-  if (attempt && attempt.locked_until > now) {
-    throw new HttpError(429, 'locked', { retryAfter: Math.ceil((attempt.locked_until - now) / 1000) });
-  }
 
   const body = await readJson(request, 1000);
   if (typeof body.authKey !== 'string' || body.authKey.length !== 44) throw new HttpError(400, 'bad_request');
@@ -132,29 +147,35 @@ async function login(request, env) {
   } catch {
     throw new HttpError(400, 'bad_request');
   }
-  const verifier = await sha256Hex(authKey);
 
+  // Erst zählen, dann prüfen: so bringen parallele Anfragen keine zusätzlichen Versuche.
+  const [mineRes, allRes] = await env.DB.batch([
+    env.DB.prepare(COUNT_ATTEMPT).bind(key, now, LOCK_MS),
+    env.DB.prepare(COUNT_ATTEMPT).bind('*', now, GLOBAL_WINDOW_MS),
+  ]);
+  const mine = mineRes.results[0];
+  const all = allRes.results[0];
+  const lockedFor = (row, windowMs) => Math.max(1, Math.ceil((row.window_start + windowMs - now) / 1000));
+  if (mine.fails > MAX_FAILS) throw new HttpError(429, 'locked', { retryAfter: lockedFor(mine, LOCK_MS) });
+  if (all.fails > GLOBAL_MAX) throw new HttpError(429, 'locked', { retryAfter: lockedFor(all, GLOBAL_WINDOW_MS) });
+
+  const verifier = await sha256Hex(authKey);
   let role = null;
   if (safeEqual(verifier, cfg.verifier_admin)) role = 'admin';
   else if (safeEqual(verifier, cfg.verifier_user)) role = 'user';
 
   if (!role) {
-    const fresh = !attempt || now - attempt.window_start > LOCK_MS;
-    const fails = fresh ? 1 : attempt.fails + 1;
-    const lockedUntil = fails >= MAX_FAILS ? now + LOCK_MS : 0;
-    await env.DB.prepare(
-      'INSERT INTO login_attempts (ip, fails, window_start, locked_until) VALUES (?1, ?2, ?3, ?4) ' +
-      'ON CONFLICT(ip) DO UPDATE SET fails = ?2, window_start = ?3, locked_until = ?4',
-    ).bind(ip, lockedUntil ? 0 : fails, fresh || lockedUntil ? now : attempt.window_start, lockedUntil).run();
     if (Math.random() < 0.05) {
-      await env.DB.prepare('DELETE FROM login_attempts WHERE window_start < ? AND locked_until < ?')
-        .bind(now - 86_400_000, now).run();
+      await env.DB.prepare("DELETE FROM login_attempts WHERE window_start < ? AND ip <> '*'").bind(now - 86_400_000).run();
     }
-    if (lockedUntil) throw new HttpError(429, 'locked', { retryAfter: LOCK_MS / 1000 });
-    throw new HttpError(401, 'wrong_password', { remaining: MAX_FAILS - fails });
+    const remaining = MAX_FAILS - mine.fails;
+    if (remaining <= 0) throw new HttpError(429, 'locked', { retryAfter: lockedFor(mine, LOCK_MS) });
+    throw new HttpError(401, 'wrong_password', { remaining });
   }
 
-  if (attempt) await env.DB.prepare('DELETE FROM login_attempts WHERE ip = ?').bind(ip).run();
+  // Ein erfolgreicher Versuch zählt nicht als Fehlversuch, setzt den Zähler aber auch nicht zurück
+  // (sonst könnte man mit dem Team-Passwort beliebig oft das Schatzmeister-Passwort raten).
+  await env.DB.batch([env.DB.prepare(UNCOUNT_ATTEMPT).bind(key), env.DB.prepare(UNCOUNT_ATTEMPT).bind('*')]);
 
   const expires = now + SESSION_MS;
   const payload = b64url(enc.encode(JSON.stringify({ r: role, e: expires, v: cfg.pw_version || '1' })));
@@ -219,28 +240,44 @@ async function getState(env, url) {
 
 const BUMP_SEQ = "INSERT INTO config (k, v) VALUES ('seq', '1') ON CONFLICT(k) DO UPDATE SET v = CAST(CAST(v AS INTEGER) + 1 AS TEXT)";
 
+async function getEntry(env, id) {
+  checkId(id);
+  const row = await env.DB.prepare('SELECT id, kind, status, created_at, updated_at, data FROM entries WHERE id = ?').bind(id).first();
+  if (!row) throw new HttpError(404, 'not_found');
+  return json(row);
+}
+
 async function putEntry(request, env, session, id) {
   requireRole(session, 'user');
   checkId(id);
   const body = await readJson(request, MAX_ENTRY_CHARS + 1000);
   const { kind, status, data } = body;
+  // Stand, auf dem die Änderung beruht. Weicht der Server ab, hat jemand anderes inzwischen gespeichert.
+  const base = Number.isFinite(body.base) && body.base > 0 ? body.base : null;
   if (!['expense', 'income'].includes(kind)) throw new HttpError(400, 'bad_request');
   if (!['draft', 'incomplete', 'complete'].includes(status)) throw new HttpError(400, 'bad_request');
   if (typeof data !== 'string' || !data || data.length > MAX_ENTRY_CHARS) throw new HttpError(400, 'bad_request');
 
   const now = Date.now();
-  const existing = await env.DB.prepare('SELECT kind, status FROM entries WHERE id = ?').bind(id).first();
+  const existing = await env.DB.prepare('SELECT kind, status, updated_at FROM entries WHERE id = ?').bind(id).first();
   if (existing) {
     if (LOCKED.includes(existing.status)) throw new HttpError(409, 'locked', { status: existing.status });
     if (existing.kind !== kind) throw new HttpError(400, 'bad_request');
     if (existing.status === 'incomplete' && status === 'draft') throw new HttpError(400, 'bad_request');
+    if (base !== null && existing.updated_at !== base) throw new HttpError(409, 'stale');
     const [res] = await env.DB.batch([
-      env.DB.prepare("UPDATE entries SET status = ?1, data = ?2, updated_at = ?3 WHERE id = ?4 AND status NOT IN ('complete', 'approved')")
-        .bind(status, data, now, id),
+      env.DB.prepare("UPDATE entries SET status = ?1, data = ?2, updated_at = ?3 WHERE id = ?4 AND status NOT IN ('complete', 'approved') AND (?5 IS NULL OR updated_at = ?5)")
+        .bind(status, data, Math.max(now, existing.updated_at + 1), id, base),
       env.DB.prepare(BUMP_SEQ),
     ]);
-    if (!res.meta.changes) throw new HttpError(409, 'locked');
+    if (!res.meta.changes) {
+      const row = await env.DB.prepare('SELECT status FROM entries WHERE id = ?').bind(id).first();
+      throw new HttpError(409, row && LOCKED.includes(row.status) ? 'locked' : 'stale');
+    }
   } else {
+    // Bereits gesicherte und gelöschte Einträge dürfen nicht von einem veralteten Gerät neu angelegt werden.
+    const archived = await env.DB.prepare('SELECT 1 FROM tombstones WHERE id = ?').bind(id).first();
+    if (archived) throw new HttpError(409, 'archived');
     await env.DB.batch([
       env.DB.prepare('INSERT INTO entries (id, kind, status, created_at, updated_at, data) VALUES (?1, ?2, ?3, ?4, ?4, ?5)')
         .bind(id, kind, status, now, data),
@@ -266,12 +303,15 @@ async function deleteEntry(env, session, id) {
   return json({ ok: true });
 }
 
-async function approveEntry(env, session, id) {
+async function approveEntry(request, env, session, id) {
   requireRole(session, 'admin');
   checkId(id);
+  // Genehmigt wird genau die Fassung, die der Schatzmeister gesehen hat.
+  const body = await readJson(request, 1000);
+  if (!Number.isFinite(body.updatedAt)) throw new HttpError(400, 'bad_request');
   const [res] = await env.DB.batch([
-    env.DB.prepare("UPDATE entries SET status = 'approved', updated_at = ? WHERE id = ? AND kind = 'expense' AND status IN ('draft', 'incomplete')")
-      .bind(Date.now(), id),
+    env.DB.prepare("UPDATE entries SET status = 'approved', updated_at = ?1 WHERE id = ?2 AND kind = 'expense' AND status IN ('draft', 'incomplete') AND updated_at = ?3")
+      .bind(Date.now(), id, body.updatedAt),
     env.DB.prepare(BUMP_SEQ),
   ]);
   if (!res.meta.changes) throw new HttpError(409, 'not_approvable');
@@ -328,29 +368,36 @@ async function archive(request, env, session) {
   if (typeof ledger !== 'string' || ledger.length > 200_000) throw new HttpError(400, 'bad_request');
 
   const now = Date.now();
-  const statements = [];
-  for (let i = 0; i < ids.length; i += 90) {
-    const chunk = ids.slice(i, i + 90);
-    const marks = chunk.map(() => '?').join(',');
-    statements.push(env.DB.prepare(
-      `DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE id IN (${marks}) AND status IN ('complete', 'approved'))`,
-    ).bind(...chunk));
-    statements.push(env.DB.prepare(
-      `DELETE FROM entries WHERE id IN (${marks}) AND status IN ('complete', 'approved')`,
-    ).bind(...chunk));
-  }
-  const results = await env.DB.batch(statements);
-  const deleted = results.filter((_, i) => i % 2 === 1).reduce((sum, r) => sum + (r.meta.changes || 0), 0);
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 90) chunks.push(ids.slice(i, i + 90)); // D1: max. 100 Parameter
+  const marks = (chunk) => chunk.map(() => '?').join(',');
+  const SAVED_ONLY = "status IN ('complete', 'approved')";
 
-  await env.DB.batch([
-    // Bilder ohne zugehörigen Eintrag (z. B. abgebrochene Entwürfe), die älter als ein Tag sind
+  const counts = await env.DB.batch(chunks.map((c) =>
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM entries WHERE id IN (${marks(c)}) AND ${SAVED_ONLY}`).bind(...c)));
+  const deleted = counts.reduce((sum, r) => sum + (r.results[0]?.n || 0), 0);
+
+  // Alles in einem Batch: entweder wird vollständig gelöscht und das Ledger aktualisiert – oder gar nichts.
+  const statements = [];
+  for (const c of chunks) {
+    statements.push(env.DB.prepare(
+      `INSERT OR IGNORE INTO tombstones (id, at) SELECT id, ? FROM entries WHERE id IN (${marks(c)}) AND ${SAVED_ONLY}`,
+    ).bind(now, ...c));
+    statements.push(env.DB.prepare(
+      `DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE id IN (${marks(c)}) AND ${SAVED_ONLY})`,
+    ).bind(...c));
+    statements.push(env.DB.prepare(`DELETE FROM entries WHERE id IN (${marks(c)}) AND ${SAVED_ONLY}`).bind(...c));
+  }
+  statements.push(
+    // Bilder ohne Eintrag (z. B. abgebrochene Entwürfe), die älter als 30 Tage sind
     env.DB.prepare('DELETE FROM images WHERE created_at < ? AND entry_id NOT IN (SELECT id FROM entries)')
-      .bind(now - 86_400_000),
+      .bind(now - 30 * 86_400_000),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('ledger', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1").bind(ledger),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('last_archive', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1")
       .bind(JSON.stringify({ at: now, count: deleted })),
     env.DB.prepare(BUMP_SEQ),
-  ]);
+  );
+  await env.DB.batch(statements);
   return json({ deleted });
 }
 

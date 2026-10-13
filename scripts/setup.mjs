@@ -35,6 +35,14 @@ const pwUser = env.PASSWORD_USER;
 const pwAdmin = env.PASSWORD_ADMIN;
 if (!pwUser || !pwAdmin) fail('PASSWORD_USER und PASSWORD_ADMIN müssen gesetzt sein (GitHub → Settings → Secrets).');
 if (pwUser.trim() === pwAdmin.trim()) fail('PASSWORD_USER und PASSWORD_ADMIN dürfen nicht gleich sein.');
+// Schwache Passwörter werden nicht verhindert, aber deutlich angemahnt.
+for (const [label, pw] of [['PASSWORD_USER', pwUser], ['PASSWORD_ADMIN', pwAdmin]]) {
+  const guessable = /kenia|kenya|mathare|rickmer|children|finance|passwort|password/i.test(pw);
+  if (pw.trim().length < 14 || guessable) {
+    const msg = `${label} ist kurz oder leicht zu erraten. Empfohlen: mindestens 14 Zeichen, z. B. 4–5 zufällige Wörter.`;
+    console.log(process.env.GITHUB_ACTIONS ? `::warning title=Schwaches Passwort::${msg}` : `WARNUNG: ${msg}`);
+  }
+}
 if (!LOCAL && (!env.CLOUDFLARE_API_TOKEN || !env.CLOUDFLARE_ACCOUNT_ID)) {
   fail('CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID müssen gesetzt sein (GitHub → Settings → Secrets).');
 }
@@ -82,8 +90,9 @@ async function ensureDatabase() {
     console.log(`D1-Datenbank gefunden: ${existing.uuid}`);
     return existing.uuid;
   }
-  const created = await cfApi('/d1/database', { method: 'POST', body: JSON.stringify({ name: DB_NAME }) });
-  console.log(`D1-Datenbank angelegt: ${created.uuid}`);
+  // jurisdiction "eu": die Daten bleiben in der EU (lässt sich nur beim Anlegen festlegen).
+  const created = await cfApi('/d1/database', { method: 'POST', body: JSON.stringify({ name: DB_NAME, jurisdiction: 'eu' }) });
+  console.log(`D1-Datenbank angelegt (Speicherort: EU): ${created.uuid}`);
   return created.uuid;
 }
 
@@ -104,10 +113,12 @@ async function applySchema() {
 
 // ------------------------------------------------------------------ Schlüssel
 
+// Schreibt alle Werte in EINER Anweisung – entweder alle oder keiner (kein halb geänderter Zustand).
 async function setConfig(values) {
-  for (const [k, v] of Object.entries(values)) {
-    await query('INSERT INTO config (k, v) VALUES (?1, ?2) ON CONFLICT(k) DO UPDATE SET v = ?2', [k, String(v)]);
-  }
+  const entries = Object.entries(values);
+  const rows = entries.map((_, i) => `(?${2 * i + 1}, ?${2 * i + 2})`).join(', ');
+  await query(`INSERT INTO config (k, v) VALUES ${rows} ON CONFLICT(k) DO UPDATE SET v = excluded.v`,
+    entries.flatMap(([k, v]) => [k, String(v)]));
 }
 
 async function bootstrapKeys() {
@@ -128,7 +139,7 @@ async function bootstrapKeys() {
       session_key: bytesToB64(crypto.getRandomValues(new Uint8Array(32))),
       pw_version: '1',
       seq: '1',
-      salt: bytesToB64(salt), // zuletzt schreiben: erst dann gilt die Einrichtung als vollständig
+      salt: bytesToB64(salt),
     });
     console.log('Erstmalige Einrichtung abgeschlossen: Datenschlüssel erzeugt und für beide Passwörter verpackt.');
     return;

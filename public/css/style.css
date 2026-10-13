@@ -557,6 +557,8 @@ textarea.in { resize: vertical; min-height: 2.6rem; }
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
+.bubble-text { overflow-y: auto; }
+
 .bubble::before {
   content: "";
   position: absolute;
@@ -566,6 +568,25 @@ textarea.in { resize: vertical; min-height: 2.6rem; }
   border-top: 0;
   border-bottom: 9px solid var(--orange);
 }
+
+.bubble.above::before {
+  top: auto;
+  bottom: -9px;
+  border-bottom: 0;
+  border-top: 9px solid var(--orange);
+}
+
+.unsaved-hint { color: var(--gold); font-size: 0.9rem; margin: 0; }
+
+.income-drafts {
+  margin-top: 1rem;
+  border: 1px dashed var(--gold);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.income-drafts h3 { color: var(--gold); font-size: 0.95rem; }
+.income-drafts ul { margin: 0; padding-left: 1.2rem; }
 
 /* ------------------------------------------------------------ Overlays */
 

@@ -21,17 +21,25 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   technische Angaben: Status (Entwurf/unvollständig/vollständig/genehmigt) und Zeitstempel.
 - **Passwortprüfung auf dem Server:** Der Browser leitet aus dem Passwort zwei Schlüssel ab
   (PBKDF2, 600.000 Runden + HKDF). Einer geht zur Prüfung an den Worker, der andere entsperrt den
-  Datenschlüssel und verlässt den Browser nie. Nach 5 Fehlversuchen wird die IP 15 Minuten gesperrt.
+  Datenschlüssel und verlässt den Browser nie.
+- **Begrenzte Anmeldeversuche:** höchstens 5 pro IP-Adresse (bei IPv6 pro /64-Netz) in 15 Minuten
+  und höchstens 100 Fehlversuche aller Adressen zusammen pro Stunde. Jeder Versuch wird gezählt,
+  bevor das Passwort geprüft wird. Während eines Angriffs können sich deshalb auch berechtigte
+  Personen kurzzeitig nicht neu anmelden; bestehende Anmeldungen laufen weiter.
 - **Rollen werden serverseitig erzwungen:** Abgeschlossene Einträge kann niemand mehr ändern.
   Nur der Schatzmeister kann genehmigen und löschen.
-- Die Anmeldung gilt nur im aktuellen Browser-Tab, höchstens 24 Stunden.
+- Die Anmeldung gilt nur im aktuellen Browser-Tab, höchstens 12 Stunden.
+- **Datenstandort:** Die D1-Datenbank wird mit `jurisdiction: eu` angelegt, die Daten bleiben in der EU.
 - **Ehrlicher Hinweis:** Kurze, erratbare Passwörter bleiben die Schwachstelle. Wer ein Passwort
   kennt, hat den vollen Zugang dieser Rolle. Längere Passwörter erhöhen den Schutz deutlich.
 
 ## Speichern
 
 - Jede Eingabe wird **jede Sekunde** verschlüsselt auf dem Gerät gesichert. Sobald Internet da ist,
-  wird sie an den Server übertragen. Gesendet wird nur, was sich geändert hat.
+  wird sie an den Server übertragen. Gesendet wird nur, was sich geändert hat. Bei Serverstörungen
+  wird automatisch erneut versucht; nichts wird verworfen.
+- Bearbeiten zwei Personen gleichzeitig denselben unvollständigen Eintrag, werden ihre Änderungen
+  feldweise zusammengeführt.
 - Fotos werden im Browser auf höchstens 2000 px verkleinert und als JPEG gespeichert.
   Pro Bild sind das meist 0,3–1 MB.
 - Speicher: Cloudflare D1 (kostenlos, 500 MB pro Datenbank). Weil der Schatzmeister regelmäßig
@@ -69,8 +77,9 @@ Unter der `workers.dev`-Adresse ist die Oberfläche zusätzlich als Ausweichadre
 **DNS (beim bisherigen Anbieter von children-of-mathare.de, kein Umzug)**
 9. Einen CNAME-Eintrag anlegen: Name `children-of-finances`, Ziel `janrickmer.github.io`.
 
-Danach veröffentlicht jeder Push auf `main` die Seite automatisch neu. Ansonsten startest du den
-Workflow manuell.
+Veröffentlicht wird immer über **Actions → Deploy → Run workflow**, und zwar nur vom
+Standard-Branch des Repositorys aus. Gibt es später einen Branch `main`, löst auch jeder Push
+darauf das Deployment aus.
 
 ## Passwort ändern
 
@@ -82,6 +91,8 @@ in zwei Durchläufen.
 ## Sicherungs-PDF
 
 - Pro Eintrag gibt es eine Infoseite, danach eine Seite pro Rechnungsbild und pro Transaktionsnachweis.
+- Konnte ein Bild beim Export nicht geladen werden, wird dieser Eintrag **nicht** gelöscht und kommt
+  in der nächsten Sicherung erneut vor.
 - Eingebettet ist die Datei `children-of-finances-daten.json` mit allen Angaben. Die Bilder werden
   beim Einlesen direkt aus den Bildseiten gelesen, mit SHA-256-Prüfsumme.
 - „Sicherungen hochladen“ liest beliebig viele dieser PDFs **nur im Browser** und zeigt sie

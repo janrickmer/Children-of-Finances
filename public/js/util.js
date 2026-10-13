@@ -166,7 +166,10 @@ document.addEventListener('click', (ev) => {
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeBubble(); });
 window.addEventListener('resize', closeBubble);
-window.addEventListener('scroll', closeBubble, true);
+window.addEventListener('scroll', (ev) => {
+  if (openBubble && ev.target instanceof Node && openBubble.bubble.contains(ev.target)) return;
+  closeBubble();
+}, true);
 
 export function infoButton(getText, label) {
   const button = h('button', { class: 'info-btn', type: 'button', 'aria-label': label, title: label, 'aria-expanded': 'false' }, 'i');
@@ -177,14 +180,21 @@ export function infoButton(getText, label) {
       return;
     }
     closeBubble();
-    const bubble = h('div', { class: 'bubble', role: 'tooltip' }, typeof getText === 'function' ? getText() : getText);
+    const bubble = h('div', { class: 'bubble', role: 'tooltip' },
+      h('div', { class: 'bubble-text' }, typeof getText === 'function' ? getText() : getText));
     document.body.append(bubble);
     const rect = button.getBoundingClientRect();
     const width = Math.min(360, window.innerWidth - 24);
     bubble.style.width = `${width}px`;
     const left = Math.max(12, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 12));
     bubble.style.left = `${left}px`;
-    bubble.style.top = `${rect.bottom + 10}px`;
+    const below = window.innerHeight - rect.bottom - 18;
+    const above = rect.top - 18;
+    const openAbove = bubble.offsetHeight > below && above > below;
+    bubble.querySelector('.bubble-text').style.maxHeight = `${Math.max(120, (openAbove ? above : below) - 24)}px`;
+    const height = bubble.offsetHeight;
+    bubble.classList.toggle('above', openAbove);
+    bubble.style.top = `${openAbove ? Math.max(8, rect.top - 10 - height) : rect.bottom + 10}px`;
     bubble.style.setProperty('--arrow-left', `${rect.left + rect.width / 2 - left}px`);
     button.setAttribute('aria-expanded', 'true');
     openBubble = { bubble, button };

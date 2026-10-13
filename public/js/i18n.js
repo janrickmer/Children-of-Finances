@@ -95,6 +95,11 @@ const T = {
     en: 'The money received has been saved.',
     sw: 'Pesa zilizopokelewa zimehifadhiwa.',
   },
+  'income.unsaved': {
+    de: 'Noch nicht gespeichert – bitte auf „Speichern“ klicken.',
+    en: 'Not saved yet – please click “Save”.',
+    sw: 'Bado haijahifadhiwa – tafadhali bonyeza “Hifadhi”.',
+  },
   'income.missing': {
     de: 'Bitte fülle alle drei Felder aus.',
     en: 'Please fill in all three fields.',
@@ -180,6 +185,16 @@ const T = {
   'upload.remove': { de: 'Bild entfernen', en: 'Remove image', sw: 'Ondoa picha' },
   'upload.processing': { de: 'Bild wird verarbeitet …', en: 'Processing image …', sw: 'Inachakata picha …' },
   'upload.pending': { de: 'wird hochgeladen', en: 'uploading', sw: 'inapakiwa' },
+  'upload.wait': {
+    de: 'Bitte warte, bis alle Bilder verarbeitet sind, und klicke dann erneut auf „Speichern“.',
+    en: 'Please wait until all images have been processed, then click “Save” again.',
+    sw: 'Tafadhali subiri hadi picha zote zichakatwe, kisha bonyeza “Hifadhi” tena.',
+  },
+  'upload.tooLate': {
+    de: 'Dieser Eintrag wurde inzwischen abgeschlossen. Das Bild wurde nicht hinzugefügt.',
+    en: 'This entry has been completed in the meantime. The image was not added.',
+    sw: 'Ingizo hili limekamilishwa wakati huo huo. Picha haikuongezwa.',
+  },
 
   save: { de: 'Speichern', en: 'Save', sw: 'Hifadhi' },
   'save.ok': { de: 'Erfolgreich gespeichert: {n}', en: 'Saved successfully: {n}', sw: 'Yamehifadhiwa kikamilifu: {n}' },
@@ -273,6 +288,16 @@ const T = {
     de: 'Ausgaben = alle erfassten Zahlungen mit Datum und Betrag (auch unvollständige und Entwürfe), die ab diesem Geldeingang bis zum nächsten bezahlt wurden.',
     en: 'Expenses = all recorded payments with date and amount (including incomplete ones and drafts) paid from this money received until the next one.',
     sw: 'Matumizi = malipo yote yaliyorekodiwa yenye tarehe na kiasi (pamoja na yasiyokamilika na rasimu) yaliyolipwa kuanzia pesa hizi zilipopokelewa hadi zinazofuata.',
+  },
+  'admin.incomeDrafts': {
+    de: 'Begonnene, noch nicht gespeicherte Geldeingänge',
+    en: 'Money received that was started but not saved yet',
+    sw: 'Pesa zilizopokelewa zilizoanzishwa lakini bado hazijahifadhiwa',
+  },
+  'admin.imagesMissing': {
+    de: 'Bei {n} Eintrag/Einträgen konnten Bilder nicht abgerufen werden. Diese Einträge werden nicht gelöscht und erscheinen in der nächsten Sicherung erneut.',
+    en: 'Images could not be loaded for {n} entry/entries. These entries will not be deleted and will appear again in the next backup.',
+    sw: 'Picha za ingizo/maingizo {n} hazikuweza kupakuliwa. Maingizo haya hayatafutwa na yataonekana tena kwenye nakala inayofuata.',
   },
   'admin.approve': { de: 'ausnahmsweise genehmigen', en: 'approve as an exception', sw: 'idhinisha kwa hali maalum' },
   'admin.approveConfirm': {

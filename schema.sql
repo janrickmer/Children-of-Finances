@@ -30,3 +30,9 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   window_start INTEGER NOT NULL,
   locked_until INTEGER NOT NULL
 );
+
+-- IDs gesicherter und gelöschter Einträge, damit veraltete Geräte sie nicht neu anlegen
+CREATE TABLE IF NOT EXISTS tombstones (
+  id TEXT PRIMARY KEY,
+  at INTEGER NOT NULL
+);

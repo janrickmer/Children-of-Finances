@@ -34,11 +34,17 @@ async function importDek(raw) {
 
 export async function login(password) {
   const params = await request('/api/params', { auth: false });
-  const { authKey, kek } = await deriveKeys(password, b64ToBytes(params.salt), params.iterations);
+  const salt = b64ToBytes(params.salt);
+  // Nur sichere Parameter akzeptieren (Schutz gegen einen manipulierten Server)
+  if (!Number.isInteger(params.iterations) || params.iterations < 600_000 || salt.length < 16) {
+    throw new ApiError(500, { error: 'unsafe_params' });
+  }
+  const { authKey, kek } = await deriveKeys(password, salt, params.iterations);
   const res = await request('/api/login', { method: 'POST', body: { authKey: bytesToB64(authKey) }, auth: false });
   const raw = await unwrapDek(kek, res.wrappedKey);
   session = { token: res.token, role: res.role, expires: res.expires, key: await importDek(raw) };
-  // Nur für diesen Browser-Tab: beim Schließen des Tabs ist die Anmeldung weg.
+  // Nur für diesen Browser-Tab (sessionStorage), höchstens 12 Stunden gültig.
+  // Hinweis: Browser können einen gerade geschlossenen Tab samt sessionStorage wiederherstellen.
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
       token: res.token, role: res.role, expires: res.expires, dek: bytesToB64(raw),
@@ -90,7 +96,9 @@ export async function request(path, { method = 'GET', body, text, auth = true } 
   const data = type.includes('application/json') ? await res.json().catch(() => null) : await res.text();
   if (!res.ok) {
     if (res.status === 401 && auth) expiredHandlers.forEach((fn) => fn());
-    if (res.status >= 502 && res.status <= 504) throw new NetworkError(`HTTP ${res.status}`);
+    // Serverfehler und Überlastung sind vorübergehend: später erneut versuchen, nichts verwerfen.
+    const transient = res.status === 429 ? auth : res.status >= 500 && data?.error !== 'not_initialized';
+    if (transient) throw new NetworkError(`HTTP ${res.status}`);
     throw new ApiError(res.status, typeof data === 'object' ? data : null);
   }
   return data;

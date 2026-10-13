@@ -119,6 +119,11 @@ class ImageEditor {
     for (const file of files) {
       try {
         const id = await images.addImage(file, this.row.entry.id);
+        if (SAVED.includes(this.row.entry.status)) {
+          images.removeImage(id); // Eintrag wurde inzwischen abgeschlossen
+          this.error.textContent = t('upload.tooLate');
+          continue;
+        }
         store.update(this.row.entry, { [this.field]: [...this.ids, id] }, this.row.getName());
         this.render();
         this.row.refreshMissing();

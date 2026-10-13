@@ -7,6 +7,7 @@ const MAX_JPEG_BYTES = 1_300_000; // verschlüsselt + Base64 bleibt so unter dem
 const THUMB_SIDE = 240;
 
 const pending = new Map(); // id -> { id, entryId, cipher }  noch nicht hochgeladen
+let processingCount = 0; // Bilder, die gerade verkleinert/verschlüsselt werden
 const pendingDeletes = new Set();
 const thumbs = new Map(); // id -> Promise<objectURL>
 const fulls = new Map(); // id -> Promise<Blob>  (LRU)
@@ -15,6 +16,15 @@ let active = 0;
 const queue = [];
 
 export class ImageError extends Error {}
+
+// Endgültige Ablehnungen durch den Server – alles andere wird später erneut versucht.
+export function isFinalRejection(err) {
+  return err instanceof ApiError && [400, 403, 404, 409, 413].includes(err.status);
+}
+
+export function processing() {
+  return processingCount;
+}
 
 // ------------------------------------------------------------------ Bild umwandeln
 
@@ -88,20 +98,25 @@ async function makeThumb(blob) {
 export async function addImage(file, entryId) {
   if (isPdf(file)) throw new ImageError('upload.pdf');
   if (!looksLikeImage(file)) throw new ImageError('upload.notImage');
-  let jpeg;
+  processingCount++;
   try {
-    jpeg = await toJpeg(file);
-  } catch {
-    throw new ImageError('upload.failed');
+    let jpeg;
+    try {
+      jpeg = await toJpeg(file);
+    } catch {
+      throw new ImageError('upload.failed');
+    }
+    const id = crypto.randomUUID();
+    const cipher = await encryptBytes(new Uint8Array(await jpeg.arrayBuffer()), `image:${id}`);
+    const item = { id, entryId, cipher };
+    pending.set(id, item);
+    await idb.put('images', id, item);
+    remember(id, Promise.resolve(jpeg));
+    thumbs.set(id, makeThumb(jpeg));
+    return id;
+  } finally {
+    processingCount--;
   }
-  const id = crypto.randomUUID();
-  const cipher = await encryptBytes(new Uint8Array(await jpeg.arrayBuffer()), `image:${id}`);
-  const item = { id, entryId, cipher };
-  pending.set(id, item);
-  await idb.put('images', id, item);
-  remember(id, Promise.resolve(jpeg));
-  thumbs.set(id, makeThumb(jpeg));
-  return id;
 }
 
 export function removeImage(id) {
@@ -122,6 +137,12 @@ export function hasWork() {
   return pending.size > 0 || pendingDeletes.size > 0;
 }
 
+// Beim Abmelden: Warteschlangen im Speicher leeren (auf dem Gerät bleiben sie für die nächste Anmeldung).
+export function resetMemory() {
+  pending.clear();
+  pendingDeletes.clear();
+}
+
 export async function loadPendingFromDevice() {
   for (const item of await idb.getAll('images')) pending.set(item.id, item);
   for (const item of await idb.getAll('deletes')) if (item.type === 'image') pendingDeletes.add(item.id);
@@ -133,7 +154,7 @@ export async function flush() {
     try {
       await request(`/api/images/${item.id}?entry=${item.entryId}`, { method: 'PUT', text: item.cipher });
     } catch (err) {
-      if (err instanceof NetworkError || err.status === 401) throw err;
+      if (!isFinalRejection(err)) throw err;
       console.error('Bild-Upload abgelehnt', err);
     }
     pending.delete(item.id);
@@ -143,7 +164,7 @@ export async function flush() {
     try {
       await request(`/api/images/${id}`, { method: 'DELETE' });
     } catch (err) {
-      if (err instanceof NetworkError || err.status === 401) throw err;
+      if (!isFinalRejection(err)) throw err;
     }
     pendingDeletes.delete(id);
     await idb.remove('deletes', `image:${id}`);

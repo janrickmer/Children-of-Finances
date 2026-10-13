@@ -96,6 +96,7 @@ export async function buildBackupPdf(entries, onProgress = () => {}) {
   onProgress(0, totalImages);
 
   const records = [];
+  const missingIds = new Set(); // Einträge, bei denen mindestens ein Bild nicht abrufbar war
   const total = entries.length;
 
   for (const [index, e] of entries.entries()) {
@@ -123,14 +124,18 @@ export async function buildBackupPdf(entries, onProgress = () => {}) {
         const ids = e.d[field] || [];
         for (const [i, id] of ids.entries()) {
           let bytes = null;
-          try {
-            bytes = await images.getBytes(id);
-          } catch (err) {
-            console.warn('Bild nicht verfügbar', id, err);
+          for (let attempt = 1; attempt <= 3 && !bytes; attempt++) {
+            try {
+              bytes = await images.getBytes(id);
+            } catch (err) {
+              console.warn(`Bild nicht verfügbar (Versuch ${attempt})`, id, err);
+              if (attempt < 3) await new Promise((r) => setTimeout(r, 1500 * attempt));
+            }
           }
           onProgress(++loaded, totalImages);
           if (!bytes) {
             record.missingImages.push(id);
+            missingIds.add(e.id);
             continue;
           }
           const image = await pdf.embedJpg(bytes);
@@ -179,7 +184,7 @@ export async function buildBackupPdf(entries, onProgress = () => {}) {
 
   const bytes = await pdf.save();
   const stamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
-  return { bytes, filename: `Children-of-Finances_Sicherung_${stamp}.pdf` };
+  return { bytes, filename: `Children-of-Finances_Sicherung_${stamp}.pdf`, missingIds: [...missingIds] };
 }
 
 function drawInfoPage(page, e, record, index, total, { font, bold, colors, now }) {

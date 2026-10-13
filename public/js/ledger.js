@@ -39,7 +39,7 @@ export function computePeriods(entries, ledger) {
     if (e.kind !== 'expense') continue;
     const period = periodFor(periods, pre, e.d.payDate);
     period.expenses.push(e);
-    if (e.d.payDate) period.spent += parseAmount(e.d.amount);
+    if (e.d.payDate || SAVED.includes(e.status)) period.spent += parseAmount(e.d.amount);
   }
   for (const p of periods) p.remaining = p.income.amount - p.spent;
   return { pre, periods };
@@ -59,7 +59,7 @@ export function ledgerAfterArchive(entries, ledger, archivedIds) {
   const { pre, periods } = computePeriods(entries, ledger);
   for (const p of [pre, ...periods]) {
     const sum = p.expenses
-      .filter((e) => ids.has(e.id) && e.d.payDate)
+      .filter((e) => ids.has(e.id) && (e.d.payDate || SAVED.includes(e.status)))
       .reduce((acc, e) => acc + parseAmount(e.d.amount), 0);
     if (sum) next.spent[p.key] = (next.spent[p.key] || 0) + sum;
     if (p.income && !p.income.archived && ids.has(p.income.id)) {

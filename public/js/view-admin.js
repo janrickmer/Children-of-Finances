@@ -76,6 +76,16 @@ export function mountAdmin(root) {
     }
   }
 
+  function renderIncomeDrafts() {
+    const drafts = store.list().filter((e) => e.kind === 'income' && e.status === 'draft' && !store.isEmpty(e));
+    if (!drafts.length) return;
+    redBox.append(h('div', { class: 'income-drafts' },
+      h('h3', {}, t('admin.incomeDrafts')),
+      h('ul', {}, drafts.map((e) => h('li', {},
+        `${fmtDate(e.d.date) || '–'} · KSH ${e.d.amount ? fmtAmount(e.d.amount) : '–'} · ${e.d.from || '–'} · `,
+        h('span', { class: 'muted' }, `${t('col.name')}: ${e.d.createdBy || '–'}, ${fmtDateTime(e.createdAt)}`))))));
+  }
+
   function renderRed() {
     const list = store.list()
       .filter((e) => e.kind === 'expense' && (e.status === 'incomplete' || e.status === 'draft'))
@@ -83,6 +93,7 @@ export function mountAdmin(root) {
     clear(redBox);
     if (!list.length) {
       redBox.append(h('p', { class: 'all-good' }, t('incomplete.none')));
+      renderIncomeDrafts();
       return;
     }
     const now = Date.now();
@@ -124,6 +135,7 @@ export function mountAdmin(root) {
           h('th', {}, t('col.status')),
           h('th', {}, t('col.action')))),
         h('tbody', {}, rows)))));
+    renderIncomeDrafts();
   }
 
   // ---------------------------------------------------------------- Erfolgreiche Einträge
@@ -154,11 +166,13 @@ export function mountAdmin(root) {
     }
     downloadBtn.disabled = true;
     try {
-      const { bytes, filename } = await buildBackupPdf(entries, (done, total) => {
+      const { bytes, filename, missingIds } = await buildBackupPdf(entries, (done, total) => {
         progress.textContent = t('admin.preparing', { done, total });
       });
       downloadBytes(bytes, filename, 'application/pdf');
-      exported = { ids: entries.map((e) => e.id), filename };
+      // Einträge, deren Bilder nicht vollständig in der PDF stehen, bleiben in der Datenbank.
+      exported = { ids: entries.filter((e) => !missingIds.includes(e.id)).map((e) => e.id), filename, skipped: missingIds.length };
+      if (missingIds.length) toast(t('admin.imagesMissing', { n: missingIds.length }), 'error', 20000);
       progress.textContent = '';
       renderDownload();
     } catch (err) {
@@ -193,10 +207,11 @@ export function mountAdmin(root) {
   function renderDownload() {
     clear(downloadBox).append(downloadBtn, progress);
     if (exported) {
-      downloadBox.append(
-        h('p', { class: 'download-done' }, t('admin.downloaded', { file: exported.filename, n: exported.ids.length })),
-        h('button', { type: 'button', class: 'btn btn-danger', onclick: deleteExported }, t('admin.delete')),
-      );
+      downloadBox.append(h('p', { class: 'download-done' }, t('admin.downloaded', { file: exported.filename, n: exported.ids.length + exported.skipped })));
+      if (exported.skipped) downloadBox.append(h('p', { class: 'form-error' }, t('admin.imagesMissing', { n: exported.skipped })));
+      if (exported.ids.length) {
+        downloadBox.append(h('button', { type: 'button', class: 'btn btn-danger', onclick: deleteExported }, t('admin.delete')));
+      }
     }
   }
 

@@ -3,7 +3,8 @@ name: Deploy
 # 1. Worker (Speicher-Schnittstelle) auf Cloudflare veröffentlichen
 # 2. Oberfläche auf GitHub Pages veröffentlichen (https://children-of-finances.children-of-mathare.de)
 #
-# Start: bei jedem Push auf main – oder manuell über GitHub → Actions → Deploy → „Run workflow“.
+# Start: manuell über GitHub → Actions → Deploy → „Run workflow“ (oder bei einem Push auf main).
+# Veröffentlicht wird nur vom Standard-Branch des Repositorys aus.
 on:
   push:
     branches: [main]
@@ -19,6 +20,7 @@ permissions:
 jobs:
   worker:
     name: Cloudflare Worker
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     outputs:
       api_url: ${{ steps.setup.outputs.api_url }}
