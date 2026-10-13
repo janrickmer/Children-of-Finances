@@ -46,6 +46,19 @@ for (const [label, pw] of [['PASSWORD_USER', pwUser], ['PASSWORD_ADMIN', pwAdmin
 if (!LOCAL && (!env.CLOUDFLARE_API_TOKEN || !env.CLOUDFLARE_ACCOUNT_ID)) {
   fail('CLOUDFLARE_API_TOKEN und CLOUDFLARE_ACCOUNT_ID müssen gesetzt sein (GitHub → Settings → Secrets).');
 }
+// Häufigster Fehler beim Einrichten: beim Kopieren ist eine zweite Zeile oder ein Leerzeichen mitgerutscht.
+if (!LOCAL) {
+  if (/\s/.test(env.CLOUDFLARE_API_TOKEN)) {
+    const lines = env.CLOUDFLARE_API_TOKEN.trim().split(/\r?\n/).length;
+    fail(`Das Secret CLOUDFLARE_API_TOKEN enthält ${lines > 1 ? `${lines} Zeilen` : 'Leerzeichen oder einen Zeilenumbruch'}. ` +
+      'Bitte das Secret in GitHub neu speichern und dabei NUR den Token einfügen: eine einzige Zeile, ' +
+      'ohne „Bearer“, ohne Leerzeichen und ohne den curl-Befehl, den Cloudflare darunter anzeigt.');
+  }
+  if (!/^[0-9a-f]{32}$/i.test(env.CLOUDFLARE_ACCOUNT_ID)) {
+    fail('Das Secret CLOUDFLARE_ACCOUNT_ID sieht nicht wie eine Cloudflare-Account-ID aus. Erwartet werden genau ' +
+      '32 Zeichen aus 0–9 und a–f, eine Zeile, ohne Leerzeichen (zu finden rechts auf der Seite „Workers & Pages“).');
+  }
+}
 
 // ------------------------------------------------------------------ Datenbankzugriff
 
