@@ -72,7 +72,7 @@ export function logout() {
   } catch { /* ignorieren */ }
 }
 
-export async function request(path, { method = 'GET', body, text, auth = true } = {}) {
+export async function request(path, { method = 'GET', body, text, auth = true, timeout } = {}) {
   const headers = {};
   if (auth) {
     if (!session) throw new ApiError(401, { error: 'unauthorized' });
@@ -86,14 +86,25 @@ export async function request(path, { method = 'GET', body, text, auth = true } 
     payload = JSON.stringify(body);
     headers['content-type'] = 'application/json';
   }
+  // Bei schlechter Verbindung nicht ewig warten: abbrechen und später erneut versuchen.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout || (text !== undefined ? 120_000 : 30_000));
   let res;
   try {
-    res = await fetch(API + path, { method, headers, body: payload, cache: 'no-store' });
+    res = await fetch(API + path, { method, headers, body: payload, cache: 'no-store', signal: controller.signal });
   } catch (err) {
+    clearTimeout(timer);
     throw new NetworkError(err.message);
   }
   const type = res.headers.get('content-type') || '';
-  const data = type.includes('application/json') ? await res.json().catch(() => null) : await res.text();
+  let data;
+  try {
+    data = type.includes('application/json') ? await res.json().catch(() => null) : await res.text();
+  } catch (err) {
+    throw new NetworkError(err.message); // Verbindung beim Lesen der Antwort abgebrochen
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) {
     if (res.status === 401 && auth) expiredHandlers.forEach((fn) => fn());
     // Serverfehler und Überlastung sind vorübergehend: später erneut versuchen, nichts verwerfen.

@@ -242,10 +242,13 @@ async function pushChanges() {
 }
 
 async function tick() {
-  if (busy || refreshing || getRole() !== 'user') return;
+  if (busy || getRole() !== 'user') return;
   busy = true;
   try {
+    // Auf dem Gerät sichern – immer, auch wenn der Server gerade nicht antwortet.
     if (persistQueue.size) await persistLocal();
+    // Nicht senden, während eine Abfrage läuft (sonst könnte deren ältere Antwort neue Daten überschreiben).
+    if (refreshing) return;
     const work = pendingDeletes.size || images.hasWork() || list().some(isDirty);
     if (!work && !refreshNeeded) {
       setSync('saved');

@@ -201,7 +201,7 @@ export function getBlob(id) {
   }
   const p = limit(async () => {
     const local = pending.get(id);
-    const cipher = local ? local.cipher : await request(`/api/images/${id}`);
+    const cipher = local ? local.cipher : await request(`/api/images/${id}`, { timeout: 120_000 });
     const bytes = await decryptBytes(cipher, `image:${id}`);
     return new Blob([bytes], { type: 'image/jpeg' });
   });
