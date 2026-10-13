@@ -7,8 +7,9 @@ compatibility_date = "2026-09-01"
 workers_dev = true
 preview_urls = false
 
-# Eigene Domain: erst aktivieren, wenn children-of-mathare.de in diesem Cloudflare-Konto liegt.
-# routes = [{ pattern = "children-of-finances.children-of-mathare.de", custom_domain = true }]
+# Die Oberfläche läuft auf GitHub Pages unter der eigenen Domain. Von dort darf sie die API aufrufen.
+[vars]
+ALLOWED_ORIGINS = "https://children-of-finances.children-of-mathare.de"
 
 [assets]
 directory = "./public"

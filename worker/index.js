@@ -19,15 +19,37 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+    const cors = corsHeaders(request, env);
+    if (request.method === 'OPTIONS') return new Response(null, { status: cors ? 204 : 403, headers: cors || {} });
+    let response;
     try {
-      return await handleApi(request, env, url);
+      response = await handleApi(request, env, url);
     } catch (err) {
-      if (err instanceof HttpError) return json({ error: err.code, ...err.extra }, err.status);
-      console.error(err);
-      return json({ error: 'server' }, 500);
+      if (err instanceof HttpError) response = json({ error: err.code, ...err.extra }, err.status);
+      else {
+        console.error(err);
+        response = json({ error: 'server' }, 500);
+      }
     }
+    if (cors) for (const [k, v] of Object.entries(cors)) response.headers.set(k, v);
+    return response;
   },
 };
+
+// Die Oberfläche liegt auf GitHub Pages (eigene Domain) und ruft die API von dort aus auf.
+// Nur die in ALLOWED_ORIGINS (wrangler.toml) eingetragenen Adressen dürfen das.
+function corsHeaders(request, env) {
+  const origin = request.headers.get('Origin');
+  const allowed = String(env.ALLOWED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  if (!origin || !allowed.includes(origin)) return null;
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
 
 class HttpError extends Error {
   constructor(status, code, extra = {}) {

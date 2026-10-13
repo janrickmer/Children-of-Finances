@@ -13,7 +13,7 @@
 //     Später: Wurde EIN Passwort geändert, wird der Datenschlüssel mit dem anderen (unveränderten)
 //     Passwort entpackt und für das neue Passwort neu verpackt. Alte Anmeldungen werden ungültig.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, appendFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -21,6 +21,7 @@ import { deriveKeys, sha256Hex, wrapDek, unwrapDek, bytesToB64, b64ToBytes } fro
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DB_NAME = 'children-of-finances';
+const WORKER_NAME = 'children-of-finances'; // muss zu "name" in wrangler.toml passen
 const ITERATIONS = 600_000;
 const LOCAL = process.argv.includes('--local');
 
@@ -158,11 +159,38 @@ async function bootstrapKeys() {
   console.log(`Passwort „${label === 'admin' ? 'Schatzmeister' : 'Kenia-Team'}“ wurde geändert. Alle bestehenden Anmeldungen sind abgelaufen.`);
 }
 
+// ------------------------------------------------------------------ Adresse des Workers
+
+// Die Oberfläche auf GitHub Pages muss wissen, wo der Worker erreichbar ist:
+// https://<WORKER_NAME>.<workers.dev-Subdomain des Kontos>.workers.dev
+async function workerUrl() {
+  const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/workers/subdomain`, {
+    headers: { Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}` },
+  });
+  const body = await res.json().catch(() => null);
+  const subdomain = body?.result?.subdomain;
+  if (!res.ok || !subdomain) {
+    fail('Für dieses Cloudflare-Konto ist noch keine workers.dev-Subdomain eingerichtet. ' +
+      'Bitte im Cloudflare-Dashboard unter „Workers & Pages“ eine Subdomain wählen und den Workflow erneut starten. ' +
+      `Details: ${JSON.stringify(body?.errors ?? body)}`);
+  }
+  return `https://${WORKER_NAME}.${subdomain}.workers.dev`;
+}
+
+async function writeApiConfig(url) {
+  const file = path.join(ROOT, 'public', 'config.js');
+  const js = await readFile(file, 'utf8');
+  await writeFile(file, js.replace(/window\.COF_API = '[^']*';/, `window.COF_API = '${url}';`));
+  if (env.GITHUB_OUTPUT) await appendFile(env.GITHUB_OUTPUT, `api_url=${url}\n`);
+  console.log(`Worker-Adresse: ${url}`);
+}
+
 // ------------------------------------------------------------------ Ablauf
 
 if (!LOCAL) {
   databaseId = await ensureDatabase();
   await writeDatabaseIdToConfig(databaseId);
+  await writeApiConfig(await workerUrl());
 }
 await applySchema();
 await bootstrapKeys();

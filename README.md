@@ -38,20 +38,39 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   sichert und löscht, reicht das für mehrere hundert Belege zwischen zwei Sicherungen.
   Die Belegung wird in der Schatzmeister-Ansicht angezeigt; ab 80 % erscheint eine Warnung.
 
+## Aufbau der Veröffentlichung
+
+```
+Browser ──► https://children-of-finances.children-of-mathare.de   (GitHub Pages: Oberfläche)
+   │
+   └──────► https://children-of-finances.<subdomain>.workers.dev  (Cloudflare Worker: Anmeldung + verschlüsselter Speicher in D1)
+```
+
+Der Worker beantwortet API-Anfragen nur von der eigenen Domain (`ALLOWED_ORIGINS` in `wrangler.toml`).
+Unter der `workers.dev`-Adresse ist die Oberfläche zusätzlich als Ausweichadresse erreichbar.
+
 ## Einrichtung (einmalig)
 
-1. **Cloudflare-Konto** anlegen: <https://dash.cloudflare.com/sign-up>
+**Cloudflare**
+1. Kostenloses Konto anlegen: <https://dash.cloudflare.com/sign-up>
 2. Unter **Workers & Pages** eine `workers.dev`-Subdomain wählen.
 3. **Account-ID** kopieren (rechts auf der Seite „Workers & Pages“).
 4. **API-Token** erstellen: Profil → API Tokens → Create Token → Vorlage „Edit Cloudflare Workers“.
    Zusätzlich nötig ist die Berechtigung *Account → D1 → Edit*.
-5. In GitHub unter *Settings → Secrets and variables → Actions* vier Secrets anlegen:
-   `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `PASSWORD_USER`, `PASSWORD_ADMIN`.
-6. **Actions → Deploy → Run workflow** starten. Das legt die Datenbank an, erzeugt den
-   Datenschlüssel und veröffentlicht die Seite unter
-   `https://children-of-finances.<subdomain>.workers.dev`.
 
-Danach veröffentlicht jeder Push auf `main` die Seite automatisch neu.
+**GitHub**
+5. Unter *Settings → Secrets and variables → Actions* vier Secrets anlegen:
+   `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `PASSWORD_USER`, `PASSWORD_ADMIN`.
+6. *Settings → Pages* → Source: **GitHub Actions**.
+7. **Actions → Deploy → Run workflow** starten.
+8. *Settings → Pages* → Custom domain: `children-of-finances.children-of-mathare.de` → Save.
+   Sobald das Zertifikat bereit ist, **Enforce HTTPS** einschalten.
+
+**DNS (beim bisherigen Anbieter von children-of-mathare.de, kein Umzug)**
+9. Einen CNAME-Eintrag anlegen: Name `children-of-finances`, Ziel `janrickmer.github.io`.
+
+Danach veröffentlicht jeder Push auf `main` die Seite automatisch neu. Ansonsten startest du den
+Workflow manuell.
 
 ## Passwort ändern
 
@@ -59,12 +78,6 @@ Danach veröffentlicht jeder Push auf `main` die Seite automatisch neu.
 Workflow erneut. Mit dem unveränderten Passwort wird der Datenschlüssel neu verpackt, die Daten
 bleiben lesbar und alle Anmeldungen laufen ab. Willst du beide ändern, mach es nacheinander
 in zwei Durchläufen.
-
-## Eigene Domain
-
-`children-of-finances.children-of-mathare.de` funktioniert erst, wenn die Domain
-`children-of-mathare.de` in diesem Cloudflare-Konto verwaltet wird. Dafür müssen die Nameserver
-umgestellt werden. Danach in `wrangler.toml` die Zeile `routes = …` aktivieren.
 
 ## Sicherungs-PDF
 
@@ -89,6 +102,7 @@ worker/index.js        API (Anmeldung, Einträge, Bilder, Sicherung/Löschen) + 
 schema.sql             Tabellen in D1
 scripts/setup.mjs      Datenbank anlegen, Passwörter/Schlüssel einrichten (lokal & in GitHub Actions)
 public/                Oberfläche (ohne Build-Schritt)
+  config.js            Adresse des Workers (wird beim Deployment eingetragen)
   js/kdf.js            Schlüsselableitung (Browser + Setup identisch)
   js/session.js        Anmeldung, Verschlüsselung, API
   js/store.js          Datenbestand, sekündliches Speichern, Abgleich

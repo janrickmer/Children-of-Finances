@@ -2,6 +2,8 @@
 import { deriveKeys, unwrapDek, bytesToB64, b64ToBytes, concat } from './kdf.js';
 
 const STORAGE_KEY = 'cof-session';
+// Adresse des Workers (aus config.js). Leer = gleiche Adresse wie die Seite.
+const API = String(window.COF_API || '').replace(/\/+$/, '');
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
@@ -80,7 +82,7 @@ export async function request(path, { method = 'GET', body, text, auth = true } 
   }
   let res;
   try {
-    res = await fetch(path, { method, headers, body: payload, cache: 'no-store' });
+    res = await fetch(API + path, { method, headers, body: payload, cache: 'no-store' });
   } catch (err) {
     throw new NetworkError(err.message);
   }

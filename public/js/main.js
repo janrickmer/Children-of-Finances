@@ -204,6 +204,7 @@ session.onExpired(() => {
 });
 
 (async function boot() {
+  if (window.top !== window.self) return; // nicht in fremden Seiten (iframes) anzeigen
   initLang();
   role = await session.restore();
   if (role) await startApp();

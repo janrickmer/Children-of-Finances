@@ -1,7 +1,9 @@
 name: Deploy
 
-# Veröffentlicht die Seite bei jedem Push auf main – oder manuell über
-# GitHub → Actions → Deploy → „Run workflow“.
+# 1. Worker (Speicher-Schnittstelle) auf Cloudflare veröffentlichen
+# 2. Oberfläche auf GitHub Pages veröffentlichen (https://children-of-finances.children-of-mathare.de)
+#
+# Start: bei jedem Push auf main – oder manuell über GitHub → Actions → Deploy → „Run workflow“.
 on:
   push:
     branches: [main]
@@ -15,8 +17,11 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  worker:
+    name: Cloudflare Worker
     runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.setup.outputs.api_url }}
     env:
       WRANGLER_SEND_METRICS: "false"
     steps:
@@ -30,6 +35,7 @@ jobs:
       - run: npm ci
 
       - name: Datenbank und Schlüssel einrichten
+        id: setup
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -42,3 +48,51 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler deploy
+
+  pages:
+    name: GitHub Pages
+    needs: worker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Ist GitHub Pages aktiviert?
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build_type=$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type' 2>/dev/null || true)
+          if [ "$build_type" = "workflow" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=GitHub Pages noch nicht eingerichtet::Settings → Pages → Source: „GitHub Actions“ wählen und den Workflow erneut starten. Der Worker wurde trotzdem veröffentlicht."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.enabled == 'true'
+
+      - name: Worker-Adresse in die Oberfläche eintragen
+        if: steps.check.outputs.enabled == 'true'
+        env:
+          API_URL: ${{ needs.worker.outputs.api_url }}
+        run: |
+          test -n "$API_URL" || { echo "::error::Worker-Adresse fehlt"; exit 1; }
+          sed -i "s#window.COF_API = '[^']*';#window.COF_API = '${API_URL}';#" public/config.js
+          grep -q "${API_URL}" public/config.js
+          cat public/config.js
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          path: public
+
+      - name: Veröffentlichen
+        id: deploy
+        if: steps.check.outputs.enabled == 'true'
+        uses: actions/deploy-pages@v4
