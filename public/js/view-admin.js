@@ -4,8 +4,9 @@ import { t } from './i18n.js';
 import * as store from './store.js';
 import { computePeriods, ledgerAfterArchive } from './ledger.js';
 import {
-  thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge,
+  thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand,
 } from './components.js';
+import { icon } from './icons.js';
 import { buildBackupPdf } from './pdf-export.js';
 import { mountBackupView } from './backup-import.js';
 
@@ -25,8 +26,8 @@ export function mountAdmin(root) {
   });
   const storage = h('div', { class: 'storage' });
   const topBar = h('div', { class: 'admin-top' },
-    h('label', { class: 'btn btn-primary' }, backupInput, t('admin.uploadBackups')),
-    storage);
+    h('div', { class: 'admin-top-left' }, h('h1', { class: 'view-title' }, t('admin.title')), storage),
+    h('label', { class: 'btn' }, backupInput, icon('upload', { size: 18 }), t('admin.uploadBackups')));
 
   // ---------------------------------------------------------------- Bereiche
   const sidebar = h('aside', { class: 'sidebar' });
@@ -35,7 +36,6 @@ export function mountAdmin(root) {
   const downloadBox = h('section', { class: 'section download-box' });
 
   clear(root).append(
-    h('h1', { class: 'view-title' }, t('admin.title')),
     topBar,
     backupPanel,
     h('div', { class: 'admin-grid' }, sidebar, h('div', { class: 'admin-main' }, redBox, successBox, downloadBox)),
@@ -44,24 +44,10 @@ export function mountAdmin(root) {
   // ---------------------------------------------------------------- Geldeingänge links
   function renderSidebar() {
     const { pre, periods } = computePeriods(store.list(), store.state.ledger);
-    clear(sidebar).append(h('h2', {}, t('admin.incomes')));
+    clear(sidebar).append(h('h2', { class: 'section-title' }, t('admin.incomes')));
     if (!periods.length) sidebar.append(h('p', { class: 'muted' }, t('admin.noIncome')));
-    for (const p of [...periods].reverse()) {
-      const inc = p.income;
-      sidebar.append(h('div', { class: 'income-card' },
-        h('div', { class: 'income-line' },
-          h('span', { class: 'income-date' }, fmtDate(inc.date)),
-          h('span', { class: 'income-amount' }, `+ KSH ${fmtAmount(inc.amount)}`)),
-        h('div', { class: 'income-from' }, inc.from || '–', inc.archived ? h('span', { class: 'muted small' }, ` (${t('admin.archivedIncome')})`) : null),
-        h('div', { class: 'spent-line' }, `${t('admin.spent')}: − KSH ${fmtAmount(p.spent)}`),
-        h('div', { class: p.remaining < 0 ? 'remaining-line negative' : 'remaining-line' },
-          `${t('admin.remaining')}: KSH ${fmtAmount(p.remaining)}`)));
-    }
-    if (pre.spent > 0) {
-      sidebar.append(h('div', { class: 'income-card pre' },
-        h('div', { class: 'income-from' }, t('period.pre')),
-        h('div', { class: 'spent-line' }, `${t('admin.spent')}: − KSH ${fmtAmount(pre.spent)}`)));
-    }
+    for (const p of [...periods].reverse()) sidebar.append(tapeBand(p));
+    if (pre.spent > 0) sidebar.append(tapeBand(pre));
     sidebar.append(h('p', { class: 'muted small' }, t('admin.sumHint')));
   }
 
@@ -92,7 +78,7 @@ export function mountAdmin(root) {
       .sort((a, b) => a.createdAt - b.createdAt);
     clear(redBox);
     if (!list.length) {
-      redBox.append(h('p', { class: 'all-good' }, t('incomplete.none')));
+      redBox.append(h('p', { class: 'all-good' }, icon('check', { size: 22 }), t('incomplete.none')));
       renderIncomeDrafts();
       return;
     }
@@ -103,7 +89,7 @@ export function mountAdmin(root) {
       const cell = (key, content, label) => h('td', { class: miss.includes(key) ? 'is-missing' : '' },
         h('span', { class: 'cell-label' }, label), content);
       return h('tr', {},
-        h('td', { class: 'flag-cell' }, old ? h('span', { class: 'overdue', title: t('admin.olderThanWeek'), 'aria-label': t('admin.olderThanWeek') }, '!') : null),
+        h('td', { class: 'flag-cell' }, old ? h('span', { class: 'overdue', title: t('admin.olderThanWeek') }, icon('alert', { size: 24, label: t('admin.olderThanWeek') })) : null),
         cell('what', e.d.what || '–', t('col.whatOrFrom')),
         cell('date', fmtDate(e.d.payDate) || '–', t('col.dateShort')),
         cell('amount', e.d.amount ? fmtAmount(e.d.amount) : '–', t('col.amountShort')),
@@ -115,13 +101,13 @@ export function mountAdmin(root) {
           e.d.editedBy && e.d.editedBy !== e.d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: e.d.editedBy })) : null,
           h('div', { class: 'muted small' }, `${t('col.started')}: ${fmtDateTime(e.createdAt)}`))),
         h('td', {}, h('span', { class: 'cell-label' }, t('col.status')), statusBadge(e),
-          miss.length ? h('div', { class: 'missing-text' }, t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null),
+          miss.length ? h('div', { class: 'missing-text' }, icon('alert', { size: 16 }), t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null),
         h('td', {}, h('span', { class: 'cell-label' }, t('col.action')),
           h('button', { type: 'button', class: 'btn btn-small btn-approve', onclick: () => approve(e) }, t('admin.approve'))),
       );
     });
     redBox.append(h('div', { class: 'red-wrap' },
-      h('h2', { class: 'red-title' }, t('incomplete.title')),
+      h('div', { class: 'red-head' }, h('h2', { class: 'red-title' }, t('incomplete.title')), h('span', { class: 'red-count' }, String(list.length))),
       h('div', { class: 'table-scroll' }, h('table', { class: 'data-table cards-on-mobile red-table' },
         h('thead', {}, h('tr', {},
           h('th', { class: 'flag-cell' }, h('span', { class: 'sr-only' }, '!')),
@@ -140,10 +126,10 @@ export function mountAdmin(root) {
 
   // ---------------------------------------------------------------- Erfolgreiche Einträge
   function renderSuccess() {
-    clear(successBox).append(h('h2', {}, t('success.title')));
+    clear(successBox).append(h('h2', { class: 'section-title' }, t('success.title')));
     const archive = store.state.lastArchive;
     if (archive) {
-      successBox.append(h('p', { class: 'archive-note' }, t('success.archived', {
+      successBox.append(h('p', { class: 'archive-note' }, icon('check', { size: 20 }), t('success.archived', {
         date: fmtDate(new Date(archive.at).toISOString().slice(0, 10)), n: archive.count,
       })));
     }
@@ -156,7 +142,7 @@ export function mountAdmin(root) {
 
   // ---------------------------------------------------------------- Herunterladen & Löschen
   const progress = h('p', { class: 'muted', role: 'status' });
-  const downloadBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: download }, t('admin.download'));
+  const downloadBtn = h('button', { type: 'button', class: 'btn btn-primary', onclick: download }, icon('download', { size: 18 }), t('admin.download'));
 
   async function download() {
     const entries = orderedSuccessEntries();
@@ -210,7 +196,7 @@ export function mountAdmin(root) {
       downloadBox.append(h('p', { class: 'download-done' }, t('admin.downloaded', { file: exported.filename, n: exported.ids.length + exported.skipped })));
       if (exported.skipped) downloadBox.append(h('p', { class: 'form-error' }, t('admin.imagesMissing', { n: exported.skipped })));
       if (exported.ids.length) {
-        downloadBox.append(h('button', { type: 'button', class: 'btn btn-danger', onclick: deleteExported }, t('admin.delete')));
+        downloadBox.append(h('button', { type: 'button', class: 'btn btn-danger', onclick: deleteExported }, icon('trash', { size: 18 }), t('admin.delete')));
       }
     }
   }

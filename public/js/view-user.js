@@ -4,8 +4,9 @@ import { t } from './i18n.js';
 import * as store from './store.js';
 import * as images from './images.js';
 import {
-  ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable,
+  ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable, tapeBand, currentPeriod,
 } from './components.js';
+import { icon } from './icons.js';
 
 export function mountUser(root, { getName }) {
   const incompleteRows = new Map();
@@ -17,23 +18,27 @@ export function mountUser(root, { getName }) {
     .sort((a, b) => a.d.clientCreatedAt - b.d.clientCreatedAt);
 
   // ---------------------------------------------------------------- Warnhinweis
-  const warning = h('section', { class: 'warning-box' }, h('p', {}, t('warning.text')));
+  const warning = h('section', { class: 'warning-box', role: 'note' }, icon('alert', { size: 22 }), h('p', {}, t('warning.text')));
+  const bandSlot = h('div', { class: 'band-slot' });
 
   // ---------------------------------------------------------------- Unvollständige Eingaben
   const incBody = h('tbody');
+  const incCount = h('span', { class: 'red-count' });
   const incWrap = h('div', { class: 'red-wrap' },
-    h('h2', { class: 'red-title' }, t('incomplete.title')),
+    h('div', { class: 'red-head' }, h('h2', { class: 'red-title' }, t('incomplete.title')), incCount),
     h('p', { class: 'red-intro' }, t('incomplete.intro')),
-    h('div', { class: 'table-scroll' }, h('table', { class: 'entry-table' }, expenseHead([t('col.name')]), incBody)),
-    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncomplete }, t('save'))),
+    h('div', { class: 'red-body table-scroll' }, h('table', { class: 'entry-table' }, expenseHead([t('col.name')]), incBody)),
+    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncomplete }, icon('check', { size: 18 }), t('save'))),
   );
-  const allGood = h('p', { class: 'all-good' }, t('incomplete.none'));
+  const allGood = h('p', { class: 'all-good' }, icon('check', { size: 22 }), t('incomplete.none'));
 
   // ---------------------------------------------------------------- Auswahl
-  const incomeChoice = h('button', { type: 'button', class: 'choice', 'aria-pressed': 'false', onclick: () => setMode('income') },
+  const incomeChoice = h('button', { type: 'button', class: 'choice choice-income', 'aria-pressed': 'false', onclick: () => setMode('income') },
+    h('span', { class: 'choice-icon' }, icon('money-in', { size: 22 })),
     h('span', { class: 'choice-title' }, t('choose.income')),
     h('span', { class: 'choice-hint' }, t('choose.incomeHint')));
-  const expenseChoice = h('button', { type: 'button', class: 'choice', 'aria-pressed': 'false', onclick: () => setMode('expense') },
+  const expenseChoice = h('button', { type: 'button', class: 'choice choice-expense', 'aria-pressed': 'false', onclick: () => setMode('expense') },
+    h('span', { class: 'choice-icon' }, icon('money-out', { size: 22 })),
     h('span', { class: 'choice-title' }, t('choose.expense')));
 
   // ---------------------------------------------------------------- Geldeingang
@@ -43,7 +48,7 @@ export function mountUser(root, { getName }) {
   const incomeAmount = amountInput((v) => store.update(incomeDraft(true), { amount: v }, getName()));
   const incomeDate = dateInput((v) => store.update(incomeDraft(true), { date: v }, getName()));
   const incomeError = h('p', { class: 'form-error', role: 'alert' });
-  const incomeUnsaved = h('p', { class: 'unsaved-hint', hidden: true }, t('income.unsaved'));
+  const incomeUnsaved = h('p', { class: 'unsaved-hint', hidden: true }, icon('info', { size: 18 }), t('income.unsaved'));
   const refreshIncomeHint = () => {
     const e = incomeDraft(false);
     incomeUnsaved.hidden = !e || store.isEmpty(e);
@@ -58,7 +63,7 @@ export function mountUser(root, { getName }) {
     h('label', { class: 'field' }, h('span', {}, t('income.date')), incomeDate),
     incomeError,
     incomeUnsaved,
-    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncome }, t('save'))),
+    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncome }, icon('check', { size: 18 }), t('save'))),
   );
 
   function fillIncome() {
@@ -85,10 +90,10 @@ export function mountUser(root, { getName }) {
   // ---------------------------------------------------------------- Bezahlungen
   const draftBody = h('tbody');
   const expenseForm = h('div', { class: 'form-card form-wide', hidden: true },
-    h('div', { class: 'table-scroll' }, h('table', { class: 'entry-table' }, expenseHead(['']), draftBody)),
+    h('div', { class: 'table-scroll' }, h('table', { class: 'entry-table draft-table' }, expenseHead(['']), draftBody)),
     h('div', { class: 'actions actions-split' },
-      h('button', { type: 'button', class: 'btn btn-add', onclick: addRow, title: t('row.add') }, t('row.add')),
-      h('button', { type: 'button', class: 'btn btn-primary', onclick: saveDrafts }, t('save'))),
+      h('button', { type: 'button', class: 'btn btn-add', onclick: addRow }, icon('plus', { size: 18 }), t('row.add')),
+      h('button', { type: 'button', class: 'btn btn-primary', onclick: saveDrafts }, icon('check', { size: 18 }), t('save'))),
   );
 
   function addRow() {
@@ -167,6 +172,11 @@ export function mountUser(root, { getName }) {
     expenseChoice.setAttribute('aria-pressed', String(mode === 'expense'));
     incomeForm.hidden = mode !== 'income';
     expenseForm.hidden = mode !== 'expense';
+    // kurzer Seitenwechsel wie beim Umdrehen einer Kassette
+    const shown = mode === 'income' ? incomeForm : expenseForm;
+    shown.classList.remove('flip-in');
+    void shown.offsetWidth;
+    shown.classList.add('flip-in');
     if (mode === 'expense') renderDrafts();
     if (mode === 'income') fillIncome();
   }
@@ -178,9 +188,9 @@ export function mountUser(root, { getName }) {
     clear(successBox);
     const archive = store.state.lastArchive;
     if (archive) {
-      successBox.append(h('p', { class: 'archive-note' }, t('success.archived', {
+      successBox.append(h('p', { class: 'archive-note' }, icon('check', { size: 20 }), h('span', {}, t('success.archived', {
         date: fmtDate(new Date(archive.at).toISOString().slice(0, 10)), n: archive.count,
-      })));
+      }))));
     }
     const groups = successGroups().reverse(); // aktueller Zeitraum oben
     if (!groups.length) {
@@ -194,16 +204,16 @@ export function mountUser(root, { getName }) {
 
   // ---------------------------------------------------------------- Aufbau
   clear(root).append(
-    warning,
-    h('section', { class: 'section' }, incWrap, allGood),
+    h('div', { class: 'user-top' }, bandSlot, warning),
+    h('section', { class: 'section section-tight' }, incWrap, allGood),
     h('section', { class: 'section' },
-      h('h2', {}, t('choose.title')),
+      h('h2', { class: 'section-title' }, t('choose.title')),
       h('div', { class: 'choices' }, incomeChoice, expenseChoice),
       incomeForm,
       expenseForm),
     h('section', { class: 'section' },
-      h('h2', {}, t('success.title')),
-      h('p', { class: 'muted' }, t('success.intro')),
+      h('h2', { class: 'section-title' }, t('success.title')),
+      h('p', { class: 'muted section-intro' }, t('success.intro')),
       successBox),
   );
 
@@ -212,6 +222,7 @@ export function mountUser(root, { getName }) {
       .filter((e) => e.kind === 'expense' && e.status === 'incomplete')
       .sort((a, b) => a.createdAt - b.createdAt);
     reconcile(incBody, list, incompleteRows, (e) => new ExpenseRow(e, { mode: 'incomplete', getName }));
+    incCount.textContent = String(list.length);
     incWrap.hidden = !list.length;
     allGood.hidden = list.length > 0;
   }
@@ -227,6 +238,7 @@ export function mountUser(root, { getName }) {
 
   function update(reason) {
     if (reason === 'sync') return;
+    clear(bandSlot).append(tapeBand(currentPeriod()));
     renderIncomplete();
     if (mode === 'expense') renderDrafts();
     if (mode === 'income') fillIncome();

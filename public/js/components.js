@@ -4,6 +4,7 @@ import { t } from './i18n.js';
 import * as store from './store.js';
 import * as images from './images.js';
 import { computePeriods, periodFor, SAVED } from './ledger.js';
+import { icon } from './icons.js';
 
 // ------------------------------------------------------------------ Vorschaubilder
 
@@ -27,7 +28,7 @@ export function thumb({ loadThumb, loadFull, caption, onRemove, pending }) {
   if (onRemove) {
     wrap.append(h('button', {
       type: 'button', class: 'thumb-remove', 'aria-label': t('upload.remove'), title: t('upload.remove'), onclick: onRemove,
-    }, '×'));
+    }, icon('x', { size: 14 })));
   }
   img.loadThumb = () => loadThumb().then((url) => { img.src = url; }).catch(() => {
     wrap.classList.add('broken');
@@ -98,10 +99,10 @@ class ImageEditor {
     this.caption = caption;
     this.list = h('div', { class: 'thumbs' });
     this.error = h('div', { class: 'upload-error', role: 'alert' });
-    this.busy = h('div', { class: 'upload-busy', hidden: true }, t('upload.processing'));
+    this.busy = h('div', { class: 'upload-busy', hidden: true }, icon('saving', { size: 16 }), t('upload.processing'));
     this.input = h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf', multiple: true, class: 'file-input' });
     this.labelText = h('span', {}, t('upload.add'));
-    this.button = h('label', { class: 'btn btn-small upload-btn' }, this.input, h('span', { class: 'upload-icon', 'aria-hidden': 'true' }, '+'), this.labelText);
+    this.button = h('label', { class: 'btn btn-small upload-btn' }, this.input, icon('camera', { size: 18 }), this.labelText);
     this.input.addEventListener('change', () => this.onFiles());
     this.el = h('div', { class: 'img-editor' }, this.list, this.button, this.busy, this.error);
     this.render();
@@ -209,7 +210,7 @@ export class ExpenseRow {
     } else {
       this.tr.append(h('td', { class: 'row-actions' }, h('button', {
         type: 'button', class: 'btn btn-small btn-ghost', onclick: () => onDelete(entry),
-      }, t('row.delete'))));
+      }, icon('trash', { size: 16 }), t('row.delete'))));
     }
     this.update();
   }
@@ -234,7 +235,7 @@ export class ExpenseRow {
       h('div', {}, d.createdBy || '–'),
       d.editedBy && d.editedBy !== d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: d.editedBy })) : null,
       h('div', { class: 'muted small' }, fmtDateTime(this.entry.createdAt)),
-      miss.length ? h('div', { class: 'missing-text' }, t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null,
+      miss.length ? h('div', { class: 'missing-text' }, icon('alert', { size: 16 }), t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null,
     ]);
   }
 }
@@ -307,7 +308,39 @@ export function periodTitle(group) {
   const base = p.income
     ? t('period.since', { date: fmtDate(p.income.date), amount: fmtAmount(p.income.amount), from: p.income.from || '–' })
     : t('period.pre');
-  return group.current ? `${t('period.current')} – ${base}` : base;
+  return [h('span', {}, base), group.current ? h('span', { class: 'now' }, t('period.current')) : null];
+}
+
+// Das Band: ein Geldeingang als Kassettenseite mit fester Länge, die nicht überlaufen darf.
+export function tapeBand(period) {
+  if (!period) {
+    return h('div', { class: 'tape-band empty', role: 'group', 'aria-label': t('band.label') }, t('band.none'));
+  }
+  const inc = period.income;
+  const amount = inc ? inc.amount : 0;
+  const left = amount - period.spent;
+  const over = left < 0;
+  const ratio = amount > 0 ? Math.min(1, period.spent / amount) : (period.spent > 0 ? 1 : 0);
+  const fill = h('div', { class: 'tape-fill' });
+  fill.style.transform = `scaleX(${ratio})`;
+  const classes = ['tape-band', over && 'overflow', inc?.archived && 'archived'].filter(Boolean).join(' ');
+  return h('div', { class: classes, role: 'group', 'aria-label': t('band.label') },
+    h('div', { class: 'tape-head' },
+      h('div', { class: 'tape-source' },
+        h('strong', {}, inc ? inc.from || '–' : t('period.pre')),
+        inc ? t('band.since', { date: fmtDate(inc.date) }) : null,
+        inc?.archived ? ` · ${t('admin.archivedIncome')}` : null),
+      inc ? h('div', { class: 'tape-total' }, `KSh ${fmtAmount(amount)}`) : null),
+    inc ? h('div', { class: 'tape-track', 'aria-hidden': 'true' }, fill) : null,
+    h('div', { class: 'tape-foot' },
+      h('span', { class: 'tape-spent' }, h('small', {}, t('band.paid')), h('b', {}, `KSh ${fmtAmount(period.spent)}`)),
+      inc ? h('span', { class: 'tape-left' }, h('small', {}, t(over ? 'band.over' : 'band.left')),
+        h('b', {}, `KSh ${fmtAmount(over ? -left : left)}`)) : null));
+}
+
+export function currentPeriod() {
+  const { periods } = computePeriods(store.list(), store.state.ledger);
+  return periods[periods.length - 1] || null;
 }
 
 export function statusBadge(e) {
@@ -331,15 +364,15 @@ export function successTable(items, { admin = false } = {}) {
     const income = e.kind === 'income';
     return h('tr', { class: income ? 'row-income' : '' },
       h('td', {}, cellLabel(t('col.dateShort')), fmtDate(dateOf(e)) || '–'),
-      h('td', {}, cellLabel(t('col.kind')), t(income ? 'kind.income' : 'kind.expense')),
+      h('td', { class: 'plain' }, cellLabel(t('col.kind')), t(income ? 'kind.income' : 'kind.expense')),
       h('td', { class: 'wrap' }, cellLabel(t('col.whatOrFrom')), (income ? e.d.from : e.d.what) || '–'),
       h('td', { class: 'num' }, cellLabel(t('col.amountShort')), fmtAmount(e.d.amount)),
       h('td', {}, cellLabel(t('col.receiptShort')), income ? '–' : thumbList(e.d.receipts, t('col.receiptShort'))),
       h('td', {}, cellLabel(t('col.transferShort')), income ? '–' : thumbList(e.d.transfers, t('col.transferShort'))),
       h('td', { class: 'wrap' }, cellLabel(t('col.noteShort')), e.d.note || '–'),
       h('td', {}, cellLabel(t('col.name')), e.d.createdBy || '–'),
-      admin && h('td', {}, cellLabel(t('col.enteredAt')), fmtDateTime(e.createdAt)),
-      h('td', {}, cellLabel(t('col.status')), statusBadge(e)),
+      admin && h('td', { class: 'plain' }, cellLabel(t('col.enteredAt')), fmtDateTime(e.createdAt)),
+      h('td', { class: 'plain' }, cellLabel(t('col.status')), statusBadge(e)),
     );
   }));
   return h('div', { class: 'table-scroll' }, h('table', { class: 'data-table cards-on-mobile' }, head, body));

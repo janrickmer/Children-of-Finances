@@ -156,7 +156,7 @@ const T = {
   'field.receipt': { de: 'Rechnung', en: 'receipt', sw: 'risiti' },
   'missing.list': { de: 'Fehlt: {list}', en: 'Missing: {list}', sw: 'Inakosekana: {list}' },
 
-  'row.add': { de: '+ Weitere Zahlung hinzufügen', en: '+ Add another payment', sw: '+ Ongeza malipo mengine' },
+  'row.add': { de: 'Weitere Zahlung hinzufügen', en: 'Add another payment', sw: 'Ongeza malipo mengine' },
   'row.delete': { de: 'Entwurf löschen', en: 'Delete draft', sw: 'Futa rasimu' },
   'row.deleteConfirm': {
     de: 'Diese Zeile wirklich löschen?',
@@ -239,6 +239,16 @@ const T = {
     de: 'Am {date} hat der deutsche Hilfsverein Children of Mathare Germany {n} Einträge gesichert und zur Prüfung an die Behörden weitergegeben.',
     en: 'On {date}, the German charity Children of Mathare Germany backed up {n} entries and passed them on to the authorities for review.',
     sw: 'Tarehe {date}, shirika la misaada la Ujerumani Children of Mathare Germany lilihifadhi maingizo {n} na kuyakabidhi kwa mamlaka kwa ajili ya ukaguzi.',
+  },
+  'band.label': { de: 'Geldeingang und Restbetrag', en: 'Money received and amount left', sw: 'Pesa zilizopokelewa na kiasi kilichobaki' },
+  'band.since': { de: 'Seit Geldeingang vom {date}', en: 'Since money received on {date}', sw: 'Tangu pesa zilizopokelewa tarehe {date}' },
+  'band.paid': { de: 'Bezahlt', en: 'Paid', sw: 'Imelipwa' },
+  'band.left': { de: 'Übrig', en: 'Left', sw: 'Imebaki' },
+  'band.over': { de: 'Überzogen um', en: 'Overspent by', sw: 'Imezidi kwa' },
+  'band.none': {
+    de: 'Noch kein Geldeingang erfasst. Sobald einer eingetragen ist, siehst du hier, wie viel davon übrig ist.',
+    en: 'No money received recorded yet. Once one is entered, you will see here how much of it is left.',
+    sw: 'Bado hakuna pesa zilizopokelewa zilizorekodiwa. Zikishaingizwa, utaona hapa kiasi kilichobaki.',
   },
   'period.current': { de: 'Aktueller Zeitraum', en: 'Current period', sw: 'Kipindi cha sasa' },
   'period.since': {

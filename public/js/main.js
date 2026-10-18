@@ -3,12 +3,13 @@ import { initLang, setLang, getLang, t } from './i18n.js';
 import * as session from './session.js';
 import * as store from './store.js';
 import { h, clear, toast } from './util.js';
+import { icon } from './icons.js';
 import { mountUser } from './view-user.js';
 import { mountAdmin } from './view-admin.js';
 
 const app = document.getElementById('app');
 const headerRight = document.getElementById('header-right');
-const LANGS = [['de', 'Deutsch'], ['en', 'English'], ['sw', 'Kiswahili']];
+const LANGS = [['de', 'Deutsch', 'DE'], ['en', 'English', 'EN'], ['sw', 'Kiswahili', 'SW']];
 
 let role = null;
 let name = '';
@@ -32,15 +33,17 @@ function writeStorage(storage, key, value) {
 
 function langSwitch() {
   return h('div', { class: 'lang-switch', role: 'group', 'aria-label': t('lang.label') },
-    LANGS.map(([code, label]) => h('button', {
+    LANGS.map(([code, label, short]) => h('button', {
       type: 'button',
       class: code === getLang() ? 'lang-btn active' : 'lang-btn',
       'aria-pressed': String(code === getLang()),
+      'aria-label': label,
+      lang: code,
       onclick: () => {
         setLang(code);
         rerender();
       },
-    }, label)));
+    }, h('span', { class: 'lang-long' }, label), h('span', { class: 'lang-short', 'aria-hidden': 'true' }, short))));
 }
 
 function rerender() {
@@ -55,7 +58,10 @@ function renderSync() {
   if (!syncEl) return;
   const s = store.state.sync;
   syncEl.className = `sync sync-${s}`;
-  syncEl.textContent = t(s === 'saved' ? 'sync.saved' : s === 'saving' ? 'sync.saving' : 'sync.offline');
+  clear(syncEl).append(
+    icon(s === 'saved' ? 'check' : s === 'saving' ? 'saving' : 'cloud-off', { size: 18 }),
+    t(s === 'saved' ? 'sync.saved' : s === 'saving' ? 'sync.saving' : 'sync.offline'),
+  );
 }
 
 function renderHeader() {
@@ -72,7 +78,9 @@ function renderHeader() {
         h('button', { type: 'button', class: 'link-btn', onclick: showNameStep }, t('name.change'))));
     }
   }
-  headerRight.append(h('button', { type: 'button', class: 'btn btn-small', onclick: logout }, t('logout')));
+  headerRight.append(h('button', {
+    type: 'button', class: 'btn btn-small btn-ghost logout-btn', onclick: logout, 'aria-label': t('logout'), title: t('logout'),
+  }, icon('logout', { size: 18 }), h('span', { class: 'btn-label' }, t('logout'))));
 }
 
 // ------------------------------------------------------------------ Anmeldung

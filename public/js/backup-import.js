@@ -5,6 +5,7 @@ import { t } from './i18n.js';
 import { thumb } from './components.js';
 import { BACKUP_FORMAT, ATTACHMENT_NAME } from './pdf-export.js';
 import { sha256Hex } from './kdf.js';
+import { icon } from './icons.js';
 
 function findAttachment(pdf, name) {
   const { PDFName, PDFDict, PDFArray, PDFRawStream, decodePDFRawStream } = window.PDFLib;
@@ -99,8 +100,8 @@ export function mountBackupView(panel, files, onClose) {
 
   clear(panel).append(
     h('div', { class: 'backup-head' },
-      h('h2', {}, t('backup.title')),
-      h('button', { type: 'button', class: 'btn btn-small', onclick: closeView }, t('backup.closeView'))),
+      h('h2', { class: 'section-title' }, t('backup.title')),
+      h('button', { type: 'button', class: 'btn btn-small', onclick: closeView }, icon('x', { size: 16 }), t('backup.closeView'))),
     h('p', { class: 'muted' }, t('backup.intro')),
     status, controls, tableBox,
   );
@@ -190,7 +191,7 @@ export function mountBackupView(panel, files, onClose) {
 
   function sortHeader(label, key) {
     const active = state.sort.key === key;
-    const arrow = active ? (state.sort.dir === 1 ? ' ▲' : ' ▼') : '';
+    const arrow = icon(active ? (state.sort.dir === 1 ? 'arrow-up' : 'arrow-down') : 'sort', { size: 16 });
     return h('th', { 'aria-sort': active ? (state.sort.dir === 1 ? 'ascending' : 'descending') : 'none' },
       h('button', {
         type: 'button', class: 'sort-btn',
@@ -242,7 +243,7 @@ export function mountBackupView(panel, files, onClose) {
       const row = h('tr', {
         class: `backup-row${open ? ' open' : ''}${income ? ' row-income' : ''}`, tabindex: '0', 'aria-expanded': String(open),
       },
-      h('td', {}, h('span', { class: 'chevron', 'aria-hidden': 'true' }, open ? '▾ ' : '▸ '), fmtDateTime(e.createdTs)),
+      h('td', {}, h('span', { class: 'chevron' }, icon(open ? 'chevron-down' : 'chevron-right', { size: 18 })), fmtDateTime(e.createdTs)),
       h('td', {}, fmtDate(e.paidOn) || '–'),
       h('td', {}, t(income ? 'kind.income' : 'kind.expense')),
       h('td', { class: 'wrap' }, (income ? e.from : e.what) || '–'),

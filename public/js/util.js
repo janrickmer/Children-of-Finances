@@ -1,4 +1,5 @@
 import { t, locale } from './i18n.js';
+import { icon } from './icons.js';
 
 // ------------------------------------------------------------------ DOM
 
@@ -86,7 +87,8 @@ export function toast(message, type = 'info', ms = 7000) {
     toastBox = h('div', { class: 'toasts', role: 'status', 'aria-live': 'polite' });
     document.body.append(toastBox);
   }
-  const item = h('div', { class: `toast toast-${type}` }, message);
+  const glyph = { success: 'check', error: 'alert', info: 'info' }[type] || 'info';
+  const item = h('div', { class: `toast toast-${type}` }, icon(glyph), h('span', {}, message));
   toastBox.append(item);
   setTimeout(() => item.remove(), ms);
 }
@@ -130,7 +132,7 @@ export function confirmDialog({ message, confirmLabel, cancelLabel, checkboxLabe
 export function openLightbox(loadUrl, caption = '') {
   const img = h('img', { class: 'lightbox-img', alt: caption });
   const spinner = h('div', { class: 'spinner', 'aria-hidden': 'true' });
-  const closeBtn = h('button', { class: 'lightbox-close', type: 'button', 'aria-label': t('close'), title: t('close') }, '×');
+  const closeBtn = h('button', { class: 'lightbox-close', type: 'button', 'aria-label': t('close'), title: t('close') }, icon('x', { size: 26 }));
   const overlay = h('div', { class: 'overlay lightbox', role: 'dialog', 'aria-modal': 'true' },
     closeBtn, spinner, img, caption && h('div', { class: 'lightbox-caption' }, caption));
   const close = () => {
@@ -172,7 +174,7 @@ window.addEventListener('scroll', (ev) => {
 }, true);
 
 export function infoButton(getText, label) {
-  const button = h('button', { class: 'info-btn', type: 'button', 'aria-label': label, title: label, 'aria-expanded': 'false' }, 'i');
+  const button = h('button', { class: 'info-btn', type: 'button', 'aria-label': label, title: label, 'aria-expanded': 'false' }, icon('info', { size: 22 }));
   button.addEventListener('click', (ev) => {
     ev.stopPropagation();
     if (openBubble && openBubble.button === button) {

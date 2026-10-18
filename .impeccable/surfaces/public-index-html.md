@@ -1,0 +1,28 @@
+---
+version: 1
+slug: "public-index-html"
+primary_target: "public/index.html"
+related_targets: ["public/js/view-user.js","public/js/view-admin.js","public/css/style.css"]
+---
+
+# Surface: Children of Finances (gesamte Oberfläche: Anmeldung, Kenia-Team, Schatzmeister)
+
+Mode: Operate. Primär am Handy draußen bei Tageslicht (Kenia-Team), sekundär Laptop (Schatzmeister). Langsame, teure mobile Daten.
+
+## Direction contract
+
+THESIS: Jeder Geldeingang ist eine Kassettenseite mit fester Länge, die nicht überlaufen darf; jede Zahlung ist ein Titel darauf. Die Oberfläche verweigert den grauen Verwaltungs-Standard mit Karten-Raster und das dunkle Neon-Finanz-Klischee.
+
+OWN-WORLD: Fast weißer Inlay-Karton (#FDFDFB), Kugelschreiber-Blau für alles, was Menschen eintragen (Werte, Eingaben, Beträge), tiefe Tinte für Fließtext, Bleistift-Grau für Vorläufiges (Entwürfe), Orange als einziger gedruckter Akzent (dreifacher Marken-Streifen, Überschriften, Hauptknöpfe). Pflichtfarben: Rot für Unvollständiges, Grün für Geldeingänge, Vollständiges und den Danke-Text. Handgeschriebene Blockschrift (Patrick Hand SC, selbst gehostet) nur für Wortmarke, Überschriften und das Band; Bedienelemente und Tabellendaten in der Systemschrift. Rahmen 2 px in Kugelschreiber-Blau, Zeilenlinien in verblasstem Blau.
+
+STORY: Das Team sieht sofort, wie viel vom aktuellen Geldeingang übrig ist, was noch fehlt (rot, ganz oben) und trägt die nächste Zahlung mit Foto in Sekunden ein; nichts geht verloren. Der Schatzmeister überblickt alle Seiten (Zeiträume), genehmigt Lücken und sichert.
+
+FIRST VIEWPORT: Handy 390 px: weiße Kopfzeile mit beiden Flaggen, Wortmarke in Blockschrift und orangem Dreifach-Streifen; darunter Name und Speicherstatus. Dann das Band des aktuellen Zeitraums (Datum und Betrag des Geldeingangs, Füllbalken, bezahlt/übrig rechtsbündig). Darunter der verblasste orange Warnkasten, dann die rote Tabelle bzw. der grüne Danke-Satz, dann „Was möchtest du eintragen?" mit Geldeingang/Bezahlung. Hauptaktion: orangefarbener Knopf „Speichern" unter der Eingabe. Schatzmeister: Seiten-Spalte links mit allen Zeiträumen als Bänder, rechts rote Tabelle, Erfolgstabelle, Sichern.
+
+FORM: Herausforderer aus dem Katalog (vernacular-ephemera-cassette-j-card), vom Nutzer gewählt statt der zugeteilten Richtung (eigene Liste Nr. 4, Duka-Schild); Signatur: das Band „Seite darf nicht überlaufen" (Füllbalken pro Geldeingang, Überlauf rot, Beträge rechtsbündig wie Laufzeiten); Wechsel Geldeingang/Bezahlung als kurzer Seitenwechsel. seed:949a8e65f851fb45
+
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
+
+## Unresolved
+
+- Swahili-Texte von Muttersprachler prüfen lassen (inhaltlich, nicht gestalterisch).

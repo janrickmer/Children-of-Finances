@@ -2,3 +2,9 @@ node_modules/
 .wrangler/
 .dev.vars
 *.log
+
+# Impeccable-Arbeitsdateien (Richtungsskizzen, Prüf-Screenshots, Würfel-Seeds)
+.impeccable/mocks/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/config.local.json
