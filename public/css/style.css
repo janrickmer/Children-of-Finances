@@ -276,6 +276,63 @@ a {
   margin: 10px 0 14px;
 }
 
+/* Kassetten-Hülle: Foto als Cover, Formular als Innenseite, getrennt durch die Falz */
+.jcard {
+  max-width: 440px;
+  margin: 40px auto;
+  background: var(--paper);
+  border: 2px solid var(--pen);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.jcard .login-card { margin: 0; max-width: none; border: 0; border-radius: 0; }
+.jcard-cover { border-bottom: 2px solid var(--pen); }
+.jcard-cover .photo-frame { aspect-ratio: 16 / 9; }
+
+@media (min-width: 900px) {
+  .jcard {
+    max-width: 960px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  }
+  .jcard-cover {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 0;
+    border-right: 2px solid var(--pen);
+  }
+  .jcard-cover .photo-frame { flex: 1; aspect-ratio: auto; min-height: 320px; }
+  .jcard .login-card { align-self: center; padding: 28px; }
+}
+
+/* Fotos aus offenen Sammlungen */
+.photo { margin: 0; }
+.photo-frame { overflow: hidden; background: var(--paper-2); }
+.photo-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+.photo-credit {
+  padding: 6px 12px 8px;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+  background: var(--paper);
+}
+
+.photo-credit a { color: inherit; text-decoration-color: var(--pen-faded); text-underline-offset: 2px; }
+
+.empty-state { display: grid; gap: 12px; max-width: 420px; }
+.empty-state p { margin: 0; }
+
+.photo-empty {
+  border: 2px solid var(--pen);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.photo-empty .photo-frame { aspect-ratio: 3 / 2; border-bottom: 2px solid var(--pen); }
+
 .field { display: grid; gap: 6px; margin-bottom: 16px; }
 .field > span:first-child,
 .field-label { font-size: 0.9375rem; font-weight: 600; color: var(--ink); }
@@ -1124,6 +1181,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .choices { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
   .login-card { margin: 16px auto; }
+  .jcard { margin: 16px auto; }
   .form-card { padding: 16px; }
   .form-card.form-wide { padding: 0; border: 0; background: transparent; }
 

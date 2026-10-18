@@ -7,6 +7,7 @@ import {
   ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable, tapeBand, currentPeriod,
 } from './components.js';
 import { icon } from './icons.js';
+import { emptyState } from './photos.js';
 
 export function mountUser(root, { getName }) {
   const incompleteRows = new Map();
@@ -194,7 +195,7 @@ export function mountUser(root, { getName }) {
     }
     const groups = successGroups().reverse(); // aktueller Zeitraum oben
     if (!groups.length) {
-      successBox.append(h('p', { class: 'muted' }, t('success.empty')));
+      successBox.append(emptyState('team-empty', t('success.empty')));
       return;
     }
     for (const g of groups) {

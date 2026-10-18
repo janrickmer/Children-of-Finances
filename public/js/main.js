@@ -4,6 +4,7 @@ import * as session from './session.js';
 import * as store from './store.js';
 import { h, clear, toast } from './util.js';
 import { icon } from './icons.js';
+import { photo } from './photos.js';
 import { mountUser } from './view-user.js';
 import { mountAdmin } from './view-admin.js';
 
@@ -85,6 +86,12 @@ function renderHeader() {
 
 // ------------------------------------------------------------------ Anmeldung
 
+// Anmeldung und Namensschritt als Kassetten-Hülle: Foto als Cover, Formular als Innenseite.
+function withCover(form) {
+  const cover = photo('cover', { className: 'jcard-cover', sizes: '(max-width: 899px) 100vw, 480px', eager: true });
+  return cover ? h('div', { class: 'jcard' }, cover, form) : form;
+}
+
 function showLogin(message = '') {
   screen = 'login';
   view = null;
@@ -124,7 +131,7 @@ function showLogin(message = '') {
       else error.textContent = t('error.generic');
     }
   });
-  clear(app).append(form);
+  clear(app).append(withCover(form));
   input.focus();
 }
 
@@ -173,7 +180,7 @@ function showNameStep() {
     writeStorage(localStorage, 'cof-last-name', name);
     showMain();
   });
-  clear(app).append(form);
+  clear(app).append(withCover(form));
   input.focus();
 }
 

@@ -7,6 +7,7 @@ import {
   thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand,
 } from './components.js';
 import { icon } from './icons.js';
+import { emptyState } from './photos.js';
 import { buildBackupPdf } from './pdf-export.js';
 import { mountBackupView } from './backup-import.js';
 
@@ -134,7 +135,7 @@ export function mountAdmin(root) {
       })));
     }
     const groups = successGroups();
-    if (!groups.length) successBox.append(h('p', { class: 'muted' }, t('success.empty')));
+    if (!groups.length) successBox.append(emptyState('treasurer-empty', t('success.empty')));
     for (const g of groups) {
       successBox.append(h('h3', { class: g.current ? 'period-title current' : 'period-title' }, periodTitle(g)), successTable(g.items, { admin: true }));
     }

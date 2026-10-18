@@ -245,6 +245,16 @@ const T = {
   'band.paid': { de: 'Bezahlt', en: 'Paid', sw: 'Imelipwa' },
   'band.left': { de: 'Übrig', en: 'Left', sw: 'Imebaki' },
   'band.over': { de: 'Überzogen um', en: 'Overspent by', sw: 'Imezidi kwa' },
+  'photo.credit': {
+    de: 'Foto:',
+    en: 'Photo:',
+    sw: 'Picha:',
+  },
+  'photo.changes': {
+    de: 'zugeschnitten und verkleinert',
+    en: 'cropped and resized',
+    sw: 'imekatwa na kupunguzwa ukubwa',
+  },
   'band.none': {
     de: 'Noch kein Geldeingang erfasst. Sobald einer eingetragen ist, siehst du hier, wie viel davon übrig ist.',
     en: 'No money received recorded yet. Once one is entered, you will see here how much of it is left.',
