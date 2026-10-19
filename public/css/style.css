@@ -1267,6 +1267,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .sum-hint .icon { flex: none; margin-top: 2px; color: var(--pen); }
   .sum-meta { margin-top: 4px; font-size: 0.875rem; color: var(--ink-2); }
   .sum-toggle { margin-top: 10px; min-height: 44px; }
+  .red-wrap:not(.needs-save) .actions { display: none; }
 
   /* Eingabetabellen werden zu Karten: jede Zeile ein Blatt, jede Zelle mit Beschriftung */
   .entry-table thead {

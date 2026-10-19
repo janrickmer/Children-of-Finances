@@ -179,10 +179,11 @@ export function expenseHead(extra = [], { summary = false } = {}) {
 
 // Eine bearbeitbare Zeile (Entwurf oder unvollständiger Eintrag).
 export class ExpenseRow {
-  constructor(entry, { mode, getName, onDelete }) {
+  constructor(entry, { mode, getName, onDelete, onState }) {
     this.entry = entry;
     this.mode = mode;
     this.getName = getName;
+    this.onState = onState;
     const name = () => getName();
 
     this.what = h('textarea', { class: 'in', rows: 2, maxlength: 1000, 'aria-label': t('col.what') });
@@ -242,6 +243,12 @@ export class ExpenseRow {
     this.tr.classList.toggle('is-open', open);
     this.toggle.setAttribute('aria-expanded', String(open));
     clear(this.toggle).append(icon(open ? 'chevron-down' : 'chevron-right', { size: 16 }), t(open ? 'row.collapse' : 'row.complete'));
+    this.onState?.();
+  }
+
+  // Gibt es hier etwas zu speichern? (Zeile offen oder alles ausgefüllt)
+  wantsSave() {
+    return this.open || !store.missing(this.entry).length;
   }
 
   refreshMissing() {
@@ -261,6 +268,7 @@ export class ExpenseRow {
       h('div', { class: 'sum-meta' }, [d.createdBy || '–', fmtDateTime(this.entry.createdAt),
         d.editedBy && d.editedBy !== d.createdBy ? t('row.editedBy', { name: d.editedBy }) : null].filter(Boolean).join(' · ')),
     ]);
+    this.onState?.();
     append(clear(this.info), [
       h('div', {}, d.createdBy || '–'),
       d.editedBy && d.editedBy !== d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: d.editedBy })) : null,

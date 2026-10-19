@@ -222,10 +222,16 @@ export function mountUser(root, { getName }) {
     const list = store.list()
       .filter((e) => e.kind === 'expense' && e.status === 'incomplete')
       .sort((a, b) => a.createdAt - b.createdAt);
-    reconcile(incBody, list, incompleteRows, (e) => new ExpenseRow(e, { mode: 'incomplete', getName }));
+    reconcile(incBody, list, incompleteRows, (e) => new ExpenseRow(e, { mode: 'incomplete', getName, onState: refreshSaveButton }));
+    refreshSaveButton();
     incCount.textContent = String(list.length);
     incWrap.hidden = !list.length;
     allGood.hidden = list.length > 0;
+  }
+
+  // Am Handy erscheint „Speichern“ nur, wenn eine Zeile offen ist oder alles ausgefüllt hat.
+  function refreshSaveButton() {
+    incWrap.classList.toggle('needs-save', [...incompleteRows.values()].some((row) => row.wantsSave()));
   }
 
   function renderDrafts() {
