@@ -477,6 +477,7 @@ Ein unvollständiger Eintrag des Teams zeigt am Handy (bis 760 px) zuerst nur, w
 - **Metazeile:** wer · wann, dazu „zuletzt bearbeitet von …“, wenn jemand anderes zuletzt geändert hat (verdünnte Tinte, 0.875rem).
 - **Umschalter:** ein kleiner Zweitknopf, 44 px hoch, mit 10 px Abstand darüber: „Ergänzen“ mit Pfeil nach rechts, aufgeklappt „Zuklappen“ mit Pfeil nach unten; `aria-expanded` meldet den Zustand.
 - **Aufgeklappt:** Die Zusammenfassung verschwindet, oben bleibt nur „Zuklappen“. Darunter folgen die Felder, und am Ende des Blatts steht die Info-Zelle mit wer, „zuletzt bearbeitet von“ und „Fehlt: …“. Der Zustand übersteht das sekündliche Speichern.
+- **Speichern:** Am Handy erscheint der orange Hauptknopf „Speichern“ unter der roten Tabelle nur, wenn mindestens eine Zeile aufgeklappt ist oder eine Zeile alle Pflichtfelder hat („Alles ausgefüllt“). Am Desktop ist er immer sichtbar.
 - **Desktop:** Zusammenfassung und ihr Spaltenkopf sind ausgeblendet; das Formular steht wie bisher offen in der Tabelle.
 - **Spaltenkopf:** Die Tabelle trägt dafür einen eigenen Kopf „Eintrag“. Am Handy ist er nur für Screenreader da, weil der Tabellenkopf dort sichtbar abgeschnitten ist.
 
