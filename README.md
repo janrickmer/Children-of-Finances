@@ -123,5 +123,21 @@ public/                Oberfläche (ohne Build-Schritt)
   js/pdf-export.js     Sicherungs-PDF
   js/backup-import.js  Sicherungen einlesen
   js/i18n.js           Texte Deutsch / Englisch / Swahili
+  js/icons.js          Gezeichnete Symbole (SVG)
+  js/photos.js         Fotos mit Bildnachweis (bei Datensparmodus nicht geladen)
+  img/                 Fotos als WebP (480 und 800 px breit)
+  fonts/               Handschrift „Patrick Hand SC“ (SIL Open Font License)
   vendor/pdf-lib.min.js  pdf-lib 1.17.1 (MIT-Lizenz)
 ```
+
+## Bildnachweise
+
+Die Fotos stammen aus Wikimedia Commons. Sie zeigen Nairobi und Kenia, nicht den Verein, seine Mitarbeitenden oder Kinder. Jedes Foto ist zugeschnitten und verkleinert; der Nachweis steht in der App direkt unter dem Bild. Lizenzen geprüft am 19.10.2026.
+
+| Datei | Foto | Urheber | Lizenz |
+| --- | --- | --- | --- |
+| `img/uhuru-park-*.webp` | [Nairobi's skyline from Uhuru Park](https://commons.wikimedia.org/wiki/File:Lascar_Nairobi%27s_skyline_from_Uhuru_Park_(4519272483).jpg) | Jorge Láscar | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
+| `img/ngong-hills-*.webp` | [Ngong Hills](https://commons.wikimedia.org/wiki/File:Ngong_Hills.jpg) | Rotsee2 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) (die bearbeitete Fassung steht ebenfalls unter CC BY-SA 3.0) |
+| `img/gemuesestand-*.webp` | [A pile of tomatoes, onions, avocados, garlic, ginger, lemons](https://commons.wikimedia.org/wiki/File:A_pile_of_tomatoes,_onions,_avocados,_garlic,_ginger,_lemons.jpg) | Queen Asali | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+
+Ein Foto austauschen: neue WebP-Dateien in beiden Breiten nach `public/img/` legen und Titel, Urheber, Lizenz, Quelle und Alternativtexte in `public/js/photos.js` anpassen. Eigene Fotos des Vereins wären die beste Wahl.

@@ -88,7 +88,7 @@ function renderHeader() {
 
 // Anmeldung und Namensschritt als Kassetten-Hülle: Foto als Cover, Formular als Innenseite.
 function withCover(form) {
-  const cover = photo('cover', { className: 'jcard-cover', sizes: '(max-width: 899px) 100vw, 480px', eager: true });
+  const cover = photo('cover', { className: 'jcard-cover', sizes: '(max-width: 899px) 100vw, 720px', eager: true });
   return cover ? h('div', { class: 'jcard' }, cover, form) : form;
 }
 

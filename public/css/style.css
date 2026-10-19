@@ -306,6 +306,10 @@ a {
   .jcard .login-card { align-self: center; padding: 28px; }
 }
 
+/* Sprachwahl im Anmeldefenster: drei gleich breite Knöpfe über die ganze Breite */
+.login-card .lang-switch { display: flex; }
+.login-card .lang-btn { flex: 1 1 0; }
+
 /* Fotos aus offenen Sammlungen */
 .photo { margin: 0; }
 .photo-frame { overflow: hidden; background: var(--paper-2); }
@@ -1168,8 +1172,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .lang-short { display: inline; }
   .login-card .lang-long { display: inline; }
   .login-card .lang-short { display: none; }
-  .login-card .lang-switch { display: flex; }
-  .login-card .lang-btn { flex: 1 1 auto; min-height: 44px; padding: 0 12px; }
+  .login-card .lang-btn { min-height: 44px; padding: 0 12px; }
   .lang-btn { min-height: 34px; padding: 0 9px; }
   .logout-btn { min-height: 38px; width: 42px; padding: 0; }
   .logout-btn .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

@@ -45,6 +45,8 @@ Kein kommerzielles Produkt, sondern ein internes Werkzeug zwischen zwei Partnero
 
 Echte Inhalte sind die Oberflächentexte in drei Sprachen (`public/js/i18n.js`). Es gibt kein Logo, keine Fotos und keine Bildmaterialien des Vereins. Nichts davon darf erfunden werden.
 
+Fotos aus offenen Sammlungen (Wikimedia Commons), am 19.10.2026 vom Auftraggeber ausgewählt: Nairobis Skyline vom Uhuru Park (Cover der Anmeldung), Ngong Hills (Leerzustand Schatzmeister), ein Gemüsestand (Leerzustand Team). Sie zeigen die Welt um den Verein, nie den Verein selbst: keine erkennbaren Personen, keine Kinder, keine Elendsbilder, keine dominanten Logos. Jedes Foto trägt seinen Bildnachweis sichtbar; bei Datensparmodus werden sie nicht geladen.
+
 ## Product Principles
 
 1. Jede Rechnung zählt: die Oberfläche führt zu vollständigen Einträgen, ohne zu schimpfen.
