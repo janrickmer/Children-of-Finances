@@ -145,6 +145,13 @@ components:
   button-small:
     padding: "0 12px"
     height: "38px"
+  button-approve:
+    padding: "8px 12px"
+    height: "44px"
+  info-button:
+    textColor: "{colors.pen}"
+    rounded: "{rounded.round}"
+    size: "30px"
   input:
     backgroundColor: "{colors.white}"
     textColor: "{colors.pen}"
@@ -296,7 +303,7 @@ Ein heller Karton mit drei Tinten (Tinte, Kugelschreiber, Bleistift), einem gedr
 
 ### Secondary
 - **Kugelschreiber-Blau** (`pen`): alles, was Menschen eintragen, also Werte in Eingabefeldern und Daten in Tabellen. Dazu die Wortmarke, Links, die aktive Sprache und jeder 2-px-Rahmen. Auf Karton 10,17:1.
-- **Verblasstes Blau** (`pen-faded`): Rahmen von Eingabefeldern und Vorschaubildern in Ruhe, der Fokusring, die Bildlaufleiste sowie Sortier- und Aufklapp-Symbole in Ruhe. Auf Karton 3,53:1, ausreichend als Grenze eines Bedienelements.
+- **Verblasstes Blau** (`pen-faded`): Rahmen von Eingabefeldern, Vorschaubildern, Auswahlkacheln und Geister-Knöpfen in Ruhe, der Fokusring, die Bildlaufleiste sowie Sortier- und Aufklapp-Symbole in Ruhe. Auf Karton 3,53:1, ausreichend als Grenze eines Bedienelements.
 
 ### Tertiary
 Die Pflichtfarben aus dem Auftrag.
@@ -315,7 +322,7 @@ Die Pflichtfarben aus dem Auftrag.
 - **Verdünnte Tinte** (`ink-2`): Nebentexte, Untertitel, Tabellenköpfe und Bildnachweise (7,43:1).
 - **Bleistift** (`pencil`): Vorläufiges. Dazu gehören Platzhalter (5,33:1 auf Weiß), der Hinweis „nicht gespeichert“, die Plakette „Entwurf“ und das leere Band.
 - **Bleistiftlinie** (`pencil-line`): gestrichelte Ränder von Entwürfen und leerem Band (2,39:1). Sie begleitet nur; der Zustand steht immer auch als Text da.
-- **Zeilenlinie** (`rule`): 1-px-Linien zwischen Tabellenzeilen und der Rahmen der Zeitraum-Filter (1,36:1). Als Rahmen eines Bedienelements nur dort, wo Beschriftung und Symbol das Element schon allein tragen.
+- **Zeilenlinie** (`rule`): 1-px-Linien zwischen Tabellenzeilen und Titelzeilen und der Rahmen der Zeitraum-Filter bei den Sicherungen (1,36:1). Sie rahmt nie ein Bedienelement.
 
 Die Flaggen Deutschlands und Kenias stehen in ihren amtlichen Farben als gezeichnetes SVG in der Kopfzeile. Diese Farben gehören nicht zur Palette und werden nie in die Oberfläche übernommen. Die Textmarkierung ist hellorange (#FFD3B3) mit Tinte (12,14:1), die Schreibmarke Kugelschreiber-Blau, `accent-color` Orange.
 
@@ -365,14 +372,14 @@ Eine ruhige Spalte auf Karton, keine Raster aus gleich großen Kacheln. Die App 
 
 **J-Karte.** Anmeldung und Namensschritt sind höchstens 440 px breit, das Foto oben im Format 16:9. Ab 900 px wird die Karte zweispaltig (bis 960 px): Foto links, Formular rechts mit höchstens 440 px.
 
-**Tabellen am Handy.** Eingabetabellen werden zu Blättern: Jede Zeile ist ein gerahmtes Blatt, jede Zelle trägt ihre Beschriftung. Erfolgstabellen werden zu Titelzeilen wie auf einer Kassettenhülle. Zeile 1 zeigt was und Betrag, Zeile 2 Datum · Art · wer, rechts den Status; darunter folgen die Belege. Leere Zellen entfallen.
+**Tabellen am Handy.** Die bearbeitbaren Eingabetabellen des Teams werden zu Blättern: Jede Zeile ist ein gerahmtes Blatt, jede Zelle trägt ihre Beschriftung. Die Erfolgstabellen und die rote Tabelle des Schatzmeisters werden zu Titelzeilen wie auf einer Kassettenhülle. Zeile 1 zeigt was und Betrag, der Betrag rechts angeschlagen. Zeile 2 beginnt mit der Status-Plakette, dann folgt Datum · Art; in der roten Tabelle stehen dort Plakette und „Fehlt: …“ in Rot. Zeile 3 nennt, wer eingetragen hat, beim Schatzmeister mit „Eingetragen am …“, in der roten Tabelle mit „Begonnen am …“. Darunter folgen die Belege (sie dürfen umbrechen), die Notiz und in der roten Tabelle der Knopf „ausnahmsweise genehmigen“. Titelzeilen haben keinen Kasten; eine 1-px-Linie in Zeilenlinie trennt sie, in der roten Tabelle eine rote. Leere Zellen entfallen.
 
 **Rhythmus.** Enge Gruppen mit 4 bis 8 px, Elemente mit 12 px Abstand (Knopfreihen, Kacheln, Kopf und Fuß im Band), 16 px Innenabstand in Kästen, 20 px in Karten und Formularen, 28 bis 40 px zwischen Bereichen. Ein Zeitraumtitel hat 28 px Luft darüber und 8 px darunter.
 
 **Umbrüche.** 420 px (Container-Abfrage am Band), 760 px (Handy), 900 px (J-Karte zweispaltig), 980 px (Spalte des Schatzmeisters). Hover-Zustände gelten nur bei `(hover: hover) and (pointer: fine)`.
 
 ### Named Rules
-**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, kleine Knöpfe 38 px, die Sprachwahl im Anmeldefenster 44 px. Knöpfe stehen 12 px auseinander.
+**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, der Knopf „ausnahmsweise genehmigen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.
 
 ## Elevation & Depth
 
@@ -389,7 +396,7 @@ Das System ist flach. Tiefe entsteht aus dem 2-px-Strich in Kugelschreiber-Blau 
 
 Leicht gerundete Ecken auf zwei Stufen. Bedienelemente haben 6 px (Knöpfe, Eingabefelder, Vorschaubilder, Zeitraumtitel). Behälter haben 10 px: Karten, Band, Warnkasten, rote Tabelle, Danke-Satz, Dialog, Sprechblase, Meldung und J-Karte. Plaketten und die Plakette „Aktueller Zeitraum“ haben 4 px, die Zahl im Kopf der roten Tabelle ist eine Pille. Info-Knopf, Entfernen-Knopf am Vorschaubild und der Schließen-Knopf der Vollansicht sind rund. Die Spur im Band ist 14 px hoch mit 7 px Rundung, die Flaggen haben 2 px.
 
-Rahmen sind 2 px: durchgezogen in Kugelschreiber-Blau für Karten, Band, Knöpfe und Sprachwahl, in Rot für die rote Tabelle. Gestrichelt heißt vorläufig oder abgelegt: Entwürfe und leeres Band in Bleistiftlinie, ein archivierter Geldeingang in Kugelschreiber-Blau, der Bereich der Sicherungen in verblasstem Blau. Zeilenlinien in Tabellen sind 1 px.
+Rahmen sind 2 px: durchgezogen in Kugelschreiber-Blau für Karten, Band, Knöpfe und Sprachwahl, in verblasstem Blau für Eingabefelder, Vorschaubilder, Auswahlkacheln und Geister-Knöpfe in Ruhe, in Rot für die rote Tabelle. Gestrichelt heißt vorläufig oder abgelegt: Entwürfe und leeres Band in Bleistiftlinie, ein archivierter Geldeingang in Kugelschreiber-Blau, der Bereich der Sicherungen in verblasstem Blau. Zeilenlinien in Tabellen und zwischen Titelzeilen sind 1 px.
 
 Wiederkehrende Formen sind der dreifache Streifen und die Falz. Der Streifen läuft quer unter der Kopfzeile (drei 3-px-Linien, 3 px Abstand), steht klein in der rechten oberen Ecke jedes gefüllten Bands (drei 4-px-Balken, 18 px hoch) und erscheint im Favicon. Die Falz ist ein 2-px-Strich in Kugelschreiber-Blau zwischen Foto und Formular der J-Karte, am Handy waagerecht, am Desktop senkrecht.
 
@@ -406,14 +413,15 @@ Fest und greifbar, wie ein Druckknopf am Kassettenrekorder.
 - **Primary:** Orange mit weißer Schrift, höchstens einer je Bereich („Speichern“, „Anmelden“, „Aktuelle Datenlage herunterladen“). Hover: gedrücktes Orange.
 - **Secondary:** Karton mit Rahmen und Schrift in Kugelschreiber-Blau („Weitere Zahlung hinzufügen“, „Bild hochladen“, „Sicherungen hochladen“, „Abbrechen“). Hover: getönter Karton.
 - **Danger:** Karton mit Rahmen und Schrift in Rot, Hover im Rot-Hauch. Wer gesicherte Einträge löschen will, muss im Dialog zusätzlich ein Häkchen setzen.
-- **Ghost:** Rahmen in Zeilenlinie, Schrift in verdünnter Tinte, für leise Nebenaktionen („Abmelden“, „Entwurf löschen“). Am Handy zeigt „Abmelden“ nur das Symbol (42 × 38 px).
+- **Ghost:** Rahmen in verblasstem Blau, Schrift in verdünnter Tinte, für leise Nebenaktionen („Abmelden“, „Entwurf löschen“). Am Handy zeigt „Abmelden“ nur das Symbol (44 × 40 px).
 - **Small:** 38 px hoch, 12 px seitlich, 0.875rem.
+- **Genehmigen:** „ausnahmsweise genehmigen“ ist 44 px hoch mit 8 px × 12 px und Zeilenhöhe 1.2. Am Desktop ist er höchstens 11rem breit und bricht in der Spalte um, in den Titelzeilen am Handy steht er auf einer Zeile.
 - **Press / Focus:** Beim Drücken `scale(0.97)` über 160 ms mit `--ease-out`; Farben wechseln in 150 ms. Fokus ist ein 3-px-Umriss in verblasstem Blau mit 2 px Abstand. Ein deaktivierter Knopf hat 55 % Deckkraft und den Zeiger „warten“.
 
 ### Chips
 - **Plaketten:** 0.8125rem, 700, 4 px Rundung, 2 px × 9 px. „vollständig“ Grün auf Grün-Hauch, „ausnahmsweise genehmigt“ Bernstein auf Bernstein-Hauch, „unvollständig“ Rot-Tinte auf Rot-Hauch, „Entwurf“ Bleistift mit innerem Ring in Bleistiftlinie.
-- **Sprachwahl:** ein Segmentknopf mit 2-px-Rahmen in Kugelschreiber-Blau, die Segmente durch 2-px-Linien getrennt. Aktiv ist Kugelschreiber-Blau mit weißer Schrift. In der Kopfzeile am Handy stehen nur die Kürzel DE/EN/SW, im Anmeldefenster drei gleich breite Knöpfe über die volle Breite (44 px).
-- **Auswahlkacheln „Geldeingang“ / „Bezahlung“:** Karton, 10 px Rundung, 14 px × 16 px, Symbol (22 px, Pfeil hinein in Grün, Pfeil hinaus in Orange), Titel in Blockschrift, Hinweis in verdünnter Tinte. In Ruhe hat die Kachel nur einen leisen Rahmen in Zeilenlinie; erkennbar wird sie durch Symbol und Titel. Gedrückt füllt sich „Bezahlung“ orange und „Geldeingang“ grün, mit weißer Schrift. Beim Drücken `scale(0.98)`. Das darunter erscheinende Formular dreht in 240 ms ein wie eine umgedrehte Kassette (`rotateX(-12deg)` aus 6 px Höhe, Drehpunkt oben); bei reduzierter Bewegung wird es nur eingeblendet (160 ms).
+- **Sprachwahl:** ein Segmentknopf mit 2-px-Rahmen in Kugelschreiber-Blau, die Segmente durch 2-px-Linien getrennt. Aktiv ist Kugelschreiber-Blau mit weißer Schrift. In der Kopfzeile am Handy stehen nur die Kürzel DE/EN/SW (40 px hoch), im Anmeldefenster drei gleich breite Knöpfe über die volle Breite (44 px).
+- **Auswahlkacheln „Geldeingang“ / „Bezahlung“:** Karton, 2-px-Rahmen in verblasstem Blau, 10 px Rundung, 14 px × 16 px, mindestens 56 px hoch und sonst so hoch wie ihr Inhalt. Der Pfeil (22 px, hinein in Grün, hinaus in Orange) steht ohne Hintergrund vor dem Titel in Blockschrift, der Hinweis in verdünnter Tinte darunter. Hover (feiner Zeiger): Rahmen in Kugelschreiber-Blau. Gewählt ist die Kachel ganz gefüllt, „Bezahlung“ in Orange und „Geldeingang“ in Grün, mit weißem Titel, Pfeil und Hinweis (5,35:1 und 6,15:1). Beim Drücken `scale(0.98)`. Das darunter erscheinende Formular dreht in 240 ms ein wie eine umgedrehte Kassette (`rotateX(-12deg)` aus 6 px Höhe, Drehpunkt oben); bei reduzierter Bewegung wird es nur eingeblendet (160 ms).
 
 ### Cards / Containers
 - **Corner Style:** 10 px.
@@ -449,14 +457,14 @@ Ein Geldeingang als Kassettenseite mit fester Länge, das Signaturelement.
 
 ### Rote Tabelle „Unvollständige Eingaben“
 - **Aufbau:** 2-px-Rahmen in Rot, 10 px Rundung. Der Kopf ist eine rote Fläche mit Titel in Blockschrift (weiß) und der Anzahl als weiße Pille mit roter Zahl. Darunter folgen Einleitung in Tinte, die Tabelle und der Hauptknopf „Speichern“.
-- **Schatzmeister:** Der Tabellenkopf steht in Rot-Tinte auf Rot-Hauch. Einträge, die älter als eine Woche sind, tragen das Warnsymbol (24 px, rot, mit Beschriftung). Dazu kommt der Knopf „ausnahmsweise genehmigen“.
-- **Mobil:** Der Außenrahmen entfällt, der Kopf wird ein gerundeter roter Balken, und jede Zeile wird ein Blatt mit rotem Rahmen.
+- **Schatzmeister:** Der Tabellenkopf steht in Rot-Tinte auf Rot-Hauch, der Betrag rechtsbündig. Einträge, die älter als eine Woche sind, tragen das Warnsymbol (24 px, rot, mit Beschriftung). Dazu kommt der Knopf „ausnahmsweise genehmigen“.
+- **Mobil:** Der Außenrahmen entfällt, und der Kopf wird ein gerundeter roter Balken. Beim Team wird jede bearbeitbare Zeile ein Blatt mit rotem Rahmen. Beim Schatzmeister werden die Einträge zu Titelzeilen mit roter Trennlinie (siehe Layout); das Warnsymbol steht vorn, der Genehmigen-Knopf unten auf eigener Zeile.
 - **Position:** immer ganz oben unter Band und Warnkasten. Wenn nichts fehlt, steht an ihrer Stelle der Danke-Satz.
 
 ### Erfolgstabelle und Titelzeilen
-- **Desktop:** Zeilenlinien in Zeilenlinie, Kopf in verdünnter Tinte auf getöntem Karton (Label klein). Werte stehen in Kugelschreiber-Blau (500), Art und Status in Tinte (400), Zeilen eines Geldeingangs in Grün. Beträge stehen rechtsbündig.
+- **Desktop:** Zeilenlinien in Zeilenlinie, Kopf in verdünnter Tinte auf getöntem Karton (Label klein). Werte stehen in Kugelschreiber-Blau (500), Art und Status in Tinte (400), Zeilen eines Geldeingangs in Grün. Beträge und ihre Spaltenköpfe stehen rechtsbündig, auch der sortierbare Betragskopf in der Tabelle der Sicherungen.
 - **Gruppierung:** Über jedem Zeitraum steht ein Titel in Blockschrift auf getöntem Karton. Der aktuelle Zeitraum ist auf kräftigem Karton und trägt die orange Plakette „Aktueller Zeitraum“ (Systemschrift, 0.75rem, 700, weiß).
-- **Mobil:** Titelzeilen wie auf einer Kassettenhülle (siehe Layout), getrennt durch 1-px-Linien.
+- **Mobil:** Titelzeilen wie auf einer Kassettenhülle (siehe Layout), ohne Kasten, getrennt durch 1-px-Linien in Zeilenlinie.
 
 ### Vorschaubilder und Vollansicht
 - **Vorschaubild:** 64 px Quadrat, 2-px-Rahmen in verblasstem Blau, 6 px Rundung, getönter Karton als Grund, Zeiger zum Vergrößern, beim Drücken `scale(0.96)`. Es lädt erst kurz vor dem Sichtbereich. Ein fehlendes Bild hat einen gestrichelten Rahmen und einen Text.
@@ -464,8 +472,8 @@ Ein Geldeingang als Kassettenseite mit fester Länge, das Signaturelement.
 - **Vollansicht:** dunkler Schleier, das Bild auf Weiß (4 px Rundung, höchstens 96vw × 84vh). Oben rechts sitzt ein weißer runder Schließen-Knopf (48 px), unter dem Bild steht die Beschriftung in Weiß.
 
 ### Sprechblase, Dialog, Meldung
-- **Info-Knopf:** rund, 30 px, Symbol in Kugelschreiber-Blau (22 px); geöffnet auf kräftigem Karton.
-- **Sprechblase:** weiß, Tinte, 2-px-Rahmen in Kugelschreiber-Blau, 10 px Rundung, der schwebende Schatten und eine Spitze in Kugelschreiber-Blau zum Knopf hin. Sie öffnet sich nach oben, wenn unten der Platz fehlt. Der Eintritt läuft über `@starting-style` (Deckkraft 0, `scale(0.97)`), 160 ms, mit dem Drehpunkt an der Spitze.
+- **Info-Knopf:** rund, sichtbar 30 px, mit einer unsichtbaren Tippfläche von 44 px (7 px rundum). Das Symbol steht in Kugelschreiber-Blau (22 px); geöffnet liegt der Knopf auf kräftigem Karton.
+- **Sprechblase:** weiß, Tinte, 2-px-Rahmen in Kugelschreiber-Blau, 10 px Rundung, der schwebende Schatten und eine Spitze in Kugelschreiber-Blau zum Knopf hin. Sie öffnet sich nach oben, wenn unten der Platz fehlt. Beim Scrollen und bei Größenänderung wandert sie mit ihrem Knopf mit. Sie schließt sich erst, wenn der Knopf das Bild verlässt, bei einem Klick daneben oder mit Escape. Der Eintritt läuft über `@starting-style` (Deckkraft 0, `scale(0.97)`), 160 ms, mit dem Drehpunkt an der Spitze.
 - **Dialog:** Schleier aus Tinte (200 ms), Karton, 2-px-Rahmen, 10 px Rundung, 22 px Innenabstand, höchstens 520 px, schwebender Schatten. Der Eintritt läuft über `@starting-style` mit `scale(0.96)` in 200 ms. Knöpfe stehen rechts mit 12 px Abstand. Ein Dialog dient nur zum Bestätigen von Löschen, ausnahmsweisem Genehmigen oder Speichern ohne Überweisungsbeleg.
 - **Meldung:** unten rechts, Tinte als Grund, weiße Schrift (500), 10 px Rundung, schwebender Schatten. Das Symbol ist hell getönt: Grün (#7BD89A) für Erfolg, Rot (#FF9C9C) für Fehler, Blau (#A9BCEB) für Information. Sie gleitet über `@starting-style` 12 px hoch ein (300 ms).
 
@@ -484,7 +492,7 @@ Ein eigenes SVG-Set im Kugelschreiber-Strich: Raster 24 px, Strich 2, runde Ende
 ## Do's and Don'ts
 
 ### Do:
-- **Halte den Karton hell und die Tinte dunkel.** Das System ist für Sonnenlicht: Fließtext in Tinte (16,44:1), eingetragene Werte in Kugelschreiber-Blau (10,17:1), Grenzen von Eingabefeldern mindestens in verblasstem Blau (3,53:1).
+- **Halte den Karton hell und die Tinte dunkel.** Das System ist für Sonnenlicht: Fließtext in Tinte (16,44:1), eingetragene Werte in Kugelschreiber-Blau (10,17:1), Grenzen von Bedienelementen mindestens in verblasstem Blau (3,53:1), nie in Zeilenlinie.
 - **Rahme mit einem 2-px-Strich** in Kugelschreiber-Blau; Zeilen in Tabellen trennt eine 1-px-Linie in Zeilenlinie.
 - **Setze Orange für Überschriften und den einen Hauptknopf** je Bereich ein, mit weißer Schrift (5,35:1); längere Texte stehen in Tinte.
 - **Zeige jeden Geldeingang als Band**, mit Füllung, „Bezahlt“ und „Übrig“, rechtsbündigen Beträgen und rotem Überlauf.

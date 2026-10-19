@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-19T05:19:56+00:00",
+  "generatedAt": "2026-10-19T09:16:05+00:00",
   "title": "Design System: Children of Finances",
   "extensions": {
     "colorMeta": {
@@ -560,9 +560,9 @@
       "name": "Auswahlkacheln",
       "kind": "custom",
       "refersTo": "choice",
-      "description": "Wahl zwischen Geldeingang (gedrückt grün) und Bezahlung (gedrückt orange), Titel in Blockschrift.",
+      "description": "Wahl zwischen Geldeingang und Bezahlung: Rahmen in verblasstem Blau, Pfeil vor dem Titel in Blockschrift; gewählt ganz grün bzw. orange mit weißer Schrift.",
       "html": "<div class=\"ds-choices\"><button class=\"ds-choice ds-choice-income\" aria-pressed=\"false\" type=\"button\"><span class=\"ds-choice-icon\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M17 7L7 17\"/><path d=\"M7 9v8h8\"/></svg></span><span class=\"ds-choice-title\">Geldeingang</span><span class=\"ds-choice-hint\">Hat CoM Kenya von jemandem Geld erhalten?</span></button><button class=\"ds-choice ds-choice-expense\" aria-pressed=\"true\" type=\"button\"><span class=\"ds-choice-icon\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17L17 7\"/><path d=\"M9 7h8v8\"/></svg></span><span class=\"ds-choice-title\">Bezahlung</span></button></div>",
-      "css": ".ds-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; } .ds-choice { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; text-align: left; padding: 14px 16px; min-height: 56px; background: var(--paper, #FDFDFB); color: var(--ink, #141B3D); border: 2px solid var(--rule, #D3DBEE); border-radius: var(--radius-lg, 10px); font: 400 1rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), border-color 150ms ease, background-color 150ms ease; } .ds-choice:active { transform: scale(0.98); } .ds-choice:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } .ds-choice-icon { display: flex; align-self: center; } .ds-choice-income .ds-choice-icon { color: var(--green, #17703A); } .ds-choice-expense .ds-choice-icon { color: var(--orange, #BE400B); } .ds-choice-title { font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-size: 1.5rem; line-height: 1.1; color: var(--ink, #141B3D); } .ds-choice-hint { grid-column: 2; font-size: 0.8125rem; line-height: 1.4; color: var(--ink-2, #4A5373); opacity: 0.85; } .ds-choice[aria-pressed=\"true\"] { border-color: var(--orange, #BE400B); background: var(--orange, #BE400B); } .ds-choice-income[aria-pressed=\"true\"] { border-color: var(--green, #17703A); background: var(--green, #17703A); } .ds-choice[aria-pressed=\"true\"] .ds-choice-title, .ds-choice[aria-pressed=\"true\"] .ds-choice-icon, .ds-choice[aria-pressed=\"true\"] .ds-choice-hint { color: #fff; opacity: 1; } @media (hover: hover) and (pointer: fine) { .ds-choice:hover { border-color: var(--pen, #1E3A8A); } } @media (prefers-reduced-motion: reduce) { .ds-choice { transition-duration: 0ms; } .ds-choice:active { transform: none; } }"
+      "css": ".ds-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; } .ds-choice { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; text-align: left; padding: 14px 16px; min-height: 56px; background: var(--paper, #FDFDFB); color: var(--ink, #141B3D); border: 2px solid var(--pen-faded, #6B86C5); border-radius: var(--radius-lg, 10px); font: 400 1rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), border-color 150ms ease, background-color 150ms ease; } .ds-choice:active { transform: scale(0.98); } .ds-choice:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } .ds-choice-icon { display: flex; align-self: center; } .ds-choice-income .ds-choice-icon { color: var(--green, #17703A); } .ds-choice-expense .ds-choice-icon { color: var(--orange, #BE400B); } .ds-choice-title { font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-size: 1.5rem; line-height: 1.1; color: var(--ink, #141B3D); } .ds-choice-hint { grid-column: 2; font-size: 0.8125rem; line-height: 1.4; color: var(--ink-2, #4A5373); opacity: 0.85; } .ds-choice[aria-pressed=\"true\"] { border-color: var(--orange, #BE400B); background: var(--orange, #BE400B); } .ds-choice-income[aria-pressed=\"true\"] { border-color: var(--green, #17703A); background: var(--green, #17703A); } .ds-choice[aria-pressed=\"true\"] .ds-choice-title, .ds-choice[aria-pressed=\"true\"] .ds-choice-icon, .ds-choice[aria-pressed=\"true\"] .ds-choice-hint { color: #fff; opacity: 1; } @media (hover: hover) and (pointer: fine) { .ds-choice:hover { border-color: var(--pen, #1E3A8A); } } @media (prefers-reduced-motion: reduce) { .ds-choice { transition-duration: 0ms; } .ds-choice:active { transform: none; } }"
     },
     {
       "name": "Das Band",
@@ -638,7 +638,7 @@
       },
       {
         "name": "Die Daumen-Regel",
-        "body": "Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, kleine Knöpfe 38 px, die Sprachwahl im Anmeldefenster 44 px. Knöpfe stehen 12 px auseinander.",
+        "body": "Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, der Knopf „ausnahmsweise genehmigen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.",
         "section": "layout"
       },
       {
@@ -663,7 +663,7 @@
       }
     ],
     "dos": [
-      "**Halte den Karton hell und die Tinte dunkel.** Das System ist für Sonnenlicht: Fließtext in Tinte (16,44:1), eingetragene Werte in Kugelschreiber-Blau (10,17:1), Grenzen von Eingabefeldern mindestens in verblasstem Blau (3,53:1).",
+      "**Halte den Karton hell und die Tinte dunkel.** Das System ist für Sonnenlicht: Fließtext in Tinte (16,44:1), eingetragene Werte in Kugelschreiber-Blau (10,17:1), Grenzen von Bedienelementen mindestens in verblasstem Blau (3,53:1), nie in Zeilenlinie.",
       "**Rahme mit einem 2-px-Strich** in Kugelschreiber-Blau; Zeilen in Tabellen trennt eine 1-px-Linie in Zeilenlinie.",
       "**Setze Orange für Überschriften und den einen Hauptknopf** je Bereich ein, mit weißer Schrift (5,35:1); längere Texte stehen in Tinte.",
       "**Zeige jeden Geldeingang als Band**, mit Füllung, „Bezahlt“ und „Übrig“, rechtsbündigen Beträgen und rotem Überlauf.",
