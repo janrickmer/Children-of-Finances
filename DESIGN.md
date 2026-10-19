@@ -148,6 +148,12 @@ components:
   button-approve:
     padding: "8px 12px"
     height: "44px"
+  summary-toggle:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.pen}"
+    rounded: "{rounded.radius}"
+    padding: "0 12px"
+    height: "44px"
   info-button:
     textColor: "{colors.pen}"
     rounded: "{rounded.round}"
@@ -372,14 +378,16 @@ Eine ruhige Spalte auf Karton, keine Raster aus gleich großen Kacheln. Die App 
 
 **J-Karte.** Anmeldung und Namensschritt sind höchstens 440 px breit, das Foto oben im Format 16:9. Ab 900 px wird die Karte zweispaltig (bis 960 px): Foto links, Formular rechts mit höchstens 440 px.
 
-**Tabellen am Handy.** Die bearbeitbaren Eingabetabellen des Teams werden zu Blättern: Jede Zeile ist ein gerahmtes Blatt, jede Zelle trägt ihre Beschriftung. Die Erfolgstabellen und die rote Tabelle des Schatzmeisters werden zu Titelzeilen wie auf einer Kassettenhülle. Zeile 1 zeigt was und Betrag, der Betrag rechts angeschlagen. Zeile 2 beginnt mit der Status-Plakette, dann folgt Datum · Art; in der roten Tabelle stehen dort Plakette und „Fehlt: …“ in Rot. Zeile 3 nennt, wer eingetragen hat, beim Schatzmeister mit „Eingetragen am …“, in der roten Tabelle mit „Begonnen am …“. Darunter folgen die Belege (sie dürfen umbrechen), die Notiz und in der roten Tabelle der Knopf „ausnahmsweise genehmigen“. Titelzeilen haben keinen Kasten; eine 1-px-Linie in Zeilenlinie trennt sie, in der roten Tabelle eine rote. Leere Zellen entfallen.
+**Tabellen am Handy.** Die bearbeitbaren Eingabetabellen des Teams werden zu Blättern: Jede Zeile ist ein gerahmtes Blatt, jede Zelle trägt ihre Beschriftung. In der roten Tabelle des Teams zeigt jedes Blatt zuerst nur eine kompakte Zeile und klappt das Formular erst auf Wunsch auf (siehe Components). Die Erfolgstabellen und die rote Tabelle des Schatzmeisters werden zu Titelzeilen wie auf einer Kassettenhülle. Zeile 1 zeigt was und Betrag, der Betrag rechts angeschlagen. Zeile 2 beginnt mit der Status-Plakette, dann folgt Datum · Art; in der roten Tabelle stehen dort Plakette und „Fehlt: …“ in Rot. Zeile 3 nennt, wer eingetragen hat, beim Schatzmeister mit „Eingetragen am …“, in der roten Tabelle mit „Begonnen am …“. Darunter folgen die Belege (sie dürfen umbrechen), die Notiz und in der roten Tabelle der Knopf „ausnahmsweise genehmigen“. Titelzeilen haben keinen Kasten; eine 1-px-Linie in Zeilenlinie trennt sie, in der roten Tabelle eine rote. Leere Zellen entfallen.
+
+**Tabellen am Desktop.** Die Eingabetabelle hält Mindestbreiten je Spalte (Beschreibung 180 px, Datum 156 px, Betrag 130 px, Rechnung und Überweisung je 200 px, Hinweis 170 px) und lässt sich sonst waagerecht scrollen.
 
 **Rhythmus.** Enge Gruppen mit 4 bis 8 px, Elemente mit 12 px Abstand (Knopfreihen, Kacheln, Kopf und Fuß im Band), 16 px Innenabstand in Kästen, 20 px in Karten und Formularen, 28 bis 40 px zwischen Bereichen. Ein Zeitraumtitel hat 28 px Luft darüber und 8 px darunter.
 
 **Umbrüche.** 420 px (Container-Abfrage am Band), 760 px (Handy), 900 px (J-Karte zweispaltig), 980 px (Spalte des Schatzmeisters). Hover-Zustände gelten nur bei `(hover: hover) and (pointer: fine)`.
 
 ### Named Rules
-**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, der Knopf „ausnahmsweise genehmigen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.
+**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, die Knöpfe „ausnahmsweise genehmigen“ und „Ergänzen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.
 
 ## Elevation & Depth
 
@@ -458,8 +466,21 @@ Ein Geldeingang als Kassettenseite mit fester Länge, das Signaturelement.
 ### Rote Tabelle „Unvollständige Eingaben“
 - **Aufbau:** 2-px-Rahmen in Rot, 10 px Rundung. Der Kopf ist eine rote Fläche mit Titel in Blockschrift (weiß) und der Anzahl als weiße Pille mit roter Zahl. Darunter folgen Einleitung in Tinte, die Tabelle und der Hauptknopf „Speichern“.
 - **Schatzmeister:** Der Tabellenkopf steht in Rot-Tinte auf Rot-Hauch, der Betrag rechtsbündig. Einträge, die älter als eine Woche sind, tragen das Warnsymbol (24 px, rot, mit Beschriftung). Dazu kommt der Knopf „ausnahmsweise genehmigen“.
-- **Mobil:** Der Außenrahmen entfällt, und der Kopf wird ein gerundeter roter Balken. Beim Team wird jede bearbeitbare Zeile ein Blatt mit rotem Rahmen. Beim Schatzmeister werden die Einträge zu Titelzeilen mit roter Trennlinie (siehe Layout); das Warnsymbol steht vorn, der Genehmigen-Knopf unten auf eigener Zeile.
+- **Mobil:** Der Außenrahmen entfällt, und der Kopf wird ein gerundeter roter Balken. Beim Team wird jede bearbeitbare Zeile ein Blatt mit rotem Rahmen, das zuerst als kompakte Zeile erscheint. Beim Schatzmeister werden die Einträge zu Titelzeilen mit roter Trennlinie (siehe Layout); das Warnsymbol steht vorn, der Genehmigen-Knopf unten auf eigener Zeile.
 - **Position:** immer ganz oben unter Band und Warnkasten. Wenn nichts fehlt, steht an ihrer Stelle der Danke-Satz.
+
+### Kompakte Zeile der roten Tabelle (Handy)
+Ein unvollständiger Eintrag des Teams zeigt am Handy (bis 760 px) zuerst nur, was er ist und was ihm fehlt. Das Formular öffnet sich erst auf Tippen.
+- **Zusammenfassung:** im roten Blatt eine Zelle mit 10 px Luft oben und unten. Zeile 1 zeigt was (Kugelschreiber-Blau, 600) und rechts angeschlagen den Betrag „KSh …“ (Kugelschreiber-Blau, 700, Tabellenziffern). Ohne Beschreibung steht dort „Ohne Beschreibung“ in Bleistift und kursiv.
+- **Status:** darunter entweder „Fehlt: …“ in Rot mit Warnsymbol oder in Grün (600, 0.9375rem) ein Häkchen mit „Alles ausgefüllt. Jetzt unten auf „Speichern“ tippen.“
+- **Hinweis:** Fehlt der Screenshot der Transaktion, folgt in verdünnter Tinte (0.875rem) mit Info-Symbol in Kugelschreiber-Blau: „Screenshot der Transaktion fehlt noch (freiwillig, nach dem Speichern nicht mehr möglich).“
+- **Metazeile:** wer · wann, dazu „zuletzt bearbeitet von …“, wenn jemand anderes zuletzt geändert hat (verdünnte Tinte, 0.875rem).
+- **Umschalter:** ein kleiner Zweitknopf, 44 px hoch, mit 10 px Abstand darüber: „Ergänzen“ mit Pfeil nach rechts, aufgeklappt „Zuklappen“ mit Pfeil nach unten; `aria-expanded` meldet den Zustand.
+- **Aufgeklappt:** Die Zusammenfassung verschwindet, oben bleibt nur „Zuklappen“. Darunter folgen die Felder, und am Ende des Blatts steht die Info-Zelle mit wer, „zuletzt bearbeitet von“ und „Fehlt: …“. Der Zustand übersteht das sekündliche Speichern.
+- **Desktop:** Zusammenfassung und ihr Spaltenkopf sind ausgeblendet; das Formular steht wie bisher offen in der Tabelle.
+- **Spaltenkopf:** Die Tabelle trägt dafür einen eigenen Kopf „Eintrag“. Am Handy ist er nur für Screenreader da, weil der Tabellenkopf dort sichtbar abgeschnitten ist.
+
+**Die Ruhige-Feld-Regel.** Wer in einem aufgeklappten Eintrag tippt, sieht über dem Feld nichts seine Höhe ändern. Was sich beim Tippen ändert, etwa die Liste „Fehlt: …“, steht zugeklappt in der Zusammenfassung und aufgeklappt unter den Feldern.
 
 ### Erfolgstabelle und Titelzeilen
 - **Desktop:** Zeilenlinien in Zeilenlinie, Kopf in verdünnter Tinte auf getöntem Karton (Label klein). Werte stehen in Kugelschreiber-Blau (500), Art und Status in Tinte (400), Zeilen eines Geldeingangs in Grün. Beträge und ihre Spaltenköpfe stehen rechtsbündig, auch der sortierbare Betragskopf in der Tabelle der Sicherungen.

@@ -26,6 +26,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 ## Amendments
 
 - 19.10.2026, vom Nutzer entschieden („Fotos auch in der App"): echte, frei lizenzierte Fotos aus Wikimedia Commons, vom Nutzer aus geprüften Kandidaten ausgewählt. Cover der Hülle auf Anmeldung und Namensschritt (Foto als Vorderseite, Formular als Innenseite, getrennt durch eine 2-px-Falz; Handy oben 16:9, Desktop links). Leerzustände: Gemüsestand (Team), Ngong Hills (Schatzmeister). Jedes Foto trägt Titel, Urheber, Lizenz und „zugeschnitten und verkleinert" sichtbar darunter; höchstens 800 px breit als WebP; bei Datensparmodus nicht geladen. Keine erkennbaren Personen, keine Kinder, keine Elendsbilder, keine dominanten Logos.
+- 19.10.2026, vom Nutzer entschieden („Wenn du das für richtig hältst, machen wir das!“): Am Handy zeigt die rote Tabelle des Teams jeden unvollständigen Eintrag zuerst als kompakte Zeile (was, Betrag, „Fehlt: …“, wer/wann) mit dem Knopf „Ergänzen“; ein Tipp klappt das Formular auf. Am Desktop bleibt sie direkt ausfüllbar.
 
 ## Unresolved
 

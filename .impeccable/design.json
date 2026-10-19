@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-19T09:16:05+00:00",
+  "generatedAt": "2026-10-19T09:59:37+00:00",
   "title": "Design System: Children of Finances",
   "extensions": {
     "colorMeta": {
@@ -589,6 +589,14 @@
       "css": ".ds-red { border: 2px solid var(--red, #B42228); border-radius: var(--radius-lg, 10px); background: var(--paper, #FDFDFB); overflow: hidden; margin-bottom: 12px; font-family: var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-red-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; background: var(--red, #B42228); color: #fff; } .ds-red-title { margin: 0; font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-weight: 400; font-size: 1.625rem; line-height: 1.05; color: #fff; } .ds-red-count { font-size: 0.875rem; font-weight: 700; background: #fff; color: var(--red, #B42228); border-radius: 999px; padding: 2px 10px; white-space: nowrap; } .ds-red-intro { margin: 0; padding: 12px 16px; color: var(--ink, #141B3D); } .ds-all-good { display: flex; align-items: center; gap: 10px; margin: 0; padding: 14px 16px; border-radius: var(--radius-lg, 10px); background: var(--green-wash, #E5F3E9); color: var(--green, #17703A); font: 700 1.0625rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-all-good svg { flex: none; }"
     },
     {
+      "name": "Kompakte Zeile der roten Tabelle (Handy)",
+      "kind": "custom",
+      "refersTo": "summary-toggle",
+      "description": "Unvollständiger Eintrag des Teams am Handy: zuerst nur was, Betrag, was fehlt und wer; „Ergänzen“ klappt das Formular auf.",
+      "html": "<div class=\"ds-sum\"><div class=\"ds-sum-line\"><span class=\"ds-sum-what\">Transport Matatu</span><span class=\"ds-sum-amount\">KSh 200</span></div><div class=\"ds-sum-missing\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z\"/><path d=\"M12 7.5v5.5\"/><path d=\"M12 16.5v.01\"/></svg>Fehlt: Datum, Rechnung</div><div class=\"ds-sum-hint\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z\"/><path d=\"M12 11v5.5\"/><path d=\"M12 7.5v.01\"/></svg>Screenshot der Transaktion fehlt noch (freiwillig, nach dem Speichern nicht mehr möglich).</div><div class=\"ds-sum-meta\">Amina Wanjiru · 19.10.2026, 05:08</div><button class=\"ds-btn ds-sum-toggle\" type=\"button\" aria-expanded=\"false\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg>Ergänzen</button></div>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius, 6px); background: var(--paper, #FDFDFB); color: var(--pen, #1E3A8A); font: 600 0.9375rem/1.2 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), background-color 150ms ease, border-color 150ms ease, color 150ms ease; } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-btn { transition-duration: 0ms; } .ds-btn:active { transform: none; } } .ds-sum { max-width: 390px; padding: 16px 14px; background: var(--paper, #FDFDFB); border: 2px solid var(--red, #B42228); border-radius: var(--radius-lg, 10px); font: 400 1rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); color: var(--ink, #141B3D); } .ds-sum-line { display: flex; align-items: baseline; gap: 8px; } .ds-sum-what { flex: 1 1 0; min-width: 0; font-weight: 600; color: var(--pen, #1E3A8A); overflow-wrap: anywhere; } .ds-sum-amount { margin-left: auto; font-weight: 700; color: var(--pen, #1E3A8A); font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-sum-missing { display: flex; align-items: center; gap: 6px; margin-top: 6px; color: var(--red, #B42228); font-weight: 600; font-size: 0.875rem; } .ds-sum-hint { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; font-size: 0.875rem; color: var(--ink-2, #4A5373); } .ds-sum-hint svg { flex: none; margin-top: 2px; color: var(--pen, #1E3A8A); } .ds-sum-missing svg { flex: none; } .ds-sum-meta { margin-top: 4px; font-size: 0.875rem; color: var(--ink-2, #4A5373); } .ds-sum-toggle { margin-top: 10px; min-height: 44px; padding: 0 12px; font-size: 0.875rem; } @media (hover: hover) and (pointer: fine) { .ds-sum-toggle:hover { background: var(--paper-2, #F2F4FA); } }"
+    },
+    {
       "name": "Foto mit Nachweis",
       "kind": "custom",
       "refersTo": "photo-credit",
@@ -638,7 +646,7 @@
       },
       {
         "name": "Die Daumen-Regel",
-        "body": "Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, der Knopf „ausnahmsweise genehmigen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.",
+        "body": "Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, die Knöpfe „ausnahmsweise genehmigen“ und „Ergänzen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.",
         "section": "layout"
       },
       {
@@ -659,6 +667,11 @@
       {
         "name": "Die Seite-darf-nicht-überlaufen-Regel",
         "body": "Jeder Geldeingang erscheint als Band, nie als nackte Kennzahl oder Kachel. Die Füllung zeigt das Verhältnis, die Zahlen darunter sagen es, und ein Überlauf färbt Rand und Rest rot und benennt ihn.",
+        "section": "components"
+      },
+      {
+        "name": "Die Ruhige-Feld-Regel",
+        "body": "Wer in einem aufgeklappten Eintrag tippt, sieht über dem Feld nichts seine Höhe ändern. Was sich beim Tippen ändert, etwa die Liste „Fehlt: …“, steht zugeklappt in der Zusammenfassung und aufgeklappt unter den Feldern.",
         "section": "components"
       }
     ],
