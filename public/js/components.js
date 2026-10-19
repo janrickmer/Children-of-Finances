@@ -360,20 +360,25 @@ export function successTable(items, { admin = false } = {}) {
     admin && h('th', {}, t('col.enteredAt')),
     h('th', {}, t('col.status')),
   ));
+  // Leere Zellen werden am Handy ausgeblendet (die Titelzeile zeigt nur, was es gibt).
+  const cell = (cls, label, content) => {
+    const empty = content == null || content === '' || content === '–';
+    return h('td', { class: empty ? `${cls} is-empty` : cls }, cellLabel(label), empty ? '–' : content);
+  };
   const body = h('tbody', {}, items.map((e) => {
     const income = e.kind === 'income';
     return h('tr', { class: income ? 'row-income' : '' },
-      h('td', {}, cellLabel(t('col.dateShort')), fmtDate(dateOf(e)) || '–'),
-      h('td', { class: 'plain' }, cellLabel(t('col.kind')), t(income ? 'kind.income' : 'kind.expense')),
-      h('td', { class: 'wrap' }, cellLabel(t('col.whatOrFrom')), (income ? e.d.from : e.d.what) || '–'),
-      h('td', { class: 'num' }, cellLabel(t('col.amountShort')), fmtAmount(e.d.amount)),
-      h('td', {}, cellLabel(t('col.receiptShort')), income ? '–' : thumbList(e.d.receipts, t('col.receiptShort'))),
-      h('td', {}, cellLabel(t('col.transferShort')), income ? '–' : thumbList(e.d.transfers, t('col.transferShort'))),
-      h('td', { class: 'wrap' }, cellLabel(t('col.noteShort')), e.d.note || '–'),
-      h('td', {}, cellLabel(t('col.name')), e.d.createdBy || '–'),
-      admin && h('td', { class: 'plain' }, cellLabel(t('col.enteredAt')), fmtDateTime(e.createdAt)),
-      h('td', { class: 'plain' }, cellLabel(t('col.status')), statusBadge(e)),
+      cell('c-date', t('col.dateShort'), fmtDate(dateOf(e))),
+      cell('c-kind plain', t('col.kind'), t(income ? 'kind.income' : 'kind.expense')),
+      cell('c-what wrap', t('col.whatOrFrom'), income ? e.d.from : e.d.what),
+      cell('c-amount num', t('col.amountShort'), fmtAmount(e.d.amount)),
+      cell('c-receipt', t('col.receiptShort'), income || !e.d.receipts?.length ? null : thumbList(e.d.receipts, t('col.receiptShort'))),
+      cell('c-transfer', t('col.transferShort'), income || !e.d.transfers?.length ? null : thumbList(e.d.transfers, t('col.transferShort'))),
+      cell('c-note wrap', t('col.noteShort'), e.d.note),
+      cell('c-name', t('col.name'), e.d.createdBy),
+      admin && cell('c-at plain', t('col.enteredAt'), fmtDateTime(e.createdAt)),
+      cell('c-status plain', t('col.status'), statusBadge(e)),
     );
   }));
-  return h('div', { class: 'table-scroll' }, h('table', { class: 'data-table cards-on-mobile' }, head, body));
+  return h('div', { class: 'table-scroll' }, h('table', { class: 'data-table track-table' }, head, body));
 }

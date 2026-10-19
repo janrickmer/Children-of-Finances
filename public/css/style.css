@@ -415,6 +415,7 @@ select.in { cursor: pointer; }
 .btn-danger { border-color: var(--red); color: var(--red); }
 .btn-ghost { border-color: var(--rule); color: var(--ink-2); }
 .btn-small { min-height: 38px; padding: 0 12px; font-size: 0.875rem; }
+.btn-approve { min-height: 44px; padding: 8px 12px; line-height: 1.2; }
 .btn-block { width: 100%; }
 .btn-approve { white-space: normal; max-width: 11rem; }
 
@@ -520,7 +521,7 @@ select.in { cursor: pointer; }
   .tape-head { flex-direction: column-reverse; align-items: flex-start; gap: 6px; padding-right: 0; }
   .tape-total { font-size: 1.75rem; }
   .tape-foot > span { flex-direction: column; gap: 0; }
-  .tape-left { align-items: flex-end; }
+  .tape-foot > .tape-left { align-items: flex-end; }
 }
 .tape-band.overflow .tape-left { color: var(--red); }
 .tape-band.archived { border-style: dashed; }
@@ -626,6 +627,7 @@ select.in { cursor: pointer; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   max-width: 820px;
+  align-items: start;
 }
 
 .choice {
@@ -634,8 +636,8 @@ select.in { cursor: pointer; }
   gap: 4px 12px;
   align-items: start;
   text-align: left;
-  padding: 16px;
-  min-height: 96px;
+  padding: 14px 16px;
+  min-height: 56px;
   background: var(--paper);
   color: var(--ink);
   border: 2px solid var(--rule);
@@ -647,15 +649,7 @@ select.in { cursor: pointer; }
 
 .choice:active { transform: scale(0.98); }
 
-.choice-icon {
-  grid-row: span 2;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-}
+.choice-icon { display: flex; align-self: center; }
 
 .choice-income .choice-icon { color: var(--green); }
 .choice-expense .choice-icon { color: var(--orange); }
@@ -675,8 +669,11 @@ select.in { cursor: pointer; }
   opacity: 0.85;
 }
 
-.choice[aria-pressed="true"] { border-color: var(--orange); background: #FFF6EF; }
-.choice-income[aria-pressed="true"] { border-color: var(--green); background: var(--green-wash); }
+.choice[aria-pressed="true"] { border-color: var(--orange); background: var(--orange); }
+.choice-income[aria-pressed="true"] { border-color: var(--green); background: var(--green); }
+.choice[aria-pressed="true"] .choice-title,
+.choice[aria-pressed="true"] .choice-icon,
+.choice[aria-pressed="true"] .choice-hint { color: #fff; opacity: 1; }
 
 /* Seitenwechsel: das neue Formular dreht kurz ein wie eine umgedrehte Kassette */
 .flip-in { animation: flip-in 240ms var(--ease-out); transform-origin: 50% 0; }
@@ -718,6 +715,8 @@ select.in { cursor: pointer; }
 .data-table td { color: var(--pen); font-weight: 500; }
 .data-table .thumbs { flex-wrap: nowrap; }
 .data-table td.plain { color: var(--ink); font-weight: 400; }
+.data-table th.num,
+.data-table td.num { text-align: right; }
 
 .red-table th { background: var(--red-wash); color: var(--red-ink); }
 
@@ -1188,6 +1187,47 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .form-card { padding: 16px; }
   .form-card.form-wide { padding: 0; border: 0; background: transparent; }
 
+  /* Erfolgstabellen werden zu Titelzeilen wie auf einer Kassettenhülle:
+     Zeile 1 was und Betrag, Zeile 2 Datum · Art · wer · wann und Status, darunter die Belege */
+  .track-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .track-table, .track-table tbody { display: block; width: 100%; }
+  .track-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 6px;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .track-table tr::before,
+  .track-table tr::after { content: ""; flex-basis: 100%; height: 0; }
+  .track-table tr::before { order: 25; }
+  .track-table tr::after { order: 75; }
+  .track-table td { display: block; padding: 0; border: 0; }
+  .track-table td.is-empty { display: none; }
+  .track-table .cell-label { display: none; }
+  .track-table .c-what { order: 10; flex: 1 1 0; min-width: 0; font-size: 1rem; font-weight: 600; }
+  .track-table .c-amount { order: 20; font-size: 1rem; font-weight: 700; }
+  .track-table .c-date { order: 30; }
+  .track-table .c-kind { order: 40; }
+  .track-table .c-name { order: 50; }
+  .track-table .c-status { order: 70; margin-left: auto; }
+  .track-table .c-at { order: 72; flex-basis: 100%; }
+  .track-table td.c-date,
+  .track-table td.c-kind,
+  .track-table td.c-name,
+  .track-table td.c-at { font-size: 0.875rem; font-weight: 400; color: var(--ink-2); }
+  .track-table .c-kind::before,
+  .track-table .c-name::before { content: "· "; }
+  .track-table .c-at .cell-label { display: inline; font-weight: 400; }
+  .track-table .c-at .cell-label::after { content: ": "; }
+  .track-table .c-receipt { order: 80; margin-top: 6px; }
+  .track-table .c-transfer { order: 81; margin-top: 6px; }
+  .track-table .c-note { order: 90; flex-basis: 100%; font-size: 0.875rem; }
+  .track-table .c-receipt .cell-label,
+  .track-table .c-transfer .cell-label,
+  .track-table .c-note .cell-label { display: block; margin-bottom: 4px; font-size: 0.75rem; font-weight: 600; color: var(--ink-2); }
+
   /* Tabellen werden zu Karten: jede Zeile ein Blatt, jede Zelle mit Beschriftung */
   .entry-table thead,
   .cards-on-mobile thead {
@@ -1222,7 +1262,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .draft-table .entry-row { border-style: dashed; border-color: var(--pencil-line); }
   .red-wrap .entry-table tr,
   .red-table tr { border-color: var(--red); }
-  .row-income { border-color: var(--green) !important; }
+  .cards-on-mobile .row-income { border-color: var(--green) !important; }
 
   .entry-table td,
   .cards-on-mobile td,
@@ -1251,7 +1291,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .is-missing { border-radius: var(--radius); padding-left: 8px !important; padding-right: 8px !important; }
   .flag-cell { width: auto; text-align: left; }
   .flag-cell:empty { display: none !important; }
-  .num { text-align: left; }
+  .cards-on-mobile td.num { text-align: left; }
   .red-body { padding: 4px 0 0; }
   .red-wrap { border: 0; overflow: visible; background: transparent; }
   .red-head { border-radius: var(--radius-lg); }

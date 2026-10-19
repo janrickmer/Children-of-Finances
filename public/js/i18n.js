@@ -10,9 +10,9 @@ const T = {
   'login.checking': { de: 'Passwort wird geprüft …', en: 'Checking password …', sw: 'Inakagua nenosiri …' },
   'login.wrong': { de: 'Das Passwort ist falsch.', en: 'The password is incorrect.', sw: 'Nenosiri si sahihi.' },
   'login.remaining': {
-    de: 'Noch {n} Versuch(e), danach wird die Anmeldung für 15 Minuten gesperrt.',
-    en: '{n} attempt(s) left, then login will be blocked for 15 minutes.',
-    sw: 'Yamebaki majaribio {n}, kisha kuingia kutazuiwa kwa dakika 15.',
+    de: ['Noch 1 Versuch, danach wird die Anmeldung für 15 Minuten gesperrt.', 'Noch {n} Versuche, danach wird die Anmeldung für 15 Minuten gesperrt.'],
+    en: ['1 attempt left, then login will be blocked for 15 minutes.', '{n} attempts left, then login will be blocked for 15 minutes.'],
+    sw: ['Limebaki jaribio 1, kisha kuingia kutazuiwa kwa dakika 15.', 'Yamebaki majaribio {n}, kisha kuingia kutazuiwa kwa dakika 15.'],
   },
   'login.locked': {
     de: 'Zu viele Fehlversuche. Bitte warte {min} Minuten.',
@@ -210,9 +210,18 @@ const T = {
   },
   'save.nothing': { de: 'Es gibt nichts zu speichern.', en: 'There is nothing to save.', sw: 'Hakuna cha kuhifadhi.' },
   'save.noTransfer': {
-    de: 'Bei {n} vollständigen Eintrag/Einträgen fehlt der Screenshot der Transaktion. Nach dem Speichern kann er nicht mehr ergänzt werden. Trotzdem speichern?',
-    en: '{n} complete entry/entries have no transaction screenshot. It cannot be added after saving. Save anyway?',
-    sw: 'Maingizo {n} yaliyokamilika hayana picha ya skrini ya muamala. Haiwezi kuongezwa baada ya kuhifadhi. Hifadhi hata hivyo?',
+    de: [
+      'Bei 1 vollständigen Eintrag fehlt der Screenshot der Transaktion. Nach dem Speichern kann er nicht mehr ergänzt werden. Trotzdem speichern?',
+      'Bei {n} vollständigen Einträgen fehlt der Screenshot der Transaktion. Nach dem Speichern kann er nicht mehr ergänzt werden. Trotzdem speichern?',
+    ],
+    en: [
+      '1 complete entry has no transaction screenshot. It cannot be added after saving. Save anyway?',
+      '{n} complete entries have no transaction screenshot. It cannot be added after saving. Save anyway?',
+    ],
+    sw: [
+      'Ingizo 1 lililokamilika halina picha ya skrini ya muamala. Haiwezi kuongezwa baada ya kuhifadhi. Hifadhi hata hivyo?',
+      'Maingizo {n} yaliyokamilika hayana picha ya skrini ya muamala. Haziwezi kuongezwa baada ya kuhifadhi. Hifadhi hata hivyo?',
+    ],
   },
   'save.anyway': { de: 'Trotzdem speichern', en: 'Save anyway', sw: 'Hifadhi hata hivyo' },
   back: { de: 'Zurück', en: 'Go back', sw: 'Rudi' },
@@ -236,9 +245,18 @@ const T = {
     sw: 'Kwa sasa hakuna maingizo hapa.',
   },
   'success.archived': {
-    de: 'Am {date} hat der deutsche Hilfsverein Children of Mathare Germany {n} Einträge gesichert und zur Prüfung an die Behörden weitergegeben.',
-    en: 'On {date}, the German charity Children of Mathare Germany backed up {n} entries and passed them on to the authorities for review.',
-    sw: 'Tarehe {date}, shirika la misaada la Ujerumani Children of Mathare Germany lilihifadhi maingizo {n} na kuyakabidhi kwa mamlaka kwa ajili ya ukaguzi.',
+    de: [
+      'Am {date} hat der deutsche Hilfsverein Children of Mathare Germany 1 Eintrag gesichert und zur Prüfung an die Behörden weitergegeben.',
+      'Am {date} hat der deutsche Hilfsverein Children of Mathare Germany {n} Einträge gesichert und zur Prüfung an die Behörden weitergegeben.',
+    ],
+    en: [
+      'On {date}, the German charity Children of Mathare Germany backed up 1 entry and passed it on to the authorities for review.',
+      'On {date}, the German charity Children of Mathare Germany backed up {n} entries and passed them on to the authorities for review.',
+    ],
+    sw: [
+      'Tarehe {date}, shirika la misaada la Ujerumani Children of Mathare Germany lilihifadhi ingizo 1 na kulikabidhi kwa mamlaka kwa ajili ya ukaguzi.',
+      'Tarehe {date}, shirika la misaada la Ujerumani Children of Mathare Germany lilihifadhi maingizo {n} na kuyakabidhi kwa mamlaka kwa ajili ya ukaguzi.',
+    ],
   },
   'band.label': { de: 'Geldeingang und Restbetrag', en: 'Money received and amount left', sw: 'Pesa zilizopokelewa na kiasi kilichobaki' },
   'band.since': { de: 'Seit Geldeingang vom {date}', en: 'Since money received on {date}', sw: 'Tangu pesa zilizopokelewa tarehe {date}' },
@@ -315,9 +333,18 @@ const T = {
     sw: 'Pesa zilizopokelewa zilizoanzishwa lakini bado hazijahifadhiwa',
   },
   'admin.imagesMissing': {
-    de: 'Bei {n} Eintrag/Einträgen konnten Bilder nicht abgerufen werden. Diese Einträge werden nicht gelöscht und erscheinen in der nächsten Sicherung erneut.',
-    en: 'Images could not be loaded for {n} entry/entries. These entries will not be deleted and will appear again in the next backup.',
-    sw: 'Picha za ingizo/maingizo {n} hazikuweza kupakuliwa. Maingizo haya hayatafutwa na yataonekana tena kwenye nakala inayofuata.',
+    de: [
+      'Bei 1 Eintrag konnten Bilder nicht abgerufen werden. Dieser Eintrag wird nicht gelöscht und erscheint in der nächsten Sicherung erneut.',
+      'Bei {n} Einträgen konnten Bilder nicht abgerufen werden. Diese Einträge werden nicht gelöscht und erscheinen in der nächsten Sicherung erneut.',
+    ],
+    en: [
+      'Images could not be loaded for 1 entry. This entry will not be deleted and will appear again in the next backup.',
+      'Images could not be loaded for {n} entries. These entries will not be deleted and will appear again in the next backup.',
+    ],
+    sw: [
+      'Picha za ingizo 1 hazikuweza kupakuliwa. Ingizo hili halitafutwa na litaonekana tena kwenye nakala inayofuata.',
+      'Picha za maingizo {n} hazikuweza kupakuliwa. Maingizo haya hayatafutwa na yataonekana tena kwenye nakala inayofuata.',
+    ],
   },
   'admin.approve': { de: 'ausnahmsweise genehmigen', en: 'approve as an exception', sw: 'idhinisha kwa hali maalum' },
   'admin.approveConfirm': {
@@ -333,9 +360,18 @@ const T = {
   'admin.download': { de: 'Aktuelle Datenlage herunterladen', en: 'Download current data', sw: 'Pakua data za sasa' },
   'admin.preparing': { de: 'PDF wird erstellt … {done}/{total}', en: 'Creating PDF … {done}/{total}', sw: 'Inaunda PDF … {done}/{total}' },
   'admin.downloaded': {
-    de: 'Die Datei „{file}“ mit {n} Einträgen wurde heruntergeladen. Bitte prüfe, ob sie vollständig gespeichert wurde, bevor du die Einträge löschst.',
-    en: 'The file “{file}” with {n} entries has been downloaded. Please check that it was saved completely before deleting the entries.',
-    sw: 'Faili “{file}” yenye maingizo {n} imepakuliwa. Tafadhali hakikisha imehifadhiwa kikamilifu kabla ya kufuta maingizo.',
+    de: [
+      'Die Datei „{file}“ mit 1 Eintrag wurde heruntergeladen. Bitte prüfe, ob sie vollständig gespeichert wurde, bevor du den Eintrag löschst.',
+      'Die Datei „{file}“ mit {n} Einträgen wurde heruntergeladen. Bitte prüfe, ob sie vollständig gespeichert wurde, bevor du die Einträge löschst.',
+    ],
+    en: [
+      'The file “{file}” with 1 entry has been downloaded. Please check that it was saved completely before deleting the entry.',
+      'The file “{file}” with {n} entries has been downloaded. Please check that it was saved completely before deleting the entries.',
+    ],
+    sw: [
+      'Faili “{file}” yenye ingizo 1 imepakuliwa. Tafadhali hakikisha imehifadhiwa kikamilifu kabla ya kufuta ingizo hilo.',
+      'Faili “{file}” yenye maingizo {n} imepakuliwa. Tafadhali hakikisha imehifadhiwa kikamilifu kabla ya kufuta maingizo.',
+    ],
   },
   'admin.delete': {
     de: 'Heruntergeladene Einträge aus der Datenbank löschen',
@@ -343,9 +379,18 @@ const T = {
     sw: 'Futa maingizo yaliyopakuliwa kutoka kwenye hifadhidata',
   },
   'admin.deleteConfirm': {
-    de: 'Sollen die {n} heruntergeladenen Einträge samt Bildern endgültig aus der Datenbank gelöscht werden? Das kann nicht rückgängig gemacht werden.',
-    en: 'Should the {n} downloaded entries including images be permanently deleted from the database? This cannot be undone.',
-    sw: 'Je, maingizo {n} yaliyopakuliwa pamoja na picha yafutwe kabisa kutoka kwenye hifadhidata? Hili haliwezi kutenduliwa.',
+    de: [
+      'Soll der heruntergeladene Eintrag samt Bildern endgültig aus der Datenbank gelöscht werden? Das kann nicht rückgängig gemacht werden.',
+      'Sollen die {n} heruntergeladenen Einträge samt Bildern endgültig aus der Datenbank gelöscht werden? Das kann nicht rückgängig gemacht werden.',
+    ],
+    en: [
+      'Should the downloaded entry including images be permanently deleted from the database? This cannot be undone.',
+      'Should the {n} downloaded entries including images be permanently deleted from the database? This cannot be undone.',
+    ],
+    sw: [
+      'Je, ingizo lililopakuliwa pamoja na picha lifutwe kabisa kutoka kwenye hifadhidata? Hili haliwezi kutenduliwa.',
+      'Je, maingizo {n} yaliyopakuliwa pamoja na picha yafutwe kabisa kutoka kwenye hifadhidata? Hili haliwezi kutenduliwa.',
+    ],
   },
   'admin.deleteCheck': {
     de: 'Ich habe die PDF-Datei gespeichert und geöffnet.',
@@ -353,7 +398,11 @@ const T = {
     sw: 'Nimehifadhi na kufungua faili ya PDF.',
   },
   'admin.deleteYes': { de: 'Endgültig löschen', en: 'Delete permanently', sw: 'Futa kabisa' },
-  'admin.deleted': { de: '{n} Einträge wurden gelöscht.', en: '{n} entries have been deleted.', sw: 'Maingizo {n} yamefutwa.' },
+  'admin.deleted': {
+    de: ['1 Eintrag wurde gelöscht.', '{n} Einträge wurden gelöscht.'],
+    en: ['1 entry has been deleted.', '{n} entries have been deleted.'],
+    sw: ['Ingizo 1 limefutwa.', 'Maingizo {n} yamefutwa.'],
+  },
   'admin.nothingToDownload': {
     de: 'Es gibt keine erfolgreichen Einträge zum Herunterladen.',
     en: 'There are no successful entries to download.',
@@ -432,9 +481,11 @@ export function locale() {
   return LOCALES[current];
 }
 
+// Texte mit Anzahl: [Einzahl, Mehrzahl]; gewählt wird nach params.n.
 export function t(key, params = {}) {
   const entry = T[key];
   let text = entry ? entry[current] || entry.de : key;
+  if (Array.isArray(text)) text = Number(params.n) === 1 ? text[0] : text[1];
   for (const [k, v] of Object.entries(params)) text = text.split(`{${k}}`).join(String(v));
   return text;
 }
