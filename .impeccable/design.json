@@ -1,0 +1,691 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-19T05:19:56+00:00",
+  "title": "Design System: Children of Finances",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Inlay-Karton",
+        "canonical": "#FDFDFB",
+        "tonalRamp": [
+          "#0B0B0A",
+          "#252524",
+          "#424240",
+          "#616160",
+          "#828281",
+          "#A5A5A3",
+          "#C9C9C7",
+          "#EEEEEC"
+        ]
+      },
+      "paper-2": {
+        "role": "neutral",
+        "displayName": "Getönter Karton",
+        "canonical": "#F2F4FA",
+        "tonalRamp": [
+          "#0A0B0F",
+          "#232529",
+          "#404247",
+          "#5F6166",
+          "#808287",
+          "#A3A5AA",
+          "#C7C9CF",
+          "#ECEEF4"
+        ]
+      },
+      "paper-3": {
+        "role": "neutral",
+        "displayName": "Kräftiger Karton",
+        "canonical": "#E6EAF4",
+        "tonalRamp": [
+          "#090B11",
+          "#22252C",
+          "#3F424A",
+          "#5E616A",
+          "#7F828B",
+          "#A1A5AE",
+          "#C5C9D3",
+          "#EAEEF8"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "Weiß",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Tiefe Tinte",
+        "canonical": "#141B3D",
+        "tonalRamp": [
+          "#040626",
+          "#1A2245",
+          "#363F65",
+          "#545F87",
+          "#7480AA",
+          "#96A3CF",
+          "#BAC7F5",
+          "#E9EEFF"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Verdünnte Tinte",
+        "canonical": "#4A5373",
+        "tonalRamp": [
+          "#050821",
+          "#1C233F",
+          "#38405F",
+          "#566080",
+          "#7781A3",
+          "#99A4C8",
+          "#BCC8ED",
+          "#E9EEFF"
+        ]
+      },
+      "pen": {
+        "role": "secondary",
+        "displayName": "Kugelschreiber-Blau",
+        "canonical": "#1E3A8A",
+        "tonalRamp": [
+          "#010035",
+          "#061766",
+          "#1E3A8A",
+          "#3B5CAF",
+          "#5A7ED4",
+          "#7BA2FB",
+          "#B0C9FF",
+          "#E7EFFF"
+        ]
+      },
+      "pen-faded": {
+        "role": "secondary",
+        "displayName": "Verblasstes Blau",
+        "canonical": "#6B86C5",
+        "tonalRamp": [
+          "#010034",
+          "#0E1F55",
+          "#283E77",
+          "#465F9A",
+          "#6680BF",
+          "#87A4E5",
+          "#B0C9FF",
+          "#E7EFFF"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Zeilenlinie",
+        "canonical": "#D3DBEE",
+        "tonalRamp": [
+          "#060B17",
+          "#1F2533",
+          "#3B4251",
+          "#5A6171",
+          "#7B8293",
+          "#9DA5B7",
+          "#C1C9DC",
+          "#E7EEFF"
+        ]
+      },
+      "pencil": {
+        "role": "neutral",
+        "displayName": "Bleistift",
+        "canonical": "#6B6B6B",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ]
+      },
+      "pencil-line": {
+        "role": "neutral",
+        "displayName": "Bleistiftlinie",
+        "canonical": "#A6A6A6",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ]
+      },
+      "orange": {
+        "role": "primary",
+        "displayName": "Hüllen-Orange",
+        "canonical": "#BE400B",
+        "tonalRamp": [
+          "#1B0300",
+          "#451000",
+          "#752200",
+          "#A83400",
+          "#D35427",
+          "#FC794E",
+          "#FFB49C",
+          "#FFE9E2"
+        ]
+      },
+      "orange-deep": {
+        "role": "primary",
+        "displayName": "Gedrücktes Orange",
+        "canonical": "#A33608",
+        "tonalRamp": [
+          "#1B0300",
+          "#451100",
+          "#742200",
+          "#A5380B",
+          "#CC5C36",
+          "#F47F59",
+          "#FFB49C",
+          "#FFE9E2"
+        ]
+      },
+      "orange-bright": {
+        "role": "primary",
+        "displayName": "Streifen-Orange",
+        "canonical": "#F06A1D",
+        "tonalRamp": [
+          "#190500",
+          "#411600",
+          "#6E2A00",
+          "#9F3F00",
+          "#D35600",
+          "#FF7830",
+          "#FFB595",
+          "#FFE9E0"
+        ]
+      },
+      "orange-wash": {
+        "role": "primary",
+        "displayName": "Verblasstes Orange",
+        "canonical": "#FFE6D2",
+        "tonalRamp": [
+          "#150700",
+          "#332111",
+          "#513D2D",
+          "#725D4B",
+          "#947E6B",
+          "#B7A08D",
+          "#DCC4B1",
+          "#FFEADA"
+        ]
+      },
+      "orange-ink": {
+        "role": "primary",
+        "displayName": "Orange-Tinte",
+        "canonical": "#3D1F09",
+        "tonalRamp": [
+          "#170600",
+          "#3A1C06",
+          "#5A3924",
+          "#7B5842",
+          "#9E7962",
+          "#C29C84",
+          "#E8C0A7",
+          "#FFEADD"
+        ]
+      },
+      "red": {
+        "role": "tertiary",
+        "displayName": "Prüfungs-Rot",
+        "canonical": "#B42228",
+        "tonalRamp": [
+          "#1F0001",
+          "#4D0006",
+          "#800010",
+          "#B11E26",
+          "#D94947",
+          "#FF726C",
+          "#FFB2AB",
+          "#FFE9E6"
+        ]
+      },
+      "red-wash": {
+        "role": "tertiary",
+        "displayName": "Rot-Hauch",
+        "canonical": "#FCE9E9",
+        "tonalRamp": [
+          "#130808",
+          "#2E2121",
+          "#4D3E3E",
+          "#6D5D5D",
+          "#8E7E7E",
+          "#B2A0A0",
+          "#D6C4C4",
+          "#FCE9E9"
+        ]
+      },
+      "red-ink": {
+        "role": "tertiary",
+        "displayName": "Rot-Tinte",
+        "canonical": "#8F1A1F",
+        "tonalRamp": [
+          "#1F0001",
+          "#4D0006",
+          "#800212",
+          "#A63332",
+          "#CD5752",
+          "#F57B74",
+          "#FFB2AC",
+          "#FFE9E6"
+        ]
+      },
+      "green": {
+        "role": "tertiary",
+        "displayName": "Eingangs-Grün",
+        "canonical": "#17703A",
+        "tonalRamp": [
+          "#001004",
+          "#002E12",
+          "#005024",
+          "#1C733D",
+          "#44965E",
+          "#69BA7F",
+          "#8DDFA2",
+          "#C7FFD3"
+        ]
+      },
+      "green-wash": {
+        "role": "tertiary",
+        "displayName": "Grün-Hauch",
+        "canonical": "#E5F3E9",
+        "tonalRamp": [
+          "#050E08",
+          "#1D2821",
+          "#3A453D",
+          "#59655C",
+          "#79867D",
+          "#9CA9A0",
+          "#C0CDC4",
+          "#E5F3E9"
+        ]
+      },
+      "amber": {
+        "role": "tertiary",
+        "displayName": "Bernstein",
+        "canonical": "#7A4B00",
+        "tonalRamp": [
+          "#140800",
+          "#371F00",
+          "#5E3800",
+          "#855513",
+          "#A9773A",
+          "#CE9A5D",
+          "#F4BE81",
+          "#FFEBD5"
+        ]
+      },
+      "amber-wash": {
+        "role": "tertiary",
+        "displayName": "Bernstein-Hauch",
+        "canonical": "#FFF1CC",
+        "tonalRamp": [
+          "#100A00",
+          "#2F2403",
+          "#4C4121",
+          "#6C6040",
+          "#8E8160",
+          "#B1A481",
+          "#D6C8A4",
+          "#FCEEC9"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Ansichtstitel „Ansicht Schatzmeister“ in Orange."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Abschnittsüberschriften und Titel der Anmeldung in Orange."
+      },
+      "wordmark": {
+        "displayName": "Wortmarke",
+        "purpose": "Wortmarke „Children of Finances“ in Kugelschreiber-Blau; am Handy 1.375rem."
+      },
+      "title-lg": {
+        "displayName": "Title groß",
+        "purpose": "Titel der roten Tabelle in Weiß; Betrag des Geldeingangs im Band in Grün mit Tabellenziffern."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Titel der Auswahlkacheln „Geldeingang“ und „Bezahlung“."
+      },
+      "title-sm": {
+        "displayName": "Title klein",
+        "purpose": "Zeitraum-Überschriften über der Erfolgstabelle."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Fließtext; Eingabewerte mit 500."
+      },
+      "body-sm": {
+        "displayName": "Body klein",
+        "purpose": "Warnkasten, Sprechblase, Fuß des Bands, Fehlermeldungen."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Feldbeschriftungen."
+      },
+      "button": {
+        "displayName": "Knopf",
+        "purpose": "Beschriftung aller Knöpfe."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Hinweise, Speicherstatus, kleine Knöpfe."
+      },
+      "label-sm": {
+        "displayName": "Label klein",
+        "purpose": "Tabellenköpfe, Zellbeschriftungen am Handy, Plaketten (700)."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Bildnachweis unter Fotos."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-float",
+        "value": "0 12px 32px rgba(20, 27, 61, 0.18), 0 2px 6px rgba(20, 27, 61, 0.12)",
+        "purpose": "Nur für schwebende Ebenen: Sprechblase, Bestätigungsdialog, Meldung."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px rgba(30, 58, 138, 0.18)",
+        "purpose": "Fokussiertes Eingabefeld, zusammen mit Rahmen in Kugelschreiber-Blau."
+      },
+      {
+        "name": "focus-outline",
+        "value": "outline: 3px solid var(--pen-faded); outline-offset: 2px",
+        "purpose": "Globaler :focus-visible-Umriss."
+      },
+      {
+        "name": "flag-ring",
+        "value": "0 0 0 1.5px var(--ink)",
+        "purpose": "Strich um die Flaggen (kein Schatten)."
+      },
+      {
+        "name": "scrim",
+        "value": "rgba(20, 27, 61, 0.55)",
+        "purpose": "Schleier hinter dem Bestätigungsdialog."
+      },
+      {
+        "name": "scrim-lightbox",
+        "value": "rgba(12, 15, 32, 0.9)",
+        "purpose": "Schleier der Bild-Vollansicht."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Eigene Ausklang-Kurve für Druck, Eintritte, Seitenwechsel und Bandfüllung."
+      },
+      {
+        "name": "press",
+        "value": "transform: scale(0.97); transition: transform 160ms var(--ease-out)",
+        "purpose": "Druck-Feedback der Knöpfe (Kacheln 0.98, Vorschaubilder 0.96, Info-Knopf 0.92, Schließen 0.94)."
+      },
+      {
+        "name": "color-change",
+        "value": "150ms ease",
+        "purpose": "Wechsel von Hintergrund, Rahmen und Schriftfarbe."
+      },
+      {
+        "name": "bubble-enter",
+        "value": "@starting-style { opacity: 0; transform: scale(0.97) } · 160ms var(--ease-out)",
+        "purpose": "Eintritt der Sprechblase, Drehpunkt an der Spitze."
+      },
+      {
+        "name": "modal-enter",
+        "value": "@starting-style { opacity: 0; transform: scale(0.96) } · 200ms var(--ease-out)",
+        "purpose": "Eintritt des Bestätigungsdialogs; der Schleier blendet in 200 ms ein."
+      },
+      {
+        "name": "toast-enter",
+        "value": "@starting-style { opacity: 0; transform: translateY(12px) } · 300ms var(--ease-out)",
+        "purpose": "Eintritt der Meldungen unten rechts."
+      },
+      {
+        "name": "flip-in",
+        "value": "240ms var(--ease-out); from { opacity: 0; transform: perspective(900px) rotateX(-12deg) translateY(-6px) }; transform-origin: 50% 0",
+        "purpose": "Seitenwechsel beim Umschalten zwischen Geldeingang und Bezahlung."
+      },
+      {
+        "name": "band-fill",
+        "value": "transform: scaleX(ratio); transition: transform 300ms var(--ease-out)",
+        "purpose": "Füllung der Bandspur."
+      },
+      {
+        "name": "spin",
+        "value": "rotate(360deg) 0.8s linear infinite",
+        "purpose": "Speichern und Bildverarbeitung."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "flip-in → fade-in 160ms ease; Übergänge 0ms; kein Druck-Scale; spin 2.4s",
+        "purpose": "Ersatz bei prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "band-narrow",
+        "value": "420px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      },
+      {
+        "name": "jcard-split",
+        "value": "900px"
+      },
+      {
+        "name": "admin-stack",
+        "value": "980px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Hauptknopf",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Der eine orange Hauptknopf je Bereich („Speichern“, „Anmelden“, „Herunterladen“).",
+      "html": "<button class=\"ds-btn ds-btn-primary\" type=\"button\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7\"/></svg>Speichern</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius, 6px); background: var(--paper, #FDFDFB); color: var(--pen, #1E3A8A); font: 600 0.9375rem/1.2 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), background-color 150ms ease, border-color 150ms ease, color 150ms ease; } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-btn { transition-duration: 0ms; } .ds-btn:active { transform: none; } } .ds-btn-primary { background: var(--orange, #BE400B); border-color: var(--orange, #BE400B); color: #fff; } @media (hover: hover) and (pointer: fine) { .ds-btn-primary:hover { background: #A33608; border-color: #A33608; } }"
+    },
+    {
+      "name": "Zweitknopf",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Karton mit Rahmen und Schrift in Kugelschreiber-Blau für Nebenaktionen wie „Weitere Zahlung hinzufügen“.",
+      "html": "<button class=\"ds-btn\" type=\"button\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14\"/><path d=\"M5 12h14\"/></svg>Weitere Zahlung hinzufügen</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius, 6px); background: var(--paper, #FDFDFB); color: var(--pen, #1E3A8A); font: 600 0.9375rem/1.2 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), background-color 150ms ease, border-color 150ms ease, color 150ms ease; } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-btn { transition-duration: 0ms; } .ds-btn:active { transform: none; } } @media (hover: hover) and (pointer: fine) { .ds-btn:hover { background: var(--paper-2, #F2F4FA); } }"
+    },
+    {
+      "name": "Gefahrknopf",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Rot gerahmter Knopf für Löschen nach der Sicherung.",
+      "html": "<button class=\"ds-btn ds-btn-danger\" type=\"button\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 7h16\"/><path d=\"M10 11v6\"/><path d=\"M14 11v6\"/><path d=\"M6 7l1 12.5A1.5 1.5 0 0 0 8.5 21h7a1.5 1.5 0 0 0 1.5-1.5L18 7\"/><path d=\"M9 7V4.5h6V7\"/></svg>Gesicherte Einträge löschen</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius, 6px); background: var(--paper, #FDFDFB); color: var(--pen, #1E3A8A); font: 600 0.9375rem/1.2 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), background-color 150ms ease, border-color 150ms ease, color 150ms ease; } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-btn { transition-duration: 0ms; } .ds-btn:active { transform: none; } } .ds-btn-danger { border-color: var(--red, #B42228); color: var(--red, #B42228); } @media (hover: hover) and (pointer: fine) { .ds-btn-danger:hover { background: var(--red-wash, #FCE9E9); } }"
+    },
+    {
+      "name": "Eingabefeld",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Weißes Feld, Wert in Kugelschreiber-Blau, Rahmen in verblasstem Blau; Fokus wechselt auf Kugelschreiber-Blau mit Hof.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Was wurde bezahlt? <span class=\"ds-req\">*</span></span><input class=\"ds-in\" type=\"text\" placeholder=\"z. B. Wasser Kanister\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-field-label { font-size: 0.9375rem; font-weight: 600; color: var(--ink, #141B3D); } .ds-req { color: var(--red, #B42228); } .ds-in { width: 100%; min-height: 46px; padding: 10px 12px; background: #fff; color: var(--pen, #1E3A8A); border: 2px solid var(--pen-faded, #6B86C5); border-radius: var(--radius, 6px); font: 500 1rem/1.4 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); transition: border-color 150ms ease, box-shadow 150ms ease; } .ds-in::placeholder { color: var(--pencil, #6B6B6B); opacity: 1; font-weight: 400; } .ds-in:focus { outline: none; border-color: var(--pen, #1E3A8A); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.18); }"
+    },
+    {
+      "name": "Sprachwahl",
+      "kind": "nav",
+      "refersTo": "lang-button",
+      "description": "Segmentknopf Deutsch / English / Kiswahili in der Kopfzeile und im Anmeldefenster.",
+      "html": "<div class=\"ds-lang\" role=\"group\" aria-label=\"Sprache\"><button class=\"ds-lang-btn ds-active\" aria-pressed=\"true\" type=\"button\">Deutsch</button><button class=\"ds-lang-btn\" aria-pressed=\"false\" type=\"button\">English</button><button class=\"ds-lang-btn\" aria-pressed=\"false\" type=\"button\">Kiswahili</button></div>",
+      "css": ".ds-lang { display: inline-flex; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius, 6px); overflow: hidden; } .ds-lang-btn { min-height: 36px; padding: 0 12px; border: 0; background: var(--paper, #FDFDFB); color: var(--pen, #1E3A8A); font: 600 0.875rem/1 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; } .ds-lang-btn + .ds-lang-btn { border-left: 2px solid var(--pen, #1E3A8A); } .ds-lang-btn.ds-active { background: var(--pen, #1E3A8A); color: #fff; } .ds-lang-btn:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: -3px; } @media (hover: hover) and (pointer: fine) { .ds-lang-btn:not(.ds-active):hover { background: var(--paper-2, #F2F4FA); } }"
+    },
+    {
+      "name": "Plaketten",
+      "kind": "chip",
+      "refersTo": "badge-complete",
+      "description": "Status eines Eintrags: vollständig, ausnahmsweise genehmigt, unvollständig, Entwurf.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge-complete\">vollständig</span><span class=\"ds-badge ds-badge-approved\">ausnahmsweise genehmigt</span><span class=\"ds-badge ds-badge-incomplete\">unvollständig</span><span class=\"ds-badge ds-badge-draft\">Entwurf</span></div>",
+      "css": ".ds-badges { display: flex; flex-wrap: wrap; gap: 8px; } .ds-badge { display: inline-block; padding: 2px 9px; border-radius: 4px; font: 700 0.8125rem/1.35 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); white-space: nowrap; } .ds-badge-complete { background: var(--green-wash, #E5F3E9); color: var(--green, #17703A); } .ds-badge-approved { background: var(--amber-wash, #FFF1CC); color: var(--amber, #7A4B00); } .ds-badge-incomplete { background: var(--red-wash, #FCE9E9); color: var(--red-ink, #8F1A1F); } .ds-badge-draft { background: transparent; color: var(--pencil, #6B6B6B); box-shadow: inset 0 0 0 1.5px var(--pencil-line, #A6A6A6); }"
+    },
+    {
+      "name": "Auswahlkacheln",
+      "kind": "custom",
+      "refersTo": "choice",
+      "description": "Wahl zwischen Geldeingang (gedrückt grün) und Bezahlung (gedrückt orange), Titel in Blockschrift.",
+      "html": "<div class=\"ds-choices\"><button class=\"ds-choice ds-choice-income\" aria-pressed=\"false\" type=\"button\"><span class=\"ds-choice-icon\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M17 7L7 17\"/><path d=\"M7 9v8h8\"/></svg></span><span class=\"ds-choice-title\">Geldeingang</span><span class=\"ds-choice-hint\">Hat CoM Kenya von jemandem Geld erhalten?</span></button><button class=\"ds-choice ds-choice-expense\" aria-pressed=\"true\" type=\"button\"><span class=\"ds-choice-icon\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 17L17 7\"/><path d=\"M9 7h8v8\"/></svg></span><span class=\"ds-choice-title\">Bezahlung</span></button></div>",
+      "css": ".ds-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; } .ds-choice { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; text-align: left; padding: 14px 16px; min-height: 56px; background: var(--paper, #FDFDFB); color: var(--ink, #141B3D); border: 2px solid var(--rule, #D3DBEE); border-radius: var(--radius-lg, 10px); font: 400 1rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); cursor: pointer; transition: transform 160ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)), border-color 150ms ease, background-color 150ms ease; } .ds-choice:active { transform: scale(0.98); } .ds-choice:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; } .ds-choice-icon { display: flex; align-self: center; } .ds-choice-income .ds-choice-icon { color: var(--green, #17703A); } .ds-choice-expense .ds-choice-icon { color: var(--orange, #BE400B); } .ds-choice-title { font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-size: 1.5rem; line-height: 1.1; color: var(--ink, #141B3D); } .ds-choice-hint { grid-column: 2; font-size: 0.8125rem; line-height: 1.4; color: var(--ink-2, #4A5373); opacity: 0.85; } .ds-choice[aria-pressed=\"true\"] { border-color: var(--orange, #BE400B); background: var(--orange, #BE400B); } .ds-choice-income[aria-pressed=\"true\"] { border-color: var(--green, #17703A); background: var(--green, #17703A); } .ds-choice[aria-pressed=\"true\"] .ds-choice-title, .ds-choice[aria-pressed=\"true\"] .ds-choice-icon, .ds-choice[aria-pressed=\"true\"] .ds-choice-hint { color: #fff; opacity: 1; } @media (hover: hover) and (pointer: fine) { .ds-choice:hover { border-color: var(--pen, #1E3A8A); } } @media (prefers-reduced-motion: reduce) { .ds-choice { transition-duration: 0ms; } .ds-choice:active { transform: none; } }"
+    },
+    {
+      "name": "Das Band",
+      "kind": "custom",
+      "refersTo": "tape-band",
+      "description": "Signatur: ein Geldeingang als Kassettenseite mit fester Länge; Füllung rot, Überlauf färbt Rand und Rest rot.",
+      "html": "<div class=\"ds-band\" role=\"group\" aria-label=\"Aktueller Geldeingang\"><div class=\"ds-band-head\"><div class=\"ds-band-source\"><strong>Children of Mathare Germany</strong>Seit Geldeingang vom 01.10.2026</div><div class=\"ds-band-total\">KSh 150.000</div></div><div class=\"ds-band-track\" aria-hidden=\"true\"><div class=\"ds-band-fill\"></div></div><div class=\"ds-band-foot\"><span class=\"ds-band-spent\"><small>Bezahlt</small><b>KSh 90.000</b></span><span class=\"ds-band-left\"><small>Übrig</small><b>KSh 60.000</b></span></div></div>",
+      "css": ".ds-band { container-type: inline-size; position: relative; display: grid; gap: 8px; padding: 12px 16px; background: var(--paper, #FDFDFB); color: var(--ink, #141B3D); border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius-lg, 10px); font-family: var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-band::after { content: \"\"; position: absolute; top: 0; right: 14px; width: 22px; height: 18px; background: linear-gradient(var(--orange-bright, #F06A1D), var(--orange-bright, #F06A1D)) 0 0 / 4px 100% no-repeat, linear-gradient(var(--orange-bright, #F06A1D), var(--orange-bright, #F06A1D)) 9px 0 / 4px 100% no-repeat, linear-gradient(var(--orange-bright, #F06A1D), var(--orange-bright, #F06A1D)) 18px 0 / 4px 100% no-repeat; } .ds-band-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-right: 34px; } .ds-band-source { font-size: 0.875rem; color: var(--ink-2, #4A5373); min-width: 0; } .ds-band-source strong { display: block; color: var(--ink, #141B3D); font-size: 0.9375rem; font-weight: 600; } .ds-band-total { font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-size: 1.625rem; line-height: 1; color: var(--green, #17703A); white-space: nowrap; font-variant-numeric: tabular-nums; } .ds-band-track { height: 14px; border: 2px solid var(--pen, #1E3A8A); border-radius: 7px; background: #fff; overflow: hidden; } .ds-band-fill { height: 100%; width: 100%; background: var(--red, #B42228); transform-origin: left center; transform: scaleX(0.6); transition: transform 300ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)); } .ds-band-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9375rem; font-variant-numeric: tabular-nums; } .ds-band-foot > span { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; } .ds-band-foot small { font-size: 0.875rem; font-weight: 600; } .ds-band-foot b { white-space: nowrap; } .ds-band-spent { color: var(--red, #B42228); } .ds-band-left { color: var(--ink, #141B3D); justify-content: flex-end; text-align: right; } .ds-band-left b { font-weight: 800; } @container (max-width: 420px) { .ds-band-head { flex-direction: column-reverse; align-items: flex-start; gap: 6px; padding-right: 0; } .ds-band-total { font-size: 1.75rem; } .ds-band-foot > span { flex-direction: column; gap: 0; } .ds-band-foot > .ds-band-left { align-items: flex-end; } } @media (prefers-reduced-motion: reduce) { .ds-band-fill { transition-duration: 0ms; } }"
+    },
+    {
+      "name": "Warnkasten",
+      "kind": "card",
+      "refersTo": "warning-box",
+      "description": "Verblasster oranger Kasten mit dem Warnhinweis, ohne Rahmen, über der roten Tabelle.",
+      "html": "<section class=\"ds-warning\" role=\"note\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z\"/><path d=\"M12 7.5v5.5\"/><path d=\"M12 16.5v.01\"/></svg><p>Es ist wichtig, dass absolut jede noch so kleine Zahlung hier protokolliert wird.</p></section>",
+      "css": ".ds-warning { display: flex; gap: 12px; align-items: flex-start; background: var(--orange-wash, #FFE6D2); color: var(--orange-ink, #3D1F09); border-radius: var(--radius-lg, 10px); padding: 14px 16px; font: 400 0.9375rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-warning svg { flex: none; color: var(--orange, #BE400B); margin-top: 1px; } .ds-warning p { margin: 0; }"
+    },
+    {
+      "name": "Rote Tabelle und Danke-Satz",
+      "kind": "card",
+      "refersTo": "red-head",
+      "description": "Kopf der Pflicht-Tabelle „Unvollständige Eingaben“ und der grüne Danke-Satz, der an ihre Stelle tritt.",
+      "html": "<div class=\"ds-red\"><div class=\"ds-red-head\"><h2 class=\"ds-red-title\">Unvollständige Eingaben</h2><span class=\"ds-red-count\">1</span></div><p class=\"ds-red-intro\">Diese Einträge sind noch nicht vollständig.</p></div><p class=\"ds-all-good\"><svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12.5l4.5 4.5L19 7\"/></svg>Alle bisher angelegten Einträge waren vollständig. Danke!</p>",
+      "css": ".ds-red { border: 2px solid var(--red, #B42228); border-radius: var(--radius-lg, 10px); background: var(--paper, #FDFDFB); overflow: hidden; margin-bottom: 12px; font-family: var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-red-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; background: var(--red, #B42228); color: #fff; } .ds-red-title { margin: 0; font-family: var(--font-hand, 'Patrick Hand SC', 'Comic Neue', system-ui, sans-serif); font-weight: 400; font-size: 1.625rem; line-height: 1.05; color: #fff; } .ds-red-count { font-size: 0.875rem; font-weight: 700; background: #fff; color: var(--red, #B42228); border-radius: 999px; padding: 2px 10px; white-space: nowrap; } .ds-red-intro { margin: 0; padding: 12px 16px; color: var(--ink, #141B3D); } .ds-all-good { display: flex; align-items: center; gap: 10px; margin: 0; padding: 14px 16px; border-radius: var(--radius-lg, 10px); background: var(--green-wash, #E5F3E9); color: var(--green, #17703A); font: 700 1.0625rem/1.5 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); } .ds-all-good svg { flex: none; }"
+    },
+    {
+      "name": "Foto mit Nachweis",
+      "kind": "custom",
+      "refersTo": "photo-credit",
+      "description": "Foto aus offener Sammlung, höchstens 800 px als WebP, mit sichtbarem Bildnachweis; im Datensparmodus nicht geladen.",
+      "html": "<figure class=\"ds-photo\"><div class=\"ds-photo-frame\"></div><figcaption class=\"ds-photo-credit\">Foto: <a href=\"https://commons.wikimedia.org/wiki/File:Ngong_Hills.jpg\">Ngong Hills</a> · Rotsee2 · <a href=\"https://creativecommons.org/licenses/by-sa/3.0/\" lang=\"en\">CC BY-SA 3.0</a> · zugeschnitten und verkleinert</figcaption></figure>",
+      "css": ".ds-photo { margin: 0; max-width: 420px; border: 2px solid var(--pen, #1E3A8A); border-radius: var(--radius-lg, 10px); overflow: hidden; background: var(--paper, #FDFDFB); } .ds-photo-frame { aspect-ratio: 3 / 2; background: var(--paper-2, #F2F4FA); border-bottom: 2px solid var(--pen, #1E3A8A); } .ds-photo-credit { padding: 6px 12px 8px; font: 400 0.6875rem/1.4 var(--font-ui, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif); color: var(--ink-2, #4A5373); background: var(--paper, #FDFDFB); } .ds-photo-credit a { color: inherit; text-decoration-color: var(--pen-faded, #6B86C5); text-underline-offset: 2px; } .ds-photo-credit a:focus-visible { outline: 3px solid var(--pen-faded, #6B86C5); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Die Kassetten-Hülle",
+    "overview": "Children of Finances sieht aus wie das Inlay einer selbst bespielten Musikkassette: fast weißer Karton, darauf in Kugelschreiber eingetragen, was Menschen erfassen, und in einem einzigen Orange gedruckt, was die Hülle selbst sagt. Jeder Geldeingang ist eine Kassettenseite mit fester Länge, jede Zahlung ein Titel darauf, ihr Betrag rechtsbündig wie eine Laufzeit. Die Seite darf nicht überlaufen. Das ist das Band, die Signatur des Systems.\n\nDie Oberfläche ist ein Arbeitswerkzeug (Modus Operate). Sie ist für ein günstiges Handy draußen im kenianischen Tageslicht gebaut und für den Laptop des Schatzmeisters. Deshalb ist sie hell, kontrastreich und flach: tiefe Tinte auf Karton (16,44:1), Kugelschreiber-Blau für Werte (10,17:1), 2-px-Striche statt Schatten und große Bedienflächen für den Daumen. Dichte entsteht durch Tabellen, Titelzeilen und Bänder, nicht durch ein Karten-Raster. Die handgeschriebene Blockschrift trägt Wortmarke, Überschriften und den Betrag auf dem Band. Alles, was bedient, gelesen oder geprüft werden muss, steht in der Systemschrift.\n\nSchlank zu sein gehört zur Gestalt: eine einzige selbst gehostete Schrift (23 KB), Fotos aus offenen Sammlungen höchstens 800 px breit als WebP, im Datensparmodus gar nicht geladen. Die Welt verweigert ausdrücklich den grauen Verwaltungs-Standard mit Karten-Raster und das dunkle Neon-Finanz-Klischee.",
+    "keyCharacteristics": [
+      "Heller Inlay-Karton als Grund, gewählt für Sonnenlicht und nicht nach Kategorie.",
+      "Drei Tinten mit fester Bedeutung: Kugelschreiber-Blau für Eingetragenes, tiefe Tinte für Text, Bleistift für Vorläufiges; dazu Orange als einziger gedruckter Akzent.",
+      "Rahmen sind 2-px-Striche in Kugelschreiber-Blau; Schatten tragen nur schwebende Ebenen.",
+      "Patrick Hand SC (selbst gehostet) für Wortmarke, Überschriften und das Band, die Systemschrift für Bedienung und Daten.",
+      "Das Band: ein Füllbalken pro Geldeingang, Überlauf in Rot, Beträge rechtsbündig mit Tabellenziffern.",
+      "Pflichtfarben: Rot für Unvollständiges, Grün für Geldeingänge, Vollständiges und den Danke-Satz, nie als einziges Signal.",
+      "Beide Flaggen und der dreifache orange Streifen bilden die Kopfzeile.",
+      "Knappe Bewegung: Druck-Feedback, Eintritt schwebender Ebenen und ein kurzer Seitenwechsel beim Umschalten, jeweils mit Ersatz bei reduzierter Bewegung."
+    ],
+    "rules": [
+      {
+        "name": "Die Kugelschreiber-Regel",
+        "body": "Was ein Mensch eingetragen hat, steht in Kugelschreiber-Blau; was die Hülle sagt (Überschriften, Hauptaktion), ist orange gedruckt; was man liest, ist Tinte. Ein Wert wechselt seine Farbe nur für eine Pflichtfarbe (Geldeingang grün, Fehlendes rot), nie, weil er wichtig ist.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Ein-Druck-Regel",
+        "body": "Orange ist der einzige Akzent. Es gibt keine zweite Schmuckfarbe, und `orange-bright` gehört nur den Streifen, nie dem Text.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Pflichtfarben-Regel",
+        "body": "Rot heißt unvollständig, fehlend, überzogen oder gefährlich; Grün heißt Geldeingang, vollständig, gespeichert oder Danke. Keine der beiden ist Schmuck, und keine trägt eine Bedeutung allein: Ein Wort oder ein Symbol sagt sie mit. Beim Schatzmeister sind Geldeingänge grün und Ausgaben rot.",
+        "section": "colors"
+      },
+      {
+        "name": "Die Blockschrift-Regel",
+        "body": "Patrick Hand SC nur für Wortmarke, Überschriften, Auswahlkacheln und den Betrag im Band. Nie für Knöpfe, Feldbeschriftungen, Tabellendaten oder Fließtext: Was bedient oder geprüft wird, steht in der Systemschrift.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Laufzeit-Regel",
+        "body": "Beträge stehen rechtsbündig mit Tabellenziffern (`tabular-nums`) und ohne Umbruch, wie Laufzeiten auf einer Hülle; im Band mit „KSh“ davor.",
+        "section": "typography"
+      },
+      {
+        "name": "Die Daumen-Regel",
+        "body": "Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, kleine Knöpfe 38 px, die Sprachwahl im Anmeldefenster 44 px. Knöpfe stehen 12 px auseinander.",
+        "section": "layout"
+      },
+      {
+        "name": "Die Flach-auf-Karton-Regel",
+        "body": "In Ruhe liegt alles flach auf dem Karton, gerahmt von einem Strich. Einen Schatten bekommt nur, was über der Seite schwebt und wieder verschwindet.",
+        "section": "elevation"
+      },
+      {
+        "name": "Die Zwei-Pixel-Regel",
+        "body": "Jeder Rahmen ist ein 2-px-Strich, 1 px nur für Zeilenlinien in Tabellen. Gestrichelt heißt vorläufig oder abgelegt.",
+        "section": "shapes"
+      },
+      {
+        "name": "Die Drei-Streifen-Regel",
+        "body": "Der dreifache orange Streifen ist das gedruckte Zeichen der Hülle: quer unter der Kopfzeile, klein in der Ecke jedes gefüllten Bands, im Favicon. Er wird nicht als Schmuck auf andere Flächen verteilt.",
+        "section": "shapes"
+      },
+      {
+        "name": "Die Seite-darf-nicht-überlaufen-Regel",
+        "body": "Jeder Geldeingang erscheint als Band, nie als nackte Kennzahl oder Kachel. Die Füllung zeigt das Verhältnis, die Zahlen darunter sagen es, und ein Überlauf färbt Rand und Rest rot und benennt ihn.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Halte den Karton hell und die Tinte dunkel.** Das System ist für Sonnenlicht: Fließtext in Tinte (16,44:1), eingetragene Werte in Kugelschreiber-Blau (10,17:1), Grenzen von Eingabefeldern mindestens in verblasstem Blau (3,53:1).",
+      "**Rahme mit einem 2-px-Strich** in Kugelschreiber-Blau; Zeilen in Tabellen trennt eine 1-px-Linie in Zeilenlinie.",
+      "**Setze Orange für Überschriften und den einen Hauptknopf** je Bereich ein, mit weißer Schrift (5,35:1); längere Texte stehen in Tinte.",
+      "**Zeige jeden Geldeingang als Band**, mit Füllung, „Bezahlt“ und „Übrig“, rechtsbündigen Beträgen und rotem Überlauf.",
+      "**Halte die Pflicht-Elemente fest:** die rote Tabelle „Unvollständige Eingaben“ ganz oben, den grünen Danke-Satz, wenn nichts fehlt, darüber den verblassten orangen Warnkasten, beim Schatzmeister Geldeingänge grün und Ausgaben rot.",
+      "**Zeige Vorläufiges in Bleistift:** gestrichelte Ränder in Bleistiftlinie, Text in Bleistift, den Zustand zusätzlich als Wort.",
+      "**Gib jedem Foto seinen sichtbaren Nachweis** (Titel, Urheber, Lizenz, „zugeschnitten und verkleinert“): höchstens 800 px breit als WebP mit 480/800-`srcset`, lazy, im Datensparmodus gar nicht.",
+      "**Gib Druck-Feedback mit `scale(0.97)`** über 160 ms und `--ease-out` (cubic-bezier(0.23, 1, 0.32, 1)). Schwebende Ebenen treten über `@starting-style` ein, und jede Bewegung hat einen Ersatz bei `prefers-reduced-motion`.",
+      "**Gestalte die Browser-Oberflächen aus der Palette:** Markierung hellorange, Schreibmarke Kugelschreiber-Blau, `accent-color` Orange, Bildlaufleiste in verblasstem Blau auf getöntem Karton, Fokus als 3-px-Umriss in verblasstem Blau.",
+      "**Zeichne Symbole aus dem eigenen Set** (24-px-Raster, Strich 2, runde Enden, `currentColor`).",
+      "**Behalte beide Flaggen** in der Kopfzeile, in amtlichen Farben mit 1,5-px-Ring in Tinte."
+    ],
+    "donts": [
+      "**Setze Patrick Hand SC nicht** für Knöpfe, Feldbeschriftungen, Tabellendaten oder Fließtext ein.",
+      "**Setze keinen Text in `orange-bright`** (3,04:1); es gehört nur den Streifen.",
+      "**Verwende Rot und Grün nicht als Schmuck** und nie als einziges Signal; ein Wort oder ein Symbol sagt die Bedeutung mit.",
+      "**Füge keine zweite Akzentfarbe hinzu** und übernimm keine Flaggenfarbe in die Oberfläche.",
+      "**Baue keinen grauen Verwaltungs-Standard mit Karten-Raster** und kein dunkles Neon-Finanz-Design.",
+      "**Gib ruhenden Flächen keinen Schatten;** nur Sprechblase, Dialog und Meldung schweben.",
+      "**Lade keine zweite Webschrift** und keine Sammlungsfotos über 800 px Breite (Belegfotos sind Inhalt, nicht Gestaltung).",
+      "**Zeige auf Fotos keine erkennbaren Personen, keine Kinder, keine Elendsbilder und keine dominanten Logos.** Fotos zeigen die Welt um den Verein, nie den Verein selbst.",
+      "**Ersetze Symbole nicht durch Unicode-Zeichen oder Emoji.** Rechenzeichen („+ “, „− “ im Band), Trennpunkte und das Pflichtsternchen sind Text, keine Symbole.",
+      "**Stelle keine Beschriftung als Kicker über eine Überschrift;** die Überschrift trägt sich selbst."
+    ]
+  }
+}
