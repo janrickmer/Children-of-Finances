@@ -206,7 +206,15 @@ export class ExpenseRow {
 
     if (mode === 'incomplete') {
       this.info = h('div', { class: 'row-info' });
-      this.tr.append(h('td', {}, cellLabel(t('col.name')), this.info));
+      this.tr.append(h('td', { class: 'row-info-cell' }, cellLabel(t('col.name')), this.info));
+      // Am Handy zuerst nur eine kompakte Zeile; „Ergänzen“ klappt das Formular auf.
+      // Der Zustand hängt an diesem Objekt und übersteht so das sekündliche Abgleichen.
+      this.open = false;
+      this.summary = h('div', { class: 'row-summary-body' });
+      this.toggle = h('button', { type: 'button', class: 'btn btn-small sum-toggle', 'aria-expanded': 'false', onclick: () => this.setOpen(!this.open) });
+      this.tr.classList.add('is-collapsible');
+      this.tr.prepend(h('td', { class: 'row-summary' }, this.summary, this.toggle));
+      this.setOpen(false);
     } else {
       this.tr.append(h('td', { class: 'row-actions' }, h('button', {
         type: 'button', class: 'btn btn-small btn-ghost', onclick: () => onDelete(entry),
@@ -226,11 +234,27 @@ export class ExpenseRow {
     this.refreshMissing();
   }
 
+  setOpen(open) {
+    this.open = open;
+    this.tr.classList.toggle('is-open', open);
+    this.toggle.setAttribute('aria-expanded', String(open));
+    clear(this.toggle).append(icon(open ? 'chevron-down' : 'chevron-right', { size: 16 }), t(open ? 'row.collapse' : 'row.complete'));
+  }
+
   refreshMissing() {
     if (this.mode !== 'incomplete') return;
     const miss = store.missing(this.entry);
     for (const key of ['what', 'date', 'amount', 'receipt']) this.cells[key].classList.toggle('is-missing', miss.includes(key));
     const d = this.entry.d;
+    append(clear(this.summary), [
+      h('div', { class: 'sum-line' },
+        h('span', { class: d.what ? 'sum-what' : 'sum-what is-blank' }, d.what || t('row.noWhat')),
+        h('span', { class: 'sum-amount' }, d.amount ? `KSh ${fmtAmount(d.amount)}` : '–')),
+      miss.length
+        ? h('div', { class: 'missing-text' }, icon('alert', { size: 16 }), t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') }))
+        : h('div', { class: 'sum-ready' }, icon('check', { size: 16 }), t('row.ready')),
+      h('div', { class: 'sum-meta' }, `${d.createdBy || '–'} · ${fmtDateTime(this.entry.createdAt)}`),
+    ]);
     append(clear(this.info), [
       h('div', {}, d.createdBy || '–'),
       d.editedBy && d.editedBy !== d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: d.editedBy })) : null,

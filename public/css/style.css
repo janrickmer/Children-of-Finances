@@ -731,6 +731,7 @@ select.in { cursor: pointer; }
 .optional { font-weight: 400; color: var(--ink-2); }
 .cell-label { display: none; }
 .m-only { display: none; }
+.row-summary { display: none; }
 
 .row-info { font-size: 0.9375rem; min-width: 150px; color: var(--ink); }
 .row-actions { white-space: nowrap; }
@@ -1244,6 +1245,21 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .track-table .c-receipt .cell-label,
   .track-table .c-transfer .cell-label,
   .track-table .c-note .cell-label { display: block; margin-bottom: 4px; font-size: 0.75rem; font-weight: 600; color: var(--ink-2); }
+
+  /* Rote Tabelle des Teams: jede Zeile zuerst kompakt, „Ergänzen“ klappt das Formular auf */
+  .entry-row.is-collapsible > td.row-summary { display: block; padding: 10px 0; }
+  .entry-row.is-collapsible:not(.is-open) > td:not(.row-summary) { display: none; }
+  .entry-row.is-collapsible > td.row-info-cell { display: none; }
+  .entry-row.is-open > td.row-summary { border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
+  .sum-line { display: flex; align-items: baseline; gap: 8px; }
+  .sum-what { flex: 1 1 0; min-width: 0; font-weight: 600; color: var(--pen); overflow-wrap: anywhere; }
+  .sum-what.is-blank { color: var(--pencil); font-weight: 400; font-style: italic; }
+  .sum-amount { margin-left: auto; font-weight: 700; color: var(--pen); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .row-summary .missing-text,
+  .sum-ready { margin-top: 6px; }
+  .sum-ready { display: flex; align-items: center; gap: 6px; color: var(--green); font-weight: 600; font-size: 0.9375rem; }
+  .sum-meta { margin-top: 4px; font-size: 0.875rem; color: var(--ink-2); }
+  .sum-toggle { margin-top: 10px; min-height: 44px; }
 
   /* Eingabetabellen werden zu Karten: jede Zeile ein Blatt, jede Zelle mit Beschriftung */
   .entry-table thead {

@@ -196,6 +196,14 @@ const T = {
     sw: 'Ingizo hili limekamilishwa wakati huo huo. Picha haikuongezwa.',
   },
 
+  'row.complete': { de: 'Ergänzen', en: 'Complete', sw: 'Kamilisha' },
+  'row.collapse': { de: 'Zuklappen', en: 'Collapse', sw: 'Funga' },
+  'row.noWhat': { de: 'Ohne Beschreibung', en: 'No description', sw: 'Bila maelezo' },
+  'row.ready': {
+    de: 'Alles ausgefüllt. Jetzt unten auf „Speichern“ tippen.',
+    en: 'Everything is filled in. Now tap “Save” below.',
+    sw: 'Kila kitu kimejazwa. Sasa gusa “Hifadhi” hapa chini.',
+  },
   save: { de: 'Speichern', en: 'Save', sw: 'Hifadhi' },
   'save.ok': { de: 'Erfolgreich gespeichert: {n}', en: 'Saved successfully: {n}', sw: 'Yamehifadhiwa kikamilifu: {n}' },
   'save.incomplete': {
