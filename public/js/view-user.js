@@ -28,7 +28,7 @@ export function mountUser(root, { getName }) {
   const incWrap = h('div', { class: 'red-wrap' },
     h('div', { class: 'red-head' }, h('h2', { class: 'red-title' }, t('incomplete.title')), incCount),
     h('p', { class: 'red-intro' }, t('incomplete.intro')),
-    h('div', { class: 'red-body table-scroll' }, h('table', { class: 'entry-table' }, expenseHead([t('col.name')]), incBody)),
+    h('div', { class: 'red-body table-scroll' }, h('table', { class: 'entry-table' }, expenseHead([t('col.name')], { summary: true }), incBody)),
     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: saveIncomplete }, icon('check', { size: 18 }), t('save'))),
   );
   const allGood = h('p', { class: 'all-good' }, icon('check', { size: 22 }), t('incomplete.none'));

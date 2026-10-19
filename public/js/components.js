@@ -162,14 +162,17 @@ function requiredMark() {
 }
 
 // Kopfzeile der Zahlungstabelle (Spalten 1–6 + optionale Zusatzspalten).
-export function expenseHead(extra = []) {
+// summary: Kopfzelle für die kompakte Zeile der roten Tabelle (nur am Handy sichtbar),
+// damit Screenreader jeder Zelle die richtige Spaltenüberschrift zuordnen.
+export function expenseHead(extra = [], { summary = false } = {}) {
   return h('thead', {}, h('tr', {},
-    h('th', {}, t('col.what'), requiredMark()),
-    h('th', {}, t('col.date'), requiredMark()),
-    h('th', {}, t('col.amount'), requiredMark()),
-    h('th', {}, t('col.receipt'), requiredMark(), ' ', infoButton(() => t('col.receiptInfo'), t('col.receiptInfoButton'))),
-    h('th', {}, t('col.transfer'), h('span', { class: 'optional' }, ` (${t('col.transferOptional')})`)),
-    h('th', {}, t('col.note')),
+    summary ? h('th', { class: 'row-summary' }, t('row.summaryHead')) : null,
+    h('th', { class: 'col-what' }, t('col.what'), requiredMark()),
+    h('th', { class: 'col-date' }, t('col.date'), requiredMark()),
+    h('th', { class: 'col-amount' }, t('col.amount'), requiredMark()),
+    h('th', { class: 'col-receipt' }, t('col.receipt'), requiredMark(), ' ', infoButton(() => t('col.receiptInfo'), t('col.receiptInfoButton'))),
+    h('th', { class: 'col-transfer' }, t('col.transfer'), h('span', { class: 'optional' }, ` (${t('col.transferOptional')})`)),
+    h('th', { class: 'col-note' }, t('col.note')),
     extra.map((x) => h('th', {}, x)),
   ));
 }
@@ -253,7 +256,10 @@ export class ExpenseRow {
       miss.length
         ? h('div', { class: 'missing-text' }, icon('alert', { size: 16 }), t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') }))
         : h('div', { class: 'sum-ready' }, icon('check', { size: 16 }), t('row.ready')),
-      h('div', { class: 'sum-meta' }, `${d.createdBy || '–'} · ${fmtDateTime(this.entry.createdAt)}`),
+      // Der Screenshot ist freiwillig, kann nach dem Speichern aber nicht mehr ergänzt werden.
+      !d.transfers?.length ? h('div', { class: 'sum-hint' }, icon('info', { size: 16 }), t('row.noTransfer')) : null,
+      h('div', { class: 'sum-meta' }, [d.createdBy || '–', fmtDateTime(this.entry.createdAt),
+        d.editedBy && d.editedBy !== d.createdBy ? t('row.editedBy', { name: d.editedBy }) : null].filter(Boolean).join(' · ')),
     ]);
     append(clear(this.info), [
       h('div', {}, d.createdBy || '–'),

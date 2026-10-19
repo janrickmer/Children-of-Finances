@@ -196,9 +196,15 @@ const T = {
     sw: 'Ingizo hili limekamilishwa wakati huo huo. Picha haikuongezwa.',
   },
 
+  'row.summaryHead': { de: 'Eintrag', en: 'Entry', sw: 'Ingizo' },
   'row.complete': { de: 'Ergänzen', en: 'Complete', sw: 'Kamilisha' },
   'row.collapse': { de: 'Zuklappen', en: 'Collapse', sw: 'Funga' },
   'row.noWhat': { de: 'Ohne Beschreibung', en: 'No description', sw: 'Bila maelezo' },
+  'row.noTransfer': {
+    de: 'Screenshot der Transaktion fehlt noch (freiwillig, nach dem Speichern nicht mehr möglich).',
+    en: 'Transaction screenshot still missing (optional, cannot be added after saving).',
+    sw: 'Picha ya skrini ya muamala bado haipo (si lazima, haiwezi kuongezwa baada ya kuhifadhi).',
+  },
   'row.ready': {
     de: 'Alles ausgefüllt. Jetzt unten auf „Speichern“ tippen.',
     en: 'Everything is filled in. Now tap “Save” below.',

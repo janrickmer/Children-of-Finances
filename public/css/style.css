@@ -720,12 +720,12 @@ select.in { cursor: pointer; }
 
 .red-table th { background: var(--red-wash); color: var(--red-ink); }
 
-.entry-table th:nth-child(1) { min-width: 180px; }
-.entry-table th:nth-child(2) { min-width: 156px; }
-.entry-table th:nth-child(3) { min-width: 130px; }
-.entry-table th:nth-child(4),
-.entry-table th:nth-child(5) { min-width: 200px; }
-.entry-table th:nth-child(6) { min-width: 170px; }
+.entry-table th.col-what { min-width: 180px; }
+.entry-table th.col-date { min-width: 156px; }
+.entry-table th.col-amount { min-width: 130px; }
+.entry-table th.col-receipt,
+.entry-table th.col-transfer { min-width: 200px; }
+.entry-table th.col-note { min-width: 170px; }
 
 .req { color: var(--red); }
 .optional { font-weight: 400; color: var(--ink-2); }
@@ -1249,8 +1249,13 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   /* Rote Tabelle des Teams: jede Zeile zuerst kompakt, „Ergänzen“ klappt das Formular auf */
   .entry-row.is-collapsible > td.row-summary { display: block; padding: 10px 0; }
   .entry-row.is-collapsible:not(.is-open) > td:not(.row-summary) { display: none; }
-  .entry-row.is-collapsible > td.row-info-cell { display: none; }
-  .entry-row.is-open > td.row-summary { border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
+  .entry-table thead th.row-summary { display: table-cell; }
+  .entry-row.is-collapsible:not(.is-open) > td.row-info-cell { display: none; }
+  /* Aufgeklappt bleibt oben nur „Zuklappen“: die Zusammenfassung würde beim Tippen ihre Höhe ändern
+     und das Feld springen lassen; wer und was fehlt, steht dann in der Info-Zelle unten. */
+  .entry-row.is-open .row-summary-body { display: none; }
+  .entry-row.is-open > td.row-summary { padding-bottom: 4px; }
+  .entry-row.is-open .sum-toggle { margin-top: 0; }
   .sum-line { display: flex; align-items: baseline; gap: 8px; }
   .sum-what { flex: 1 1 0; min-width: 0; font-weight: 600; color: var(--pen); overflow-wrap: anywhere; }
   .sum-what.is-blank { color: var(--pencil); font-weight: 400; font-style: italic; }
@@ -1258,6 +1263,8 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .row-summary .missing-text,
   .sum-ready { margin-top: 6px; }
   .sum-ready { display: flex; align-items: center; gap: 6px; color: var(--green); font-weight: 600; font-size: 0.9375rem; }
+  .sum-hint { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; font-size: 0.875rem; color: var(--ink-2); }
+  .sum-hint .icon { flex: none; margin-top: 2px; color: var(--pen); }
   .sum-meta { margin-top: 4px; font-size: 0.875rem; color: var(--ink-2); }
   .sum-toggle { margin-top: 10px; min-height: 44px; }
 
