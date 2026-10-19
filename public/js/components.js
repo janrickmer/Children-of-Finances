@@ -375,7 +375,9 @@ export function successTable(items, { admin = false } = {}) {
       cell('c-receipt', t('col.receiptShort'), income || !e.d.receipts?.length ? null : thumbList(e.d.receipts, t('col.receiptShort'))),
       cell('c-transfer', t('col.transferShort'), income || !e.d.transfers?.length ? null : thumbList(e.d.transfers, t('col.transferShort'))),
       cell('c-note wrap', t('col.noteShort'), e.d.note),
-      cell('c-name', t('col.name'), e.d.createdBy),
+      // Am Handy steht „Eingetragen am“ mit in der Namenszeile (die eigene Spalte entfällt dort).
+      cell('c-name', t('col.name'), e.d.createdBy && [e.d.createdBy,
+        admin ? h('span', { class: 'm-only' }, ` · ${t('col.enteredAt')} ${fmtDateTime(e.createdAt)}`) : null]),
       admin && cell('c-at plain', t('col.enteredAt'), fmtDateTime(e.createdAt)),
       cell('c-status plain', t('col.status'), statusBadge(e)),
     );

@@ -415,9 +415,9 @@ select.in { cursor: pointer; }
 .btn-danger { border-color: var(--red); color: var(--red); }
 .btn-ghost { border-color: var(--rule); color: var(--ink-2); }
 .btn-small { min-height: 38px; padding: 0 12px; font-size: 0.875rem; }
-.btn-approve { min-height: 44px; padding: 8px 12px; line-height: 1.2; }
 .btn-block { width: 100%; }
-.btn-approve { white-space: normal; max-width: 11rem; }
+/* In der schmalen Aktion-Spalte darf der Text umbrechen; die Fläche bleibt daumengroß */
+.btn-approve { min-height: 44px; max-width: 11rem; padding: 8px 12px; line-height: 1.2; white-space: normal; }
 
 @media (hover: hover) and (pointer: fine) {
   .btn:hover { background: var(--paper-2); }
@@ -730,6 +730,7 @@ select.in { cursor: pointer; }
 .req { color: var(--red); }
 .optional { font-weight: 400; color: var(--ink-2); }
 .cell-label { display: none; }
+.m-only { display: none; }
 
 .row-info { font-size: 0.9375rem; min-width: 150px; color: var(--ink); }
 .row-actions { white-space: nowrap; }
@@ -1210,17 +1211,26 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .track-table .c-amount { order: 20; font-size: 1rem; font-weight: 700; }
   .track-table .c-date { order: 30; }
   .track-table .c-kind { order: 40; }
-  .track-table .c-name { order: 50; }
-  .track-table .c-status { order: 70; margin-left: auto; }
-  .track-table .c-at { order: 72; flex-basis: 100%; }
+  .track-table td.c-name { order: 71; flex-basis: 100%; }
+  .track-table .m-only { display: inline; }
+  .track-table td.c-at { display: none; }
+  .track-table .c-flag { order: 5; }
+  .track-table .c-status { order: 28; }
+  .track-table .c-action { order: 95; flex-basis: 100%; margin-top: 8px; }
+  .track-table .btn-approve { max-width: none; white-space: nowrap; }
   .track-table td.c-date,
   .track-table td.c-kind,
-  .track-table td.c-name,
-  .track-table td.c-at { font-size: 0.875rem; font-weight: 400; color: var(--ink-2); }
-  .track-table .c-kind::before,
-  .track-table .c-name::before { content: "· "; }
-  .track-table .c-at .cell-label { display: inline; font-weight: 400; }
-  .track-table .c-at .cell-label::after { content: ": "; }
+  .track-table td.c-name { font-size: 0.875rem; font-weight: 400; color: var(--ink-2); }
+  .track-table .c-kind::before { content: "· "; }
+
+  /* Rote Tabelle des Schatzmeisters: Zeile 2 Status und „Fehlt: …“, Zeile 3 wer und seit wann */
+  .red-table td.c-status { display: contents; }
+  .red-table .c-status .badge { order: 28; }
+  .red-table .c-status .missing-text { order: 29; margin: 0; }
+  .red-table td.c-date::before { content: "· "; }
+  .red-table td.c-name div { display: inline; }
+  .red-table td.c-name div + div::before { content: " · "; }
+  .red-table td.flag-cell { width: auto; padding: 0; }
   .track-table .c-receipt { order: 80; margin-top: 6px; }
   .track-table .c-transfer { order: 81; margin-top: 6px; }
   .track-table .c-note { order: 90; flex-basis: 100%; font-size: 0.875rem; }

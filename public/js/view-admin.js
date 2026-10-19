@@ -87,29 +87,31 @@ export function mountAdmin(root) {
     const rows = list.map((e) => {
       const old = now - e.createdAt > WEEK;
       const miss = store.missing(e);
-      const cell = (key, content, label) => h('td', { class: miss.includes(key) ? 'is-missing' : '' },
-        h('span', { class: 'cell-label' }, label), content);
+      // Klassen c-* ordnen die Zellen am Handy zu Titelzeilen; leere Zellen entfallen dort.
+      const cell = (key, content, label, empty) => h('td', {
+        class: [`c-${key}`, key === 'amount' && 'num', miss.includes(key) && 'is-missing', empty && 'is-empty'].filter(Boolean).join(' '),
+      }, h('span', { class: 'cell-label' }, label), content);
       return h('tr', {},
-        h('td', { class: 'flag-cell' }, old ? h('span', { class: 'overdue', title: t('admin.olderThanWeek') }, icon('alert', { size: 24, label: t('admin.olderThanWeek') })) : null),
-        cell('what', e.d.what || '–', t('col.whatOrFrom')),
-        cell('date', fmtDate(e.d.payDate) || '–', t('col.dateShort')),
-        cell('amount', e.d.amount ? fmtAmount(e.d.amount) : '–', t('col.amountShort')),
-        cell('receipt', thumbList(e.d.receipts, t('col.receiptShort')), t('col.receiptShort')),
-        cell('transfer', thumbList(e.d.transfers, t('col.transferShort')), t('col.transferShort')),
-        cell('note', e.d.note || '–', t('col.noteShort')),
-        h('td', {}, h('span', { class: 'cell-label' }, t('col.name')), h('div', {},
+        h('td', { class: 'flag-cell c-flag' }, old ? h('span', { class: 'overdue', title: t('admin.olderThanWeek') }, icon('alert', { size: 24, label: t('admin.olderThanWeek') })) : null),
+        cell('what', e.d.what || '–', t('col.whatOrFrom'), !e.d.what),
+        cell('date', fmtDate(e.d.payDate) || '–', t('col.dateShort'), !e.d.payDate),
+        cell('amount', e.d.amount ? fmtAmount(e.d.amount) : '–', t('col.amountShort'), !e.d.amount),
+        cell('receipt', thumbList(e.d.receipts, t('col.receiptShort')), t('col.receiptShort'), !e.d.receipts?.length),
+        cell('transfer', thumbList(e.d.transfers, t('col.transferShort')), t('col.transferShort'), !e.d.transfers?.length),
+        cell('note', e.d.note || '–', t('col.noteShort'), !e.d.note),
+        h('td', { class: 'c-name' }, h('span', { class: 'cell-label' }, t('col.name')), h('div', {},
           h('div', {}, e.d.createdBy || '–'),
           e.d.editedBy && e.d.editedBy !== e.d.createdBy ? h('div', { class: 'muted small' }, t('row.editedBy', { name: e.d.editedBy })) : null,
           h('div', { class: 'muted small' }, `${t('col.started')}: ${fmtDateTime(e.createdAt)}`))),
-        h('td', {}, h('span', { class: 'cell-label' }, t('col.status')), statusBadge(e),
+        h('td', { class: 'c-status' }, h('span', { class: 'cell-label' }, t('col.status')), statusBadge(e),
           miss.length ? h('div', { class: 'missing-text' }, icon('alert', { size: 16 }), t('missing.list', { list: miss.map((k) => t(`field.${k}`)).join(', ') })) : null),
-        h('td', {}, h('span', { class: 'cell-label' }, t('col.action')),
+        h('td', { class: 'c-action' }, h('span', { class: 'cell-label' }, t('col.action')),
           h('button', { type: 'button', class: 'btn btn-small btn-approve', onclick: () => approve(e) }, t('admin.approve'))),
       );
     });
     redBox.append(h('div', { class: 'red-wrap' },
       h('div', { class: 'red-head' }, h('h2', { class: 'red-title' }, t('incomplete.title')), h('span', { class: 'red-count' }, String(list.length))),
-      h('div', { class: 'table-scroll' }, h('table', { class: 'data-table cards-on-mobile red-table' },
+      h('div', { class: 'table-scroll' }, h('table', { class: 'data-table track-table red-table' },
         h('thead', {}, h('tr', {},
           h('th', { class: 'flag-cell' }, h('span', { class: 'sr-only' }, '!')),
           h('th', {}, t('col.what')),
