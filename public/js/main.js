@@ -102,7 +102,7 @@ function showLogin(message = '') {
   const error = h('p', { class: 'form-error', role: 'alert' }, message);
   const submit = h('button', { type: 'submit', class: 'btn btn-primary btn-block' }, t('login.submit'));
   const form = h('form', { class: 'card login-card', novalidate: true },
-    h('div', { class: 'field' }, h('span', { class: 'field-label' }, `${t('lang.label')} / Language / Lugha`), langSwitch()),
+    h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Sprache / Language / Lugha'), langSwitch()),
     h('h1', {}, t('login.title')),
     h('label', { class: 'field', for: 'password' }, h('span', {}, t('login.password')), input),
     error,
