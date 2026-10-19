@@ -189,10 +189,10 @@ export function mountBackupView(panel, files, onClose) {
     });
   }
 
-  function sortHeader(label, key) {
+  function sortHeader(label, key, className) {
     const active = state.sort.key === key;
     const arrow = icon(active ? (state.sort.dir === 1 ? 'arrow-up' : 'arrow-down') : 'sort', { size: 16 });
-    return h('th', { 'aria-sort': active ? (state.sort.dir === 1 ? 'ascending' : 'descending') : 'none' },
+    return h('th', { class: className, 'aria-sort': active ? (state.sort.dir === 1 ? 'ascending' : 'descending') : 'none' },
       h('button', {
         type: 'button', class: 'sort-btn',
         onclick: () => {
@@ -230,7 +230,7 @@ export function mountBackupView(panel, files, onClose) {
       sortHeader(t('backup.paidRange'), 'paidOn'),
       h('th', {}, t('col.kind')),
       h('th', {}, t('col.whatOrFrom')),
-      sortHeader(t('col.amountShort'), 'amount'),
+      sortHeader(t('col.amountShort'), 'amount', 'num'),
       sortHeader(t('col.name'), 'createdBy'),
       h('th', {}, t('col.noteShort')),
       h('th', {}, t('col.status')),

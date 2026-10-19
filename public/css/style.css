@@ -413,7 +413,7 @@ select.in { cursor: pointer; }
 
 .btn-primary { background: var(--orange); border-color: var(--orange); color: #fff; }
 .btn-danger { border-color: var(--red); color: var(--red); }
-.btn-ghost { border-color: var(--rule); color: var(--ink-2); }
+.btn-ghost { border-color: var(--pen-faded); color: var(--ink-2); }
 .btn-small { min-height: 38px; padding: 0 12px; font-size: 0.875rem; }
 .btn-block { width: 100%; }
 /* In der schmalen Aktion-Spalte darf der Text umbrechen; die Fläche bleibt daumengroß */
@@ -640,7 +640,7 @@ select.in { cursor: pointer; }
   min-height: 56px;
   background: var(--paper);
   color: var(--ink);
-  border: 2px solid var(--rule);
+  border: 2px solid var(--pen-faded);
   border-radius: var(--radius-lg);
   font: inherit;
   cursor: pointer;
@@ -862,9 +862,12 @@ select.in { cursor: pointer; }
   cursor: pointer;
   vertical-align: middle;
   padding: 0;
+  position: relative;
   transition: transform 160ms var(--ease-out), background-color 150ms ease;
 }
 
+/* Sichtbar 30 px, getippt werden 44 px */
+.info-btn::before { content: ""; position: absolute; inset: -7px; }
 .info-btn:active { transform: scale(0.92); }
 .info-btn[aria-expanded="true"] { background: var(--paper-3); }
 
@@ -1133,6 +1136,7 @@ select.in { cursor: pointer; }
 }
 
 .sort-btn .icon { color: var(--pen-faded); }
+th.num .sort-btn { justify-content: flex-end; }
 th[aria-sort="ascending"] .sort-btn .icon,
 th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
 
@@ -1173,8 +1177,8 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .login-card .lang-long { display: inline; }
   .login-card .lang-short { display: none; }
   .login-card .lang-btn { min-height: 44px; padding: 0 12px; }
-  .lang-btn { min-height: 34px; padding: 0 9px; }
-  .logout-btn { min-height: 38px; width: 42px; padding: 0; }
+  .lang-btn { min-height: 40px; padding: 0 10px; }
+  .logout-btn { min-height: 40px; width: 44px; padding: 0; }
   .logout-btn .btn-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .wordmark { font-size: 1.375rem; }
   .flags { flex-direction: column; gap: 3px; }
@@ -1188,8 +1192,8 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .form-card { padding: 16px; }
   .form-card.form-wide { padding: 0; border: 0; background: transparent; }
 
-  /* Erfolgstabellen werden zu Titelzeilen wie auf einer Kassettenhülle:
-     Zeile 1 was und Betrag, Zeile 2 Datum · Art · wer · wann und Status, darunter die Belege */
+  /* Tabellen werden zu Titelzeilen wie auf einer Kassettenhülle:
+     Zeile 1 was und Betrag, Zeile 2 Status, Datum · Art, Zeile 3 wer (und wann), darunter die Belege */
   .track-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .track-table, .track-table tbody { display: block; width: 100%; }
   .track-table tr {
@@ -1207,8 +1211,8 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .track-table td { display: block; padding: 0; border: 0; }
   .track-table td.is-empty { display: none; }
   .track-table .cell-label { display: none; }
-  .track-table .c-what { order: 10; flex: 1 1 0; min-width: 0; font-size: 1rem; font-weight: 600; }
-  .track-table .c-amount { order: 20; font-size: 1rem; font-weight: 700; }
+  .track-table .c-what { order: 10; flex: 1 1 0; min-width: 0; font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+  .track-table .c-amount { order: 20; margin-left: auto; font-size: 1rem; font-weight: 700; }
   .track-table .c-date { order: 30; }
   .track-table .c-kind { order: 40; }
   .track-table td.c-name { order: 71; flex-basis: 100%; }
@@ -1221,7 +1225,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .track-table td.c-date,
   .track-table td.c-kind,
   .track-table td.c-name { font-size: 0.875rem; font-weight: 400; color: var(--ink-2); }
-  .track-table .c-kind::before { content: "· "; }
+  .track-table td.c-date:not(.is-empty) + td.c-kind::before { content: "· "; }
 
   /* Rote Tabelle des Schatzmeisters: Zeile 2 Status und „Fehlt: …“, Zeile 3 wer und seit wann */
   .red-table td.c-status { display: contents; }
@@ -1233,14 +1237,16 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .red-table td.flag-cell { width: auto; padding: 0; }
   .track-table .c-receipt { order: 80; margin-top: 6px; }
   .track-table .c-transfer { order: 81; margin-top: 6px; }
-  .track-table .c-note { order: 90; flex-basis: 100%; font-size: 0.875rem; }
+  .track-table .c-note { order: 90; flex-basis: 100%; min-width: 0; font-size: 0.875rem; overflow-wrap: anywhere; }
+  .track-table .c-receipt,
+  .track-table .c-transfer { min-width: 0; }
+  .track-table .thumbs { flex-wrap: wrap; }
   .track-table .c-receipt .cell-label,
   .track-table .c-transfer .cell-label,
   .track-table .c-note .cell-label { display: block; margin-bottom: 4px; font-size: 0.75rem; font-weight: 600; color: var(--ink-2); }
 
-  /* Tabellen werden zu Karten: jede Zeile ein Blatt, jede Zelle mit Beschriftung */
-  .entry-table thead,
-  .cards-on-mobile thead {
+  /* Eingabetabellen werden zu Karten: jede Zeile ein Blatt, jede Zelle mit Beschriftung */
+  .entry-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1251,17 +1257,12 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .entry-table,
   .entry-table tbody,
   .entry-table tr,
-  .entry-table td,
-  .cards-on-mobile,
-  .cards-on-mobile tbody,
-  .cards-on-mobile tr,
-  .cards-on-mobile td {
+  .entry-table td {
     display: block;
     width: 100%;
   }
 
-  .entry-table tr,
-  .cards-on-mobile tr {
+  .entry-table tr {
     border: 2px solid var(--pen);
     border-radius: var(--radius-lg);
     background: var(--paper);
@@ -1272,10 +1273,8 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
   .draft-table .entry-row { border-style: dashed; border-color: var(--pencil-line); }
   .red-wrap .entry-table tr,
   .red-table tr { border-color: var(--red); }
-  .cards-on-mobile .row-income { border-color: var(--green) !important; }
 
   .entry-table td,
-  .cards-on-mobile td,
   .draft-table .entry-row td {
     border-bottom: 0;
     padding: 8px 0;
@@ -1290,18 +1289,9 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
     margin-bottom: 4px;
   }
 
-  .cards-on-mobile td {
-    display: grid;
-    grid-template-columns: minmax(0, 38%) minmax(0, 1fr);
-    gap: 12px;
-    align-items: start;
-  }
-
-  .cards-on-mobile td .cell-label { margin-bottom: 0; }
   .is-missing { border-radius: var(--radius); padding-left: 8px !important; padding-right: 8px !important; }
   .flag-cell { width: auto; text-align: left; }
   .flag-cell:empty { display: none !important; }
-  .cards-on-mobile td.num { text-align: left; }
   .red-body { padding: 4px 0 0; }
   .red-wrap { border: 0; overflow: visible; background: transparent; }
   .red-head { border-radius: var(--radius-lg); }

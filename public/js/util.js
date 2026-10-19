@@ -167,11 +167,35 @@ document.addEventListener('click', (ev) => {
   if (openBubble && !openBubble.bubble.contains(ev.target) && ev.target !== openBubble.button) closeBubble();
 });
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeBubble(); });
-window.addEventListener('resize', closeBubble);
-window.addEventListener('scroll', (ev) => {
-  if (openBubble && ev.target instanceof Node && openBubble.bubble.contains(ev.target)) return;
-  closeBubble();
-}, true);
+// Beim Scrollen wandert die Blase mit ihrem Knopf mit. Kleine Verschiebungen (z. B. wenn sich darüber
+// die Speicheranzeige ändert) sollen sie nicht schließen; erst wenn der Knopf aus dem Bild ist.
+function followBubble(ev) {
+  if (!openBubble || (ev?.target instanceof Node && openBubble.bubble.contains(ev.target))) return;
+  const rect = openBubble.button.getBoundingClientRect();
+  if (!openBubble.button.isConnected || rect.bottom < 0 || rect.top > window.innerHeight) closeBubble();
+  else placeBubble(openBubble);
+}
+window.addEventListener('resize', followBubble);
+window.addEventListener('scroll', followBubble, true);
+
+// Blase über oder unter den Knopf setzen, je nachdem wo mehr Platz ist.
+function placeBubble({ bubble, button }) {
+  const rect = button.getBoundingClientRect();
+  const width = Math.min(360, window.innerWidth - 24);
+  bubble.style.width = `${width}px`;
+  const left = Math.max(12, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 12));
+  bubble.style.left = `${left}px`;
+  const text = bubble.querySelector('.bubble-text');
+  text.style.maxHeight = '';
+  const below = window.innerHeight - rect.bottom - 18;
+  const above = rect.top - 18;
+  const openAbove = bubble.offsetHeight > below && above > below;
+  text.style.maxHeight = `${Math.max(120, (openAbove ? above : below) - 24)}px`;
+  const height = bubble.offsetHeight;
+  bubble.classList.toggle('above', openAbove);
+  bubble.style.top = `${openAbove ? Math.max(8, rect.top - 10 - height) : rect.bottom + 10}px`;
+  bubble.style.setProperty('--arrow-left', `${rect.left + rect.width / 2 - left}px`);
+}
 
 export function infoButton(getText, label) {
   const button = h('button', { class: 'info-btn', type: 'button', 'aria-label': label, title: label, 'aria-expanded': 'false' }, icon('info', { size: 22 }));
@@ -185,19 +209,7 @@ export function infoButton(getText, label) {
     const bubble = h('div', { class: 'bubble', role: 'tooltip' },
       h('div', { class: 'bubble-text' }, typeof getText === 'function' ? getText() : getText));
     document.body.append(bubble);
-    const rect = button.getBoundingClientRect();
-    const width = Math.min(360, window.innerWidth - 24);
-    bubble.style.width = `${width}px`;
-    const left = Math.max(12, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - 12));
-    bubble.style.left = `${left}px`;
-    const below = window.innerHeight - rect.bottom - 18;
-    const above = rect.top - 18;
-    const openAbove = bubble.offsetHeight > below && above > below;
-    bubble.querySelector('.bubble-text').style.maxHeight = `${Math.max(120, (openAbove ? above : below) - 24)}px`;
-    const height = bubble.offsetHeight;
-    bubble.classList.toggle('above', openAbove);
-    bubble.style.top = `${openAbove ? Math.max(8, rect.top - 10 - height) : rect.bottom + 10}px`;
-    bubble.style.setProperty('--arrow-left', `${rect.left + rect.width / 2 - left}px`);
+    placeBubble({ bubble, button });
     button.setAttribute('aria-expanded', 'true');
     openBubble = { bubble, button };
   });
