@@ -181,6 +181,10 @@ components:
   tape-total:
     textColor: "{colors.green}"
     typography: "{typography.title-lg}"
+  tape-eur:
+    textColor: "{colors.ink-2}"
+  tape-dup:
+    textColor: "{colors.amber}"
   tape-track:
     backgroundColor: "{colors.white}"
     height: "14px"
@@ -247,6 +251,22 @@ components:
     textColor: "{colors.pencil}"
     rounded: "{rounded.badge}"
     padding: "2px 9px"
+  badge-unverified:
+    backgroundColor: "{colors.amber-wash}"
+    textColor: "{colors.amber}"
+    rounded: "{rounded.badge}"
+    padding: "2px 9px"
+  badge-verified:
+    backgroundColor: "{colors.green-wash}"
+    textColor: "{colors.green}"
+    rounded: "{rounded.badge}"
+    padding: "2px 9px"
+  pending-note:
+    backgroundColor: "{colors.amber-wash}"
+    textColor: "{colors.amber}"
+    typography: "{typography.label}"
+    rounded: "{rounded.radius}"
+    padding: "10px 12px"
   thumb:
     backgroundColor: "{colors.paper-2}"
     rounded: "{rounded.radius}"
@@ -316,8 +336,8 @@ Die Pflichtfarben aus dem Auftrag.
 - **Prüfungs-Rot** (`red`): ausschließlich für Unvollständiges, Fehlendes, Überlauf und Gefahr. Dazu gehören die rote Tabelle „Unvollständige Eingaben“, Pflichtsternchen, Fehlermeldungen, „Bezahlt“ und die Füllung im Band, Ausgaben beim Schatzmeister, Lösch-Knöpfe und der Status „offline“. Auf Karton 6,44:1, weiße Schrift darauf 6,56:1.
 - **Rot-Hauch** (`red-wash`) mit **Rot-Tinte** (`red-ink`): fehlende Zellen, der Tabellenkopf der roten Tabelle beim Schatzmeister und die Plakette „unvollständig“ (7,69:1).
 - **Eingangs-Grün** (`green`): Geldeingänge (der Betrag im Band, Zeilen der Erfolgstabelle, die gedrückte Wahl „Geldeingang“), außerdem „vollständig“, „Alles gespeichert“ und der Danke-Satz. Auf Karton 6,04:1, weiße Schrift darauf 6,15:1.
-- **Grün-Hauch** (`green-wash`): Fläche des Danke-Satzes und der Plakette „vollständig“ (5,37:1).
-- **Bernstein** (`amber`) auf **Bernstein-Hauch** (`amber-wash`): nur für die Plakette „ausnahmsweise genehmigt“ (6,60:1).
+- **Grün-Hauch** (`green-wash`): Fläche des Danke-Satzes und der Plaketten „vollständig“ und „bestätigt“ (5,37:1).
+- **Bernstein** (`amber`) auf **Bernstein-Hauch** (`amber-wash`): für Vorbehalte, also die Plaketten „ausnahmsweise genehmigt“ und „noch nicht bestätigt“ sowie den Hinweis auf wartende Geldeingänge (6,60:1). Direkt auf Karton warnt Bernstein vor einem vielleicht doppelt eingetragenen Geldeingang (7,28:1).
 
 ### Neutral
 - **Inlay-Karton** (`paper`): Seitengrund und Grund jeder gerahmten Fläche.
@@ -338,6 +358,8 @@ Die Flaggen Deutschlands und Kenias stehen in ihren amtlichen Farben als gezeich
 **Die Ein-Druck-Regel.** Orange ist der einzige Akzent. Es gibt keine zweite Schmuckfarbe, und `orange-bright` gehört nur den Streifen, nie dem Text.
 
 **Die Pflichtfarben-Regel.** Rot heißt unvollständig, fehlend, überzogen oder gefährlich; Grün heißt Geldeingang, vollständig, gespeichert oder Danke. Keine der beiden ist Schmuck, und keine trägt eine Bedeutung allein: Ein Wort oder ein Symbol sagt sie mit. Beim Schatzmeister sind Geldeingänge grün und Ausgaben rot.
+
+**Die Bernstein-Regel.** Bernstein heißt Vorbehalt: Etwas ist eingetragen, aber noch nicht ganz in Ordnung. Es ist noch nicht bestätigt, nur ausnahmsweise genehmigt oder vielleicht doppelt. Bernstein ist nie Fehler (Rot) und nie Erfolg (Grün), und auch Bernstein steht nie ohne Wort.
 
 ## Typography
 
@@ -387,7 +409,7 @@ Eine ruhige Spalte auf Karton, keine Raster aus gleich großen Kacheln. Die App 
 **Umbrüche.** 420 px (Container-Abfrage am Band), 760 px (Handy), 900 px (J-Karte zweispaltig), 980 px (Spalte des Schatzmeisters). Hover-Zustände gelten nur bei `(hover: hover) and (pointer: fine)`.
 
 ### Named Rules
-**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, die Knöpfe „ausnahmsweise genehmigen“ und „Ergänzen“ 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.
+**Die Daumen-Regel.** Eingabefelder und Hauptknöpfe sind mindestens 46 px hoch, Auswahlkacheln 56 px, die Knöpfe „ausnahmsweise genehmigen“ und „Ergänzen“ sowie „Bestätigen“ und „Löschen“ am Band 44 px, kleine Knöpfe 38 px. Die Sprachwahl hat im Anmeldefenster 44 px und in der Kopfzeile am Handy 40 px, „Abmelden“ ist dort 44 × 40 px. Bleibt ein Element sichtbar kleiner, wird seine Tippfläche größer gezogen: Der Info-Knopf misst 30 px und nimmt 44 px an. Knöpfe stehen 12 px auseinander.
 
 ## Elevation & Depth
 
@@ -420,7 +442,7 @@ Fest und greifbar, wie ein Druckknopf am Kassettenrekorder.
 - **Shape:** leicht gerundet (6 px), 2-px-Rahmen, mindestens 46 px hoch, 18 px seitlich, Symbol (18 px) und Text mit 8 px Abstand.
 - **Primary:** Orange mit weißer Schrift, höchstens einer je Bereich („Speichern“, „Anmelden“, „Aktuelle Datenlage herunterladen“). Hover: gedrücktes Orange.
 - **Secondary:** Karton mit Rahmen und Schrift in Kugelschreiber-Blau („Weitere Zahlung hinzufügen“, „Bild hochladen“, „Sicherungen hochladen“, „Abbrechen“). Hover: getönter Karton.
-- **Danger:** Karton mit Rahmen und Schrift in Rot, Hover im Rot-Hauch. Wer gesicherte Einträge löschen will, muss im Dialog zusätzlich ein Häkchen setzen.
+- **Danger:** Karton mit Rahmen und Schrift in Rot, Hover im Rot-Hauch. Wer gesicherte Einträge oder einen Geldeingang löschen will, muss im Dialog zusätzlich ein Häkchen setzen.
 - **Ghost:** Rahmen in verblasstem Blau, Schrift in verdünnter Tinte, für leise Nebenaktionen („Abmelden“, „Entwurf löschen“). Am Handy zeigt „Abmelden“ nur das Symbol (44 × 40 px).
 - **Small:** 38 px hoch, 12 px seitlich, 0.875rem.
 - **Genehmigen:** „ausnahmsweise genehmigen“ ist 44 px hoch mit 8 px × 12 px und Zeilenhöhe 1.2. Am Desktop ist er höchstens 11rem breit und bricht in der Spalte um, in den Titelzeilen am Handy steht er auf einer Zeile.
@@ -428,6 +450,7 @@ Fest und greifbar, wie ein Druckknopf am Kassettenrekorder.
 
 ### Chips
 - **Plaketten:** 0.8125rem, 700, 4 px Rundung, 2 px × 9 px. „vollständig“ Grün auf Grün-Hauch, „ausnahmsweise genehmigt“ Bernstein auf Bernstein-Hauch, „unvollständig“ Rot-Tinte auf Rot-Hauch, „Entwurf“ Bleistift mit innerem Ring in Bleistiftlinie.
+- **Plaketten für Geldeingänge:** „noch nicht bestätigt“ steht in Bernstein auf Bernstein-Hauch (6,60:1), „bestätigt“ in Grün auf Grün-Hauch (5,37:1). Sie stehen in den Erfolgstabellen und am Band. Ausgaben behalten ihre Plaketten, und ein gesicherter (archivierter) Geldeingang trägt keine.
 - **Sprachwahl:** ein Segmentknopf mit 2-px-Rahmen in Kugelschreiber-Blau, die Segmente durch 2-px-Linien getrennt. Aktiv ist Kugelschreiber-Blau mit weißer Schrift. In der Kopfzeile am Handy stehen nur die Kürzel DE/EN/SW (40 px hoch), im Anmeldefenster drei gleich breite Knöpfe über die volle Breite (44 px).
 - **Auswahlkacheln „Geldeingang“ / „Bezahlung“:** Karton, 2-px-Rahmen in verblasstem Blau, 10 px Rundung, 14 px × 16 px, mindestens 56 px hoch und sonst so hoch wie ihr Inhalt. Der Pfeil (22 px, hinein in Grün, hinaus in Orange) steht ohne Hintergrund vor dem Titel in Blockschrift, der Hinweis in verdünnter Tinte darunter. Hover (feiner Zeiger): Rahmen in Kugelschreiber-Blau. Gewählt ist die Kachel ganz gefüllt, „Bezahlung“ in Orange und „Geldeingang“ in Grün, mit weißem Titel, Pfeil und Hinweis (5,35:1 und 6,15:1). Beim Drücken `scale(0.98)`. Das darunter erscheinende Formular dreht in 240 ms ein wie eine umgedrehte Kassette (`rotateX(-12deg)` aus 6 px Höhe, Drehpunkt oben); bei reduzierter Bewegung wird es nur eingeblendet (160 ms).
 
@@ -440,6 +463,7 @@ Fest und greifbar, wie ein Druckknopf am Kassettenrekorder.
 - **Warnkasten:** verblasstes Orange ohne Rahmen, Orange-Tinte, oranges Warnsymbol (22 px), 14 px × 16 px. Er steht über der roten Tabelle.
 - **Danke-Satz:** Grün-Hauch, Grün, 700, 1.0625rem, Häkchen (22 px), 14 px × 16 px. „Alle bisher angelegten Einträge waren vollständig. Danke!“
 - **Hinweis auf eine Sicherung:** getönter Karton, Tinte, grünes Häkchen.
+- **Wartende Geldeingänge (Schatzmeister):** oben in der Seitenspalte ein Kasten in Bernstein-Hauch ohne Rahmen, 6 px Rundung, 10 px × 12 px, Schrift in Bernstein (600, 0.9375rem) mit Info-Symbol (18 px): „N Geldeingänge warten auf deine Bestätigung.“ Er erscheint nur, solange einer wartet.
 
 ### Inputs / Fields
 - **Style:** weißes Feld, Wert in Kugelschreiber-Blau (500, 1rem), 2-px-Rahmen in verblasstem Blau, 6 px Rundung, mindestens 46 px hoch, 10 px × 12 px. Der Platzhalter steht in Bleistift (400). Beschriftungen stehen darüber (Label, Tinte) mit 6 px Abstand, Felder 16 px untereinander.
@@ -458,8 +482,12 @@ Ein Geldeingang als Kassettenseite mit fester Länge, das Signaturelement.
 - **Fuß:** links „Bezahlt“ und Betrag in Rot, rechts „Übrig“ und Betrag in Tinte (800), rechtsbündig mit Tabellenziffern.
 - **Überlauf:** Spurrahmen und Restbetrag werden rot, und die Beschriftung heißt „Überzogen um“.
 - **Zustände:** Ein archivierter Geldeingang hat einen gestrichelten Rahmen. Ein leeres Band ist gestrichelt in Bleistiftlinie mit Text in Bleistift und ohne Eckstreifen. Vor dem ersten Geldeingang fehlt die Spur.
+- **Status:** Unter „seit <Datum>“ trägt ein offener Geldeingang die Plakette „noch nicht bestätigt“, beim Team und beim Schatzmeister. Beim Schatzmeister steht nach der Bestätigung „bestätigt“. Ein archiviertes Band trägt keine Plakette.
 - **Schmal (Container bis 420 px):** Der Betrag steht über dem Absender (1.75rem), die Beschriftungen im Fuß stehen über den Beträgen.
 - **Schatzmeister:** Alle Zeiträume stehen als Bänder in der Seitenspalte, der neueste oben, mit „+ “ vor dem Eingang und „− “ vor den Ausgaben.
+- **Euro-Wert (nur Schatzmeister):** Unter dem Betrag steht klein der ungefähre Wert, etwa „(ca. 1.071 €)“ (0.8125rem, verdünnte Tinte, Tabellenziffern), rechtsbündig und im schmalen Band linksbündig. Sein Tooltip nennt den Tagesmittelkurs und dessen Datum; ein archiviertes Band nutzt den Kurs aus dem verschlüsselten Ledger. Einen Euro-Wert gibt es nie bei Ausgaben und nie in der Ansicht des Teams.
+- **Doppelt? (nur Schatzmeister):** Haben zwei offene Geldeingänge denselben Betrag und dasselbe Datum, steht unter dem Fuß eine Zeile in Bernstein (600, 0.875rem) mit Warnsymbol: „Gleicher Betrag und gleiches Datum wie ein anderer Geldeingang – doppelt eingetragen?“
+- **Knöpfe (nur Schatzmeister):** Unter dem Fuß folgt eine Zeile, abgesetzt durch eine 1-px-Linie in Zeilenlinie und 10 px Luft, mit 8 px Abstand zwischen den Knöpfen. „Bestätigen“ (Hauptknopf mit Häkchen) erscheint nur, solange der Geldeingang unbestätigt ist, „Löschen“ (Gefahrknopf mit Papierkorb) bei jedem offenen Geldeingang. Beide sind kleine Knöpfe mit 44 px Höhe und füllen im schmalen Band die Zeile.
 
 **Die Seite-darf-nicht-überlaufen-Regel.** Jeder Geldeingang erscheint als Band, nie als nackte Kennzahl oder Kachel. Die Füllung zeigt das Verhältnis, die Zahlen darunter sagen es, und ein Überlauf färbt Rand und Rest rot und benennt ihn.
 
@@ -496,7 +524,7 @@ Ein unvollständiger Eintrag des Teams zeigt am Handy (bis 760 px) zuerst nur, w
 ### Sprechblase, Dialog, Meldung
 - **Info-Knopf:** rund, sichtbar 30 px, mit einer unsichtbaren Tippfläche von 44 px (7 px rundum). Das Symbol steht in Kugelschreiber-Blau (22 px); geöffnet liegt der Knopf auf kräftigem Karton.
 - **Sprechblase:** weiß, Tinte, 2-px-Rahmen in Kugelschreiber-Blau, 10 px Rundung, der schwebende Schatten und eine Spitze in Kugelschreiber-Blau zum Knopf hin. Sie öffnet sich nach oben, wenn unten der Platz fehlt. Beim Scrollen und bei Größenänderung wandert sie mit ihrem Knopf mit. Sie schließt sich erst, wenn der Knopf das Bild verlässt, bei einem Klick daneben oder mit Escape. Der Eintritt läuft über `@starting-style` (Deckkraft 0, `scale(0.97)`), 160 ms, mit dem Drehpunkt an der Spitze.
-- **Dialog:** Schleier aus Tinte (200 ms), Karton, 2-px-Rahmen, 10 px Rundung, 22 px Innenabstand, höchstens 520 px, schwebender Schatten. Der Eintritt läuft über `@starting-style` mit `scale(0.96)` in 200 ms. Knöpfe stehen rechts mit 12 px Abstand. Ein Dialog dient nur zum Bestätigen von Löschen, ausnahmsweisem Genehmigen oder Speichern ohne Überweisungsbeleg.
+- **Dialog:** Schleier aus Tinte (200 ms), Karton, 2-px-Rahmen, 10 px Rundung, 22 px Innenabstand, höchstens 520 px, schwebender Schatten. Der Eintritt läuft über `@starting-style` mit `scale(0.96)` in 200 ms. Knöpfe stehen rechts mit 12 px Abstand. Ein Dialog dient nur zum Bestätigen folgenreicher Schritte: Löschen, ausnahmsweises Genehmigen, Bestätigen eines Geldeingangs, Herunterladen trotz unbestätigter Geldeingänge oder Speichern ohne Überweisungsbeleg. Ein Lösch-Dialog ist immer als Gefahr gestaltet und verlangt ein Häkchen. Beim Löschen eines Geldeingangs nennt sein Text, wohin die Ausgaben dieses Zeitraums wandern.
 - **Meldung:** unten rechts, Tinte als Grund, weiße Schrift (500), 10 px Rundung, schwebender Schatten. Das Symbol ist hell getönt: Grün (#7BD89A) für Erfolg, Rot (#FF9C9C) für Fehler, Blau (#A9BCEB) für Information. Sie gleitet über `@starting-style` 12 px hoch ein (300 ms).
 
 ### J-Karte (Anmeldung und Namensschritt)
