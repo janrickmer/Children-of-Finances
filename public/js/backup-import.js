@@ -80,6 +80,14 @@ export async function readBackup(file) {
 
 // ------------------------------------------------------------------ Anzeige
 
+// Sicherungen vor dem 29.10.2026 kennen das Bestätigen von Geldeingängen nicht (kein Feld „confirmed“):
+// Dort steht für Geldeingänge wie damals „vollständig“.
+function backupBadge(e) {
+  if (e.kind !== 'income') return statusBadge(e);
+  if (typeof e.confirmed !== 'boolean') return statusBadge({ kind: 'expense', status: 'complete' });
+  return statusBadge({ kind: 'income', status: e.confirmed ? 'approved' : 'complete' });
+}
+
 export function mountBackupView(panel, files, onClose) {
   const urls = [];
   const state = {
@@ -250,7 +258,7 @@ export function mountBackupView(panel, files, onClose) {
       h('td', { class: 'num' }, fmtAmount(e.amount)),
       h('td', {}, e.createdBy || '–'),
       h('td', { class: 'wrap' }, e.note || '–'),
-      h('td', {}, statusBadge(e)),
+      h('td', {}, backupBadge(e)),
       h('td', { class: 'small' }, e.file));
       const toggle = () => {
         if (open) state.expanded.delete(e.id);

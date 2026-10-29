@@ -383,10 +383,21 @@ const T = {
   'admin.incomeVerified': { de: 'Geldeingang bestätigt.', en: 'Money received confirmed.', sw: 'Pesa zilizopokelewa zimethibitishwa.' },
   'admin.removeIncome': { de: 'Löschen', en: 'Delete', sw: 'Futa' },
   'admin.removeIncomeConfirm': {
-    de: 'Geldeingang von {from} vom {date} über KSh {amount}{eur} endgültig löschen? Die Ausgaben dieses Zeitraums zählen dann zum vorherigen Geldeingang. Das kann nicht rückgängig gemacht werden.',
-    en: 'Permanently delete the money received from {from} on {date}, KSh {amount}{eur}? The expenses of this period will then count towards the previous money received. This cannot be undone.',
-    sw: 'Futa kabisa pesa zilizopokelewa kutoka {from} tarehe {date}, KSh {amount}{eur}? Matumizi ya kipindi hiki yatahesabiwa kwenye pesa zilizopokelewa kabla yake. Hili haliwezi kutenduliwa.',
+    de: 'Geldeingang von {from} vom {date} über KSh {amount}{eur} endgültig löschen?',
+    en: 'Permanently delete the money received from {from} on {date}, KSh {amount}{eur}?',
+    sw: 'Futa kabisa pesa zilizopokelewa kutoka {from} tarehe {date}, KSh {amount}{eur}?',
   },
+  'admin.removeIncomeMoves': {
+    de: 'Die Ausgaben dieses Zeitraums zählen dann zum Geldeingang vom {date}.',
+    en: 'The expenses of this period will then count towards the money received on {date}.',
+    sw: 'Matumizi ya kipindi hiki yatahesabiwa kwenye pesa zilizopokelewa tarehe {date}.',
+  },
+  'admin.removeIncomeMovesPre': {
+    de: 'Die Ausgaben dieses Zeitraums zählen dann zu „Vor dem ersten erfassten Geldeingang“.',
+    en: 'The expenses of this period will then count as “Before the first recorded money received”.',
+    sw: 'Matumizi ya kipindi hiki yatahesabiwa kama “Kabla ya pesa za kwanza zilizorekodiwa”.',
+  },
+  'admin.removeIncomeFinal': { de: 'Das kann nicht rückgängig gemacht werden.', en: 'This cannot be undone.', sw: 'Hili haliwezi kutenduliwa.' },
   'admin.removeIncomeCheck': {
     de: 'Ja, dieser Geldeingang ist falsch oder doppelt eingetragen.',
     en: 'Yes, this money received entry is wrong or entered twice.',
@@ -410,11 +421,21 @@ const T = {
     sw: 'Thamani za € kwenye mabano ni za takriban: kiwango cha wastani cha siku ya pesa zilizopokelewa (huduma huria ya viwango currency-api).',
   },
   'admin.unverifiedExport': {
-    de: ['1 Geldeingang ist noch nicht bestätigt. Er wird trotzdem gesichert und steht in der PDF als „noch nicht bestätigt“. Jetzt herunterladen?', '{n} Geldeingänge sind noch nicht bestätigt. Sie werden trotzdem gesichert und stehen in der PDF als „noch nicht bestätigt“. Jetzt herunterladen?'],
-    en: ['1 money received entry is not yet confirmed. It will still be backed up and appears in the PDF as “not yet confirmed”. Download now?', '{n} money received entries are not yet confirmed. They will still be backed up and appear in the PDF as “not yet confirmed”. Download now?'],
-    sw: ['Ingizo 1 la pesa zilizopokelewa bado halijathibitishwa. Bado litahifadhiwa na litaonekana kwenye PDF kama “bado haijathibitishwa”. Pakua sasa?', 'Maingizo {n} ya pesa zilizopokelewa bado hayajathibitishwa. Bado yatahifadhiwa na yataonekana kwenye PDF kama “bado haijathibitishwa”. Pakua sasa?'],
+    de: ['1 Geldeingang ist noch nicht bestätigt. Er wird trotzdem gesichert, steht in der PDF als „noch nicht bestätigt“ und lässt sich nach dem Löschen nicht mehr bestätigen. Jetzt herunterladen?', '{n} Geldeingänge sind noch nicht bestätigt. Sie werden trotzdem gesichert, stehen in der PDF als „noch nicht bestätigt“ und lassen sich nach dem Löschen nicht mehr bestätigen. Jetzt herunterladen?'],
+    en: ['1 money received entry is not yet confirmed. It will still be backed up, appears in the PDF as “not yet confirmed” and cannot be confirmed after deleting. Download now?', '{n} money received entries are not yet confirmed. They will still be backed up, appear in the PDF as “not yet confirmed” and cannot be confirmed after deleting. Download now?'],
+    sw: ['Ingizo 1 la pesa zilizopokelewa bado halijathibitishwa. Bado litahifadhiwa, litaonekana kwenye PDF kama “bado haijathibitishwa” na haliwezi kuthibitishwa baada ya kufutwa. Pakua sasa?', 'Maingizo {n} ya pesa zilizopokelewa bado hayajathibitishwa. Bado yatahifadhiwa, yataonekana kwenye PDF kama “bado haijathibitishwa” na hayawezi kuthibitishwa baada ya kufutwa. Pakua sasa?'],
   },
   'admin.downloadAnyway': { de: 'Trotzdem herunterladen', en: 'Download anyway', sw: 'Pakua hata hivyo' },
+  'admin.downloadAgain': {
+    de: 'Die heruntergeladene PDF enthält diesen Geldeingang noch im alten Stand. Bitte lade die aktuelle Datenlage erneut herunter, bevor du löschst.',
+    en: 'The downloaded PDF still contains this money received entry in its old state. Please download the current data again before deleting.',
+    sw: 'PDF iliyopakuliwa bado ina ingizo hili la pesa zilizopokelewa katika hali yake ya zamani. Tafadhali pakua data ya sasa tena kabla ya kufuta.',
+  },
+  'admin.archiveStale': {
+    de: 'Die Daten haben sich seit dem Herunterladen geändert. Es wurde nichts gelöscht. Bitte lade die aktuelle Datenlage erneut herunter.',
+    en: 'The data has changed since the download. Nothing was deleted. Please download the current data again.',
+    sw: 'Data imebadilika tangu ilipopakuliwa. Hakuna kilichofutwa. Tafadhali pakua data ya sasa tena.',
+  },
   'admin.approveConfirm': {
     de: 'Diesen Eintrag trotz fehlender Angaben ausnahmsweise genehmigen? Er wird dann zu den erfolgreichen Einträgen verschoben.',
     en: 'Approve this entry as an exception despite missing information? It will then be moved to the successful entries.',

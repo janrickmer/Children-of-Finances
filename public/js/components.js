@@ -350,7 +350,8 @@ export function periodTitle(group) {
 }
 
 // Das Band: ein Geldeingang als Kassettenseite mit fester Länge, die nicht überlaufen darf.
-// opts (nur Schatzmeister): rate = { kesPerEur, rateDay } für den ungefähren Euro-Wert des Geldeingangs,
+// opts (nur Schatzmeister): rate = { kesPerEur, rateDay } für den ungefähren Euro-Wert des Geldeingangs
+// (bei gesicherten Geldeingängen steht er im Ledger: inc.rate),
 // duplicate = Hinweis auf einen möglicherweise doppelt eingetragenen Geldeingang,
 // onVerify / onRemove = Knöpfe „Bestätigen“ und „Löschen“.
 export function tapeBand(period, opts = {}) {
@@ -359,12 +360,13 @@ export function tapeBand(period, opts = {}) {
   }
   const inc = period.income;
   const entry = inc && !inc.archived ? inc.entry : null;
-  // Noch nicht bestätigt: offener Geldeingang mit Status „complete“ oder gesicherter mit verified === false.
-  const unverified = entry ? entry.status === 'complete' : inc?.verified === false;
-  const eur = inc && opts.rate ? h('small', {
+  // Den Hinweis gibt es nur für offene Geldeingänge; gesicherte lassen sich nicht mehr bestätigen.
+  const unverified = entry?.status === 'complete';
+  const rate = opts.showEur ? opts.rate || inc?.rate : null;
+  const eur = inc && rate ? h('small', {
     class: 'tape-eur',
-    title: t('band.rateTitle', { date: fmtDate(opts.rate.rateDay), rate: fmtAmount(Math.round(opts.rate.kesPerEur * 100) / 100) }),
-  }, t('band.eur', { eur: fmtAmount(Math.round(inc.amount / opts.rate.kesPerEur)) })) : null;
+    title: t('band.rateTitle', { date: fmtDate(rate.rateDay), rate: fmtAmount(Math.round(rate.kesPerEur * 100) / 100) }),
+  }, t('band.eur', { eur: fmtAmount(Math.round(inc.amount / rate.kesPerEur)) })) : null;
   const amount = inc ? inc.amount : 0;
   const left = amount - period.spent;
   const over = left < 0;

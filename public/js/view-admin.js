@@ -2,7 +2,7 @@
 import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes, parseAmount } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
-import { computePeriods, ledgerAfterArchive, ledgerAfterIncomeRemoval } from './ledger.js';
+import { computePeriods, periodFor, ledgerAfterArchive, ledgerAfterIncomeRemoval } from './ledger.js';
 import {
   thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand,
 } from './components.js';
@@ -58,6 +58,7 @@ export function mountAdmin(root) {
     if (!periods.length) sidebar.append(h('p', { class: 'muted' }, t('admin.noIncome')));
     for (const p of [...periods].reverse()) {
       sidebar.append(tapeBand(p, {
+        showEur: true,
         rate: store.state.rates.get(p.income.date) || null,
         duplicate: twins.get(`${p.income.date}|${p.income.amount}`) > 1,
         onVerify: verifyIncome,
@@ -67,8 +68,8 @@ export function mountAdmin(root) {
     if (pre.spent > 0) sidebar.append(tapeBand(pre));
     sidebar.append(h('p', { class: 'muted small' }, t('admin.sumHint')));
     if (periods.length) sidebar.append(h('p', { class: 'muted small' }, t('admin.eurHint')));
-    // Fehlende Tageskurse nachladen und danach neu zeichnen
-    store.loadRates(periods.map((p) => p.income.date)).then((added) => { if (added) renderSidebar(); });
+    // Fehlende Tageskurse nachladen und danach neu zeichnen. Gesicherte Geldeingänge tragen ihren Kurs im Ledger.
+    store.loadRates(periods.filter((p) => !p.income.rate).map((p) => p.income.date)).then((added) => { if (added) renderSidebar(); });
   }
 
   function incomeFacts(e) {
@@ -87,25 +88,50 @@ export function mountAdmin(root) {
     try {
       await store.verifyIncome(e);
       toast(t('admin.incomeVerified'), 'success');
+      exportOutdated(e);
     } catch (err) {
       incomeActionFailed(err);
     }
   }
 
+  // Wohin die Ausgaben dieses Zeitraums nach dem Löschen gehören (für den Text der Rückfrage).
+  function removalEffect(e) {
+    const entries = store.list();
+    const { periods } = computePeriods(entries, store.state.ledger);
+    const own = periods.find((p) => p.key === e.id);
+    if (!own || (!own.expenses.length && !own.spent)) return '';
+    const rest = computePeriods(entries.filter((x) => x.id !== e.id), store.state.ledger);
+    const target = periodFor(rest.periods, rest.pre, e.d.date);
+    return target.income ? t('admin.removeIncomeMoves', { date: fmtDate(target.income.date) }) : t('admin.removeIncomeMovesPre');
+  }
+
   async function removeIncome(e) {
+    const effect = removalEffect(e);
     const ok = await confirmDialog({
-      message: t('admin.removeIncomeConfirm', incomeFacts(e)),
+      message: [t('admin.removeIncomeConfirm', incomeFacts(e)), effect ? ` ${effect}` : '', ` ${t('admin.removeIncomeFinal')}`],
       confirmLabel: t('admin.removeIncomeYes'),
       checkboxLabel: t('admin.removeIncomeCheck'),
       danger: true,
     });
     if (!ok) return;
     try {
-      await store.removeIncome(e, ledgerAfterIncomeRemoval(store.list(), store.state.ledger, e.id));
-      toast(t('admin.incomeRemoved'), 'success');
+      // Ledger und seine verschlüsselte Fassung im selben Moment lesen: darauf prüft der Server die Version.
+      const { ledger, ledgerRaw } = store.state;
+      const removed = await store.removeIncome(e, ledgerAfterIncomeRemoval(store.list(), ledger, e.id), ledgerRaw);
+      toast(t(removed ? 'admin.incomeRemoved' : 'admin.incomeChanged'), removed ? 'success' : 'error');
+      exportOutdated(e);
     } catch (err) {
       incomeActionFailed(err);
     }
+  }
+
+  // Die heruntergeladene PDF stimmt nicht mehr, wenn ein darin enthaltener Geldeingang bestätigt oder
+  // gelöscht wurde: Dann muss vor dem Löschen erneut heruntergeladen werden.
+  function exportOutdated(e) {
+    if (!exported?.ids.includes(e.id)) return;
+    exported = null;
+    renderDownload();
+    toast(t('admin.downloadAgain'), 'info', 12000);
   }
 
   // Inzwischen bestätigt, gelöscht oder gesichert (z. B. in einem anderen Fenster): Ansicht auffrischen.
@@ -258,14 +284,23 @@ export function mountAdmin(root) {
     });
     if (!ok) return;
     try {
-      const ledger = ledgerAfterArchive(store.list(), store.state.ledger, exported.ids);
-      const deleted = await store.archive(exported.ids, ledger);
+      const { ledger: current, ledgerRaw } = store.state;
+      const ledger = ledgerAfterArchive(store.list(), current, exported.ids, store.state.rates);
+      const deleted = await store.archive(exported.ids, ledger, ledgerRaw);
       exported = null;
       toast(t('admin.deleted', { n: deleted }), 'success');
       renderDownload();
     } catch (err) {
       console.error(err);
-      toast(t('error.generic'), 'error');
+      if (err?.status === 409) {
+        // Inzwischen geändert (z. B. Geldeingang in einem anderen Fenster gelöscht): neu herunterladen
+        exported = null;
+        renderDownload();
+        toast(t('admin.archiveStale'), 'error', 15000);
+        store.refresh(true).catch(() => {});
+      } else {
+        toast(t('error.generic'), 'error');
+      }
     }
   }
 

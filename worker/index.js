@@ -21,7 +21,9 @@ const FX_SOURCES = [
 ];
 const FX_FIRST_DAY = '2024-03-02';
 const FX_MAX_DAYS = 40; // Tage pro Anfrage
-const FX_MAX_FETCHES = 24; // Abrufe beim Kursdienst pro Anfrage
+const FX_MAX_FETCHES = 24; // Abrufe beim Kursdienst pro Anfrage …
+const FX_DEADLINE_MS = 12_000; // … und höchstens so lange (der Browser wartet 30 s)
+const FX_FETCH_MS = 4000; // pro Abruf
 
 const enc = new TextEncoder();
 let authCache = null;
@@ -352,20 +354,19 @@ async function verifyIncome(request, env, session, id) {
 
 // Der Schatzmeister löscht einen gespeicherten Geldeingang (z. B. versehentlich doppelt eingetragen).
 // Der Grabstein verhindert, dass ein veraltetes Gerät ihn wieder anlegt. Waren dem Geldeingang schon
-// gesicherte Ausgaben zugeordnet, schickt der Browser das angepasste, verschlüsselte Ledger mit;
-// es wird nur übernommen, wenn es auf dem aktuellen Stand beruht und der Geldeingang wirklich gelöscht wird.
+// gesicherte Ausgaben zugeordnet, schickt der Browser das angepasste, verschlüsselte Ledger mit; es wird
+// nur übernommen, wenn der Geldeingang wirklich gelöscht wird. ledgerBase (Prüfsumme des Ledgers, auf dem
+// der Browser gerechnet hat) ist immer nötig: Hat sich das Ledger inzwischen geändert (z. B. durch eine
+// Sicherung in einem anderen Fenster), muss neu gerechnet werden.
 async function removeIncome(request, env, session, id) {
   requireRole(session, 'admin');
   checkId(id);
   const body = await readJson(request, 210_000);
   const { ledger, ledgerBase } = body;
-  if (ledger !== undefined && (typeof ledger !== 'string' || ledger.length > 200_000 || typeof ledgerBase !== 'string')) {
+  if (typeof ledgerBase !== 'string' || (ledger !== undefined && (typeof ledger !== 'string' || ledger.length > 200_000))) {
     throw new HttpError(400, 'bad_request');
   }
-  if (ledger !== undefined) {
-    const row = await env.DB.prepare("SELECT v FROM config WHERE k = 'ledger'").first();
-    if ((await sha256Hex(enc.encode(row?.v || ''))) !== ledgerBase) throw new HttpError(409, 'stale');
-  }
+  await checkLedgerBase(env, ledgerBase);
   const INCOME = "id = ? AND kind = 'income' AND status IN ('complete', 'approved')";
   const statements = [
     env.DB.prepare(`INSERT OR IGNORE INTO tombstones (id, at) SELECT id, ? FROM entries WHERE ${INCOME}`).bind(Date.now(), id),
@@ -384,8 +385,14 @@ async function removeIncome(request, env, session, id) {
   if (!results[statements.length - 2].meta.changes) {
     const row = await env.DB.prepare('SELECT kind, status FROM entries WHERE id = ?').bind(id).first();
     if (row) throw new HttpError(409, 'not_removable', { kind: row.kind, status: row.status });
+    return json({ removed: false }); // gab es nicht (mehr), z. B. inzwischen gesichert oder schon gelöscht
   }
-  return json({ ok: true });
+  return json({ removed: true });
+}
+
+async function checkLedgerBase(env, ledgerBase) {
+  const row = await env.DB.prepare("SELECT v FROM config WHERE k = 'ledger'").first();
+  if ((await sha256Hex(enc.encode(row?.v || ''))) !== ledgerBase) throw new HttpError(409, 'stale');
 }
 
 // ---------------------------------------------------------------- Wechselkurse (Schatzmeister)
@@ -404,25 +411,45 @@ async function getRates(env, session, url) {
 
   const today = isoDay(Date.now());
   const sources = (env.FX_SOURCES || FX_SOURCES.join(',')).split(',').map((x) => x.trim()).filter(Boolean);
+  const failed = new Set(); // Quellen, die in dieser Anfrage gestört waren (nicht nur „Tag fehlt“)
+  const deadline = Date.now() + FX_DEADLINE_MS;
+  const unchecked = [];
   let budget = FX_MAX_FETCHES;
   for (const day of days) {
     if (rates[day] || day < FX_FIRST_DAY || day > shiftDay(today, 1)) continue;
     let found = null;
-    for (let back = 0; back < 7 && !found && budget > 0; back++) {
+    let complete = true; // false: Kursdienst gestört oder Zeit/Abrufe aufgebraucht – später erneut versuchen
+    for (let back = 0; back < 7 && !found && complete; back++) {
       const d = shiftDay(day, -back);
       if (d < FX_FIRST_DAY) break;
+      // Einen Tag zurück nur, wenn alle Quellen sagen, dass es diesen Tag nicht gibt.
+      let allMissing = true;
       for (const source of sources) {
-        if (budget <= 0) break;
+        if (failed.has(source)) {
+          allMissing = false;
+          continue;
+        }
+        if (budget <= 0 || Date.now() > deadline) {
+          allMissing = false;
+          break;
+        }
         budget--;
         const res = await fetchKesPerEur(source.replace('{day}', d));
         if (res.rate) {
           found = { kesPerEur: res.rate, rateDay: d };
           break;
         }
-        if (res.missing) break; // diesen Tag gibt es beim Kursdienst nicht – den Tag davor versuchen
+        if (!res.missing) {
+          failed.add(source);
+          allMissing = false;
+        }
       }
+      if (!found && !allMissing) complete = false;
     }
-    if (!found) continue;
+    if (!found) {
+      if (!complete) unchecked.push(day);
+      continue;
+    }
     rates[day] = found;
     // Endgültig ist ein Kurs, wenn er vom Tag selbst stammt oder der Tag eine Woche zurückliegt.
     if (found.rateDay === day || day <= shiftDay(today, -7)) {
@@ -430,12 +457,12 @@ async function getRates(env, session, url) {
         .bind(day, found.kesPerEur, found.rateDay, Date.now()).run();
     }
   }
-  return json({ rates });
+  return json({ rates, unchecked });
 }
 
 async function fetchKesPerEur(address) {
   try {
-    const res = await fetch(address, { signal: AbortSignal.timeout(6000), headers: { accept: 'application/json' } });
+    const res = await fetch(address, { signal: AbortSignal.timeout(FX_FETCH_MS), headers: { accept: 'application/json' } });
     if (res.status === 404) return { missing: true };
     if (!res.ok) return {};
     const rate = Number((await res.json())?.eur?.kes);
@@ -502,10 +529,12 @@ async function deleteImage(env, session, id) {
 async function archive(request, env, session) {
   requireRole(session, 'admin');
   const body = await readJson(request, 400_000);
-  const { ids, ledger } = body;
+  const { ids, ledger, ledgerBase } = body;
   if (!Array.isArray(ids) || !ids.length || ids.length > MAX_ARCHIVE_IDS) throw new HttpError(400, 'bad_request');
   ids.forEach(checkId);
   if (typeof ledger !== 'string' || ledger.length > 200_000) throw new HttpError(400, 'bad_request');
+  // Hat sich das Ledger seit dem Rechnen geändert (z. B. Geldeingang in einem anderen Fenster gelöscht), neu rechnen.
+  if (ledgerBase !== undefined) await checkLedgerBase(env, String(ledgerBase));
 
   const now = Date.now();
   const chunks = [];
@@ -533,6 +562,8 @@ async function archive(request, env, session) {
     env.DB.prepare('DELETE FROM images WHERE created_at < ? AND entry_id NOT IN (SELECT id FROM entries)')
       .bind(now - 30 * 86_400_000),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('ledger', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1").bind(ledger),
+    // Die Kurse gesicherter Geldeingänge stehen ab jetzt verschlüsselt im Ledger; die Tabelle verrät sonst ihre Daten.
+    env.DB.prepare('DELETE FROM fx_rates'),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('last_archive', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1")
       .bind(JSON.stringify({ at: now, count: deleted })),
     env.DB.prepare(BUMP_SEQ),

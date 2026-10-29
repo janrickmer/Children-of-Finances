@@ -112,7 +112,7 @@ export async function buildBackupPdf(entries, onProgress = () => {}) {
       editedBy: e.d.editedBy || '',
       infoPage: pdf.getPageCount() - 1,
       ...(income
-        ? { from: e.d.from || '', date: e.d.date || '', amount: parseAmount(e.d.amount) }
+        ? { from: e.d.from || '', date: e.d.date || '', amount: parseAmount(e.d.amount), confirmed: e.status === 'approved' }
         : {
           what: e.d.what || '', payDate: e.d.payDate || '', amount: parseAmount(e.d.amount), note: e.d.note || '',
           receipts: [], transfers: [], missingImages: [],

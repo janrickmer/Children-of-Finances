@@ -401,6 +401,7 @@ export function reset() {
   state.ledger = emptyLedger();
   state.ledgerRaw = null;
   state.rates.clear();
+  rateTried.clear();
   state.lastArchive = null;
   state.seq = null;
   state.since = 0;
@@ -419,28 +420,35 @@ export async function verifyIncome(e) {
   await refresh(true);
 }
 
-// Geldeingang löschen (z. B. doppelt eingetragen). `nextLedger` nur, wenn sich das Ledger ändert.
-export async function removeIncome(e, nextLedger = null) {
-  const body = {};
-  if (nextLedger) {
-    body.ledger = await encryptJson(nextLedger, 'ledger');
-    body.ledgerBase = await sha256Hex(new TextEncoder().encode(state.ledgerRaw || ''));
-  }
-  await request(`/api/entries/${e.id}/remove`, { method: 'POST', body });
+// Geldeingang löschen (z. B. doppelt eingetragen). `nextLedger` nur, wenn sich das Ledger ändert;
+// `ledgerRaw` ist die verschlüsselte Fassung, auf der gerechnet wurde. Liefert false, wenn es den
+// Geldeingang nicht mehr gab (z. B. inzwischen gesichert).
+export async function removeIncome(e, nextLedger, ledgerRaw) {
+  const body = { ledgerBase: await ledgerHash(ledgerRaw) };
+  if (nextLedger) body.ledger = await encryptJson(nextLedger, 'ledger');
+  const res = await request(`/api/entries/${e.id}/remove`, { method: 'POST', body });
   await refresh(true);
+  return res.removed !== false;
 }
 
-// Tageskurse (KSh je Euro) für die angegebenen Tage holen. Bekannte Kurse werden nicht erneut abgefragt,
-// Tage ohne Kurs frühestens nach 10 Minuten wieder. Liefert true, wenn neue Kurse dazugekommen sind.
+function ledgerHash(raw) {
+  return sha256Hex(new TextEncoder().encode(raw || ''));
+}
+
+// Tageskurse (KSh je Euro) für die angegebenen Tage holen, neueste zuerst. Bekannte Kurse werden nicht
+// erneut abgefragt; Tage, für die der Kursdienst nichts hatte, frühestens nach 10 Minuten wieder.
+// Liefert true, wenn neue Kurse dazugekommen sind.
 const rateTried = new Map();
 
 export async function loadRates(days) {
   const now = Date.now();
   const missing = [...new Set(days)]
     .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !state.rates.get(d) && !(now - (rateTried.get(d) || 0) < 600_000))
+    .sort()
+    .reverse()
     .slice(0, 40);
   if (!missing.length) return false;
-  missing.forEach((d) => rateTried.set(d, now));
+  missing.forEach((d) => rateTried.set(d, now)); // nicht doppelt anfragen, solange die Antwort aussteht
   try {
     const res = await request(`/api/rates?days=${missing.join(',')}`);
     let added = false;
@@ -451,15 +459,18 @@ export async function loadRates(days) {
         added = true;
       }
     }
+    // Tage, die der Server diesmal nicht prüfen konnte (Kursdienst gestört, Zeit aufgebraucht): bald erneut
+    for (const d of res.unchecked || []) rateTried.delete(d);
     return added;
   } catch {
+    missing.forEach((d) => rateTried.delete(d));
     return false;
   }
 }
 
-export async function archive(ids, ledger) {
+export async function archive(ids, ledger, ledgerRaw) {
   const encrypted = await encryptJson(ledger, 'ledger');
-  const res = await request('/api/archive', { method: 'POST', body: { ids, ledger: encrypted } });
+  const res = await request('/api/archive', { method: 'POST', body: { ids, ledger: encrypted, ledgerBase: await ledgerHash(ledgerRaw) } });
   await refresh(true);
   return res.deleted;
 }

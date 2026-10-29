@@ -52,8 +52,9 @@ export function periodFor(periods, pre, isoDate) {
   return found;
 }
 
-// Neues Ledger nach dem Löschen der Einträge mit den IDs `archivedIds`.
-export function ledgerAfterArchive(entries, ledger, archivedIds) {
+// Neues Ledger nach dem Löschen der Einträge mit den IDs `archivedIds`. Gesicherte Geldeingänge behalten
+// ihren Tageskurs (aus `rates`, Tag → { kesPerEur, rateDay }) verschlüsselt im Ledger.
+export function ledgerAfterArchive(entries, ledger, archivedIds, rates = new Map()) {
   const ids = new Set(archivedIds);
   const next = { v: 1, incomes: [...ledger.incomes], spent: { ...ledger.spent } };
   const { pre, periods } = computePeriods(entries, ledger);
@@ -64,7 +65,8 @@ export function ledgerAfterArchive(entries, ledger, archivedIds) {
     if (sum) next.spent[p.key] = (next.spent[p.key] || 0) + sum;
     if (p.income && !p.income.archived && ids.has(p.income.id)) {
       const { id, date, from, amount, createdAt } = p.income;
-      next.incomes.push({ id, date, from, amount, createdAt, verified: p.income.entry?.status === 'approved' });
+      const rate = rates.get(date);
+      next.incomes.push({ id, date, from, amount, createdAt, ...(rate ? { rate } : {}) });
     }
   }
   return next;

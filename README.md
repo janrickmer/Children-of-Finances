@@ -29,8 +29,10 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
 - **Rollen werden serverseitig erzwungen:** Abgeschlossene Einträge kann niemand mehr ändern.
   Nur der Schatzmeister kann genehmigen, Geldeingänge bestätigen und löschen.
 - **Wechselkurse:** Für die ungefähren Euro-Werte fragt der Worker Tageskurse (EUR/KES) bei einem
-  freien Kursdienst ab und speichert sie zwischen. Dabei erfährt der Worker die Daten der
-  Geldeingänge, nicht ihre Beträge; der Kursdienst erfährt nur Kalendertage.
+  freien Kursdienst ab und speichert sie zwischen. Dabei erfährt der Worker die Daten der offenen
+  Geldeingänge, nicht ihre Beträge; der Kursdienst erfährt nur Kalendertage. Beim Sichern & Löschen
+  wandert der Kurs jedes gesicherten Geldeingangs verschlüsselt ins Ledger, und der Zwischenspeicher
+  wird geleert.
 - Die Anmeldung gilt nur im aktuellen Browser-Tab, höchstens 12 Stunden.
 - **Datenstandort:** Die D1-Datenbank wird mit `jurisdiction: eu` angelegt, die Daten bleiben in der EU.
 - **Ehrlicher Hinweis:** Kurze, erratbare Passwörter bleiben die Schwachstelle. Wer ein Passwort
