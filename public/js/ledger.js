@@ -56,7 +56,7 @@ export function periodFor(periods, pre, isoDate) {
 // ihren Tageskurs (aus `rates`, Tag → { kesPerEur, rateDay }) verschlüsselt im Ledger.
 export function ledgerAfterArchive(entries, ledger, archivedIds, rates = new Map()) {
   const ids = new Set(archivedIds);
-  const next = { v: 1, incomes: [...ledger.incomes], spent: { ...ledger.spent } };
+  const next = { v: 1, incomes: withRates(ledger.incomes, rates), spent: { ...ledger.spent } };
   const { pre, periods } = computePeriods(entries, ledger);
   for (const p of [pre, ...periods]) {
     const sum = p.expenses
@@ -72,10 +72,15 @@ export function ledgerAfterArchive(entries, ledger, archivedIds, rates = new Map
   return next;
 }
 
+// Früher gesicherte Geldeingänge ohne Kurs bekommen ihn nachgetragen, sobald er bekannt ist.
+function withRates(incomes, rates) {
+  return incomes.map((i) => (i.rate || !rates.get(i.date) ? i : { ...i, rate: rates.get(i.date) }));
+}
+
 // Neues Ledger, wenn der Schatzmeister den Geldeingang `incomeId` löscht – oder null, wenn sich nichts ändert.
 // Waren ihm schon gesicherte Ausgaben zugeordnet, gehen deren Summen an den Zeitraum, dem seine
 // übrigen Ausgaben ab jetzt auch angehören (der vorherige Geldeingang, sonst „vor dem ersten“).
-export function ledgerAfterIncomeRemoval(entries, ledger, incomeId) {
+export function ledgerAfterIncomeRemoval(entries, ledger, incomeId, rates = new Map()) {
   const sum = ledger.spent[incomeId] || 0;
   if (!sum) return null;
   const income = entries.find((e) => e.id === incomeId);
@@ -85,5 +90,5 @@ export function ledgerAfterIncomeRemoval(entries, ledger, incomeId) {
   const spent = { ...ledger.spent };
   delete spent[incomeId];
   spent[target.key] = (spent[target.key] || 0) + sum;
-  return { v: 1, incomes: [...ledger.incomes], spent };
+  return { v: 1, incomes: withRates(ledger.incomes, rates), spent };
 }

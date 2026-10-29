@@ -117,7 +117,7 @@ export function mountAdmin(root) {
     try {
       // Ledger und seine verschlüsselte Fassung im selben Moment lesen: darauf prüft der Server die Version.
       const { ledger, ledgerRaw } = store.state;
-      const removed = await store.removeIncome(e, ledgerAfterIncomeRemoval(store.list(), ledger, e.id), ledgerRaw);
+      const removed = await store.removeIncome(e, ledgerAfterIncomeRemoval(store.list(), ledger, e.id, store.state.rates), ledgerRaw);
       toast(t(removed ? 'admin.incomeRemoved' : 'admin.incomeChanged'), removed ? 'success' : 'error');
       exportOutdated(e);
     } catch (err) {
@@ -135,6 +135,7 @@ export function mountAdmin(root) {
   }
 
   // Inzwischen bestätigt, gelöscht oder gesichert (z. B. in einem anderen Fenster): Ansicht auffrischen.
+  // Ob die heruntergeladene PDF noch stimmt, prüft „Löschen“ ohnehin vor dem Sichern.
   function incomeActionFailed(err) {
     console.error(err);
     if (err?.status === 409) {
@@ -256,13 +257,15 @@ export function mountAdmin(root) {
       if (!ok) return;
     }
     downloadBtn.disabled = true;
+    // Stand jedes Eintrags beim Start des Downloads: Vor dem Löschen muss alles noch genau so sein.
+    const snapshot = new Map(entries.map((e) => [e.id, `${e.status}|${e.updatedAt}`]));
     try {
       const { bytes, filename, missingIds } = await buildBackupPdf(entries, (done, total) => {
         progress.textContent = t('admin.preparing', { done, total });
       });
       downloadBytes(bytes, filename, 'application/pdf');
       // Einträge, deren Bilder nicht vollständig in der PDF stehen, bleiben in der Datenbank.
-      exported = { ids: entries.filter((e) => !missingIds.includes(e.id)).map((e) => e.id), filename, skipped: missingIds.length };
+      exported = { ids: entries.filter((e) => !missingIds.includes(e.id)).map((e) => e.id), filename, skipped: missingIds.length, snapshot };
       if (missingIds.length) toast(t('admin.imagesMissing', { n: missingIds.length }), 'error', 20000);
       progress.textContent = '';
       renderDownload();
@@ -284,6 +287,27 @@ export function mountAdmin(root) {
     });
     if (!ok) return;
     try {
+      // Frisch abgleichen: Stimmt die heruntergeladene PDF noch mit den Daten überein? Ein Geldeingang
+      // kann inzwischen bestätigt oder gelöscht worden sein (auch auf einem anderen Gerät).
+      await store.refresh(true);
+      const gone = exported.ids.filter((id) => !store.state.entries.has(id)).length;
+      if (gone === exported.ids.length) {
+        // Schon gesichert und gelöscht (z. B. ein früherer Versuch, dessen Antwort verloren ging)
+        toast(t('admin.deleted', { n: gone }), 'success');
+        exported = null;
+        renderDownload();
+        return;
+      }
+      const changed = gone || exported.ids.some((id) => `${store.state.entries.get(id).status}|${store.state.entries.get(id).updatedAt}` !== exported.snapshot.get(id));
+      if (changed) {
+        exported = null;
+        renderDownload();
+        toast(t('admin.downloadOutdated'), 'error', 15000);
+        return;
+      }
+      // Fehlende Tageskurse vorher laden, damit gesicherte Geldeingänge ihren Kurs im Ledger behalten.
+      const { periods } = computePeriods(store.list(), store.state.ledger);
+      await store.loadRates(periods.filter((p) => !p.income.rate).map((p) => p.income.date));
       const { ledger: current, ledgerRaw } = store.state;
       const ledger = ledgerAfterArchive(store.list(), current, exported.ids, store.state.rates);
       const deleted = await store.archive(exported.ids, ledger, ledgerRaw);

@@ -431,6 +431,11 @@ const T = {
     en: 'The downloaded PDF still contains this money received entry in its old state. Please download the current data again before deleting.',
     sw: 'PDF iliyopakuliwa bado ina ingizo hili la pesa zilizopokelewa katika hali yake ya zamani. Tafadhali pakua data ya sasa tena kabla ya kufuta.',
   },
+  'admin.downloadOutdated': {
+    de: 'Seit dem Herunterladen hat sich etwas geändert (z. B. wurde ein Geldeingang bestätigt oder gelöscht). Es wurde nichts gelöscht. Bitte lade die aktuelle Datenlage erneut herunter.',
+    en: 'Something has changed since the download (e.g. money received was confirmed or deleted). Nothing was deleted. Please download the current data again.',
+    sw: 'Kuna kilichobadilika tangu kupakua (k.m. pesa zilizopokelewa zimethibitishwa au zimefutwa). Hakuna kilichofutwa. Tafadhali pakua data ya sasa tena.',
+  },
   'admin.archiveStale': {
     de: 'Die Daten haben sich seit dem Herunterladen geändert. Es wurde nichts gelöscht. Bitte lade die aktuelle Datenlage erneut herunter.',
     en: 'The data has changed since the download. Nothing was deleted. Please download the current data again.',
