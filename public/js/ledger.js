@@ -64,8 +64,24 @@ export function ledgerAfterArchive(entries, ledger, archivedIds) {
     if (sum) next.spent[p.key] = (next.spent[p.key] || 0) + sum;
     if (p.income && !p.income.archived && ids.has(p.income.id)) {
       const { id, date, from, amount, createdAt } = p.income;
-      next.incomes.push({ id, date, from, amount, createdAt });
+      next.incomes.push({ id, date, from, amount, createdAt, verified: p.income.entry?.status === 'approved' });
     }
   }
   return next;
+}
+
+// Neues Ledger, wenn der Schatzmeister den Geldeingang `incomeId` löscht – oder null, wenn sich nichts ändert.
+// Waren ihm schon gesicherte Ausgaben zugeordnet, gehen deren Summen an den Zeitraum, dem seine
+// übrigen Ausgaben ab jetzt auch angehören (der vorherige Geldeingang, sonst „vor dem ersten“).
+export function ledgerAfterIncomeRemoval(entries, ledger, incomeId) {
+  const sum = ledger.spent[incomeId] || 0;
+  if (!sum) return null;
+  const income = entries.find((e) => e.id === incomeId);
+  if (!income) return null;
+  const { pre, periods } = computePeriods(entries.filter((e) => e.id !== incomeId), ledger);
+  const target = periodFor(periods, pre, income.d.date);
+  const spent = { ...ledger.spent };
+  delete spent[incomeId];
+  spent[target.key] = (spent[target.key] || 0) + sum;
+  return { v: 1, incomes: [...ledger.incomes], spent };
 }

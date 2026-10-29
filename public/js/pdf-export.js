@@ -204,7 +204,8 @@ function drawInfoPage(page, e, record, index, total, { font, bold, colors, now }
   page.drawLine({ start: { x: MARGIN, y }, end: { x: w - MARGIN, y }, thickness: 1, color: colors.accent });
   y -= 26;
 
-  if (e.status === 'approved') {
+  // Bei Ausgaben heißt „approved“: ausnahmsweise genehmigt. Bei Geldeingängen: vom Schatzmeister bestätigt.
+  if (!income && e.status === 'approved') {
     const missing = missingFields(e);
     const text = `Ausnahmsweise durch den Schatzmeister genehmigt${missing.length ? ` – fehlende Angaben: ${missing.join(', ')}` : ''}.`;
     for (const line of wrap(text, bold, 11, width)) {
@@ -244,6 +245,7 @@ function drawInfoPage(page, e, record, index, total, { font, bold, colors, now }
   if (e.d.editedBy && e.d.editedBy !== e.d.createdBy) field('Zuletzt bearbeitet von', e.d.editedBy);
   field('Eintragung begonnen am', fmtDateTime(e.createdAt));
   if (e.updatedAt) field('Zuletzt gespeichert am', fmtDateTime(e.updatedAt));
-  field('Status', e.status === 'approved' ? 'ausnahmsweise genehmigt' : 'vollständig');
+  if (income) field('Status', e.status === 'approved' ? 'vom Schatzmeister bestätigt' : 'noch nicht bestätigt');
+  else field('Status', e.status === 'approved' ? 'ausnahmsweise genehmigt' : 'vollständig');
   field('Eintrag-ID', e.id);
 }

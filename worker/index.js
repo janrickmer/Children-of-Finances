@@ -13,6 +13,15 @@ const MAX_IMAGE_CHARS = 1_950_000; // D1 erlaubt max. 2 MB pro Zeile
 const MAX_ARCHIVE_IDS = 5000;
 const ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const LOCKED = ['complete', 'approved'];
+// Ungefähre Euro-Werte der Geldeingänge: täglicher Mittelkurs EUR→KES eines freien Kursdienstes
+// (fawazahmed0/currency-api, Daten ab 2.3.2024). Zwei Adressen desselben Dienstes; {day} = JJJJ-MM-TT.
+const FX_SOURCES = [
+  'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@{day}/v1/currencies/eur.min.json',
+  'https://{day}.currency-api.pages.dev/v1/currencies/eur.min.json',
+];
+const FX_FIRST_DAY = '2024-03-02';
+const FX_MAX_DAYS = 40; // Tage pro Anfrage
+const FX_MAX_FETCHES = 24; // Abrufe beim Kursdienst pro Anfrage
 
 const enc = new TextEncoder();
 let authCache = null;
@@ -86,6 +95,13 @@ async function handleApi(request, env, url) {
   if (parts[0] === 'entries' && parts.length === 3 && parts[2] === 'approve' && method === 'POST') {
     return approveEntry(request, env, session, parts[1]);
   }
+  if (parts[0] === 'entries' && parts.length === 3 && parts[2] === 'verify' && method === 'POST') {
+    return verifyIncome(request, env, session, parts[1]);
+  }
+  if (parts[0] === 'entries' && parts.length === 3 && parts[2] === 'remove' && method === 'POST') {
+    return removeIncome(request, env, session, parts[1]);
+  }
+  if (route === 'GET rates') return getRates(env, session, url);
   if (parts[0] === 'images' && parts.length === 2 && method === 'PUT') return putImage(request, env, session, parts[1], url);
   if (parts[0] === 'images' && parts.length === 2 && method === 'GET') return getImage(env, parts[1]);
   if (parts[0] === 'images' && parts.length === 2 && method === 'DELETE') return deleteImage(env, session, parts[1]);
@@ -316,6 +332,130 @@ async function approveEntry(request, env, session, id) {
   ]);
   if (!res.meta.changes) throw new HttpError(409, 'not_approvable');
   return json({ ok: true });
+}
+
+// Der Schatzmeister bestätigt einen Geldeingang. Bei Geldeingängen heißt „approved“: bestätigt.
+// Bestätigt wird genau die Fassung, die er gesehen hat.
+async function verifyIncome(request, env, session, id) {
+  requireRole(session, 'admin');
+  checkId(id);
+  const body = await readJson(request, 1000);
+  if (!Number.isFinite(body.updatedAt)) throw new HttpError(400, 'bad_request');
+  const [res] = await env.DB.batch([
+    env.DB.prepare("UPDATE entries SET status = 'approved', updated_at = MAX(?1, updated_at + 1) WHERE id = ?2 AND kind = 'income' AND status = 'complete' AND updated_at = ?3")
+      .bind(Date.now(), id, body.updatedAt),
+    env.DB.prepare(BUMP_SEQ),
+  ]);
+  if (!res.meta.changes) throw new HttpError(409, 'not_verifiable');
+  return json({ ok: true });
+}
+
+// Der Schatzmeister löscht einen gespeicherten Geldeingang (z. B. versehentlich doppelt eingetragen).
+// Der Grabstein verhindert, dass ein veraltetes Gerät ihn wieder anlegt. Waren dem Geldeingang schon
+// gesicherte Ausgaben zugeordnet, schickt der Browser das angepasste, verschlüsselte Ledger mit;
+// es wird nur übernommen, wenn es auf dem aktuellen Stand beruht und der Geldeingang wirklich gelöscht wird.
+async function removeIncome(request, env, session, id) {
+  requireRole(session, 'admin');
+  checkId(id);
+  const body = await readJson(request, 210_000);
+  const { ledger, ledgerBase } = body;
+  if (ledger !== undefined && (typeof ledger !== 'string' || ledger.length > 200_000 || typeof ledgerBase !== 'string')) {
+    throw new HttpError(400, 'bad_request');
+  }
+  if (ledger !== undefined) {
+    const row = await env.DB.prepare("SELECT v FROM config WHERE k = 'ledger'").first();
+    if ((await sha256Hex(enc.encode(row?.v || ''))) !== ledgerBase) throw new HttpError(409, 'stale');
+  }
+  const INCOME = "id = ? AND kind = 'income' AND status IN ('complete', 'approved')";
+  const statements = [
+    env.DB.prepare(`INSERT OR IGNORE INTO tombstones (id, at) SELECT id, ? FROM entries WHERE ${INCOME}`).bind(Date.now(), id),
+  ];
+  if (ledger !== undefined) {
+    statements.push(env.DB.prepare(
+      `INSERT INTO config (k, v) SELECT 'ledger', ? WHERE EXISTS (SELECT 1 FROM entries WHERE ${INCOME}) ON CONFLICT(k) DO UPDATE SET v = excluded.v`,
+    ).bind(ledger, id));
+  }
+  statements.push(
+    env.DB.prepare(`DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE ${INCOME})`).bind(id),
+    env.DB.prepare(`DELETE FROM entries WHERE ${INCOME}`).bind(id),
+    env.DB.prepare(BUMP_SEQ),
+  );
+  const results = await env.DB.batch(statements);
+  if (!results[statements.length - 2].meta.changes) {
+    const row = await env.DB.prepare('SELECT kind, status FROM entries WHERE id = ?').bind(id).first();
+    if (row) throw new HttpError(409, 'not_removable', { kind: row.kind, status: row.status });
+  }
+  return json({ ok: true });
+}
+
+// ---------------------------------------------------------------- Wechselkurse (Schatzmeister)
+
+// Liefert für jeden angefragten Tag den Mittelkurs (KSh je Euro). Fehlt für einen Tag ein Kurs,
+// gilt der letzte davor (höchstens 6 Tage zurück). Kurse werden in D1 zwischengespeichert;
+// fällt der Kursdienst aus, fehlt der Wert einfach (nie ein Serverfehler).
+async function getRates(env, session, url) {
+  requireRole(session, 'admin');
+  const days = [...new Set((url.searchParams.get('days') || '').split(',').filter(Boolean))];
+  if (!days.length || days.length > FX_MAX_DAYS || !days.every(isIsoDay)) throw new HttpError(400, 'bad_request');
+  const rates = {};
+  const { results } = await env.DB.prepare(`SELECT day, kes_per_eur, rate_day FROM fx_rates WHERE day IN (${days.map(() => '?').join(',')})`)
+    .bind(...days).all();
+  for (const r of results) rates[r.day] = { kesPerEur: r.kes_per_eur, rateDay: r.rate_day };
+
+  const today = isoDay(Date.now());
+  const sources = (env.FX_SOURCES || FX_SOURCES.join(',')).split(',').map((x) => x.trim()).filter(Boolean);
+  let budget = FX_MAX_FETCHES;
+  for (const day of days) {
+    if (rates[day] || day < FX_FIRST_DAY || day > shiftDay(today, 1)) continue;
+    let found = null;
+    for (let back = 0; back < 7 && !found && budget > 0; back++) {
+      const d = shiftDay(day, -back);
+      if (d < FX_FIRST_DAY) break;
+      for (const source of sources) {
+        if (budget <= 0) break;
+        budget--;
+        const res = await fetchKesPerEur(source.replace('{day}', d));
+        if (res.rate) {
+          found = { kesPerEur: res.rate, rateDay: d };
+          break;
+        }
+        if (res.missing) break; // diesen Tag gibt es beim Kursdienst nicht – den Tag davor versuchen
+      }
+    }
+    if (!found) continue;
+    rates[day] = found;
+    // Endgültig ist ein Kurs, wenn er vom Tag selbst stammt oder der Tag eine Woche zurückliegt.
+    if (found.rateDay === day || day <= shiftDay(today, -7)) {
+      await env.DB.prepare('INSERT INTO fx_rates (day, kes_per_eur, rate_day, fetched_at) VALUES (?, ?, ?, ?) ON CONFLICT(day) DO NOTHING')
+        .bind(day, found.kesPerEur, found.rateDay, Date.now()).run();
+    }
+  }
+  return json({ rates });
+}
+
+async function fetchKesPerEur(address) {
+  try {
+    const res = await fetch(address, { signal: AbortSignal.timeout(6000), headers: { accept: 'application/json' } });
+    if (res.status === 404) return { missing: true };
+    if (!res.ok) return {};
+    const rate = Number((await res.json())?.eur?.kes);
+    // Plausibel ist ein Kurs zwischen 20 und 2000 KSh je Euro.
+    return Number.isFinite(rate) && rate > 20 && rate < 2000 ? { rate } : {};
+  } catch {
+    return {};
+  }
+}
+
+function isIsoDay(day) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) && isoDay(Date.parse(`${day}T00:00:00Z`)) === day;
+}
+
+function isoDay(ms) {
+  return Number.isFinite(ms) ? new Date(ms).toISOString().slice(0, 10) : '';
+}
+
+function shiftDay(day, n) {
+  return isoDay(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000);
 }
 
 // ---------------------------------------------------------------- Bilder

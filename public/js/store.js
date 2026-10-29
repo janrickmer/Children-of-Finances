@@ -7,10 +7,13 @@ import { request, encryptJson, decryptJson, NetworkError, getRole } from './sess
 import * as images from './images.js';
 import * as idb from './idb.js';
 import { emptyLedger, SAVED } from './ledger.js';
+import { sha256Hex } from './kdf.js';
 
 export const state = {
   entries: new Map(),
   ledger: emptyLedger(),
+  ledgerRaw: null, // verschlüsselte Fassung, wie sie der Server hält (für die Versionsprüfung beim Löschen)
+  rates: new Map(), // Tag (JJJJ-MM-TT) → { kesPerEur, rateDay } oder null, nur beim Schatzmeister
   lastArchive: null,
   dbSize: null,
   seq: null,
@@ -339,6 +342,7 @@ async function doRefresh(full) {
   }
 
   state.ledger = res.ledger ? await decryptJson(res.ledger, 'ledger').catch(() => emptyLedger()) : emptyLedger();
+  state.ledgerRaw = res.ledger || null;
   state.lastArchive = res.lastArchive;
   state.seq = res.seq;
   if (needFull) return doRefresh(true);
@@ -395,6 +399,8 @@ export function reset() {
   nextAttempt = 0;
   state.entries.clear();
   state.ledger = emptyLedger();
+  state.ledgerRaw = null;
+  state.rates.clear();
   state.lastArchive = null;
   state.seq = null;
   state.since = 0;
@@ -405,6 +411,50 @@ export function reset() {
 export async function approve(e) {
   await request(`/api/entries/${e.id}/approve`, { method: 'POST', body: { updatedAt: e.updatedAt } });
   await refresh(true);
+}
+
+// Geldeingang bestätigen: passt zu einer Zahlung von Children of Mathare Germany.
+export async function verifyIncome(e) {
+  await request(`/api/entries/${e.id}/verify`, { method: 'POST', body: { updatedAt: e.updatedAt } });
+  await refresh(true);
+}
+
+// Geldeingang löschen (z. B. doppelt eingetragen). `nextLedger` nur, wenn sich das Ledger ändert.
+export async function removeIncome(e, nextLedger = null) {
+  const body = {};
+  if (nextLedger) {
+    body.ledger = await encryptJson(nextLedger, 'ledger');
+    body.ledgerBase = await sha256Hex(new TextEncoder().encode(state.ledgerRaw || ''));
+  }
+  await request(`/api/entries/${e.id}/remove`, { method: 'POST', body });
+  await refresh(true);
+}
+
+// Tageskurse (KSh je Euro) für die angegebenen Tage holen. Bekannte Kurse werden nicht erneut abgefragt,
+// Tage ohne Kurs frühestens nach 10 Minuten wieder. Liefert true, wenn neue Kurse dazugekommen sind.
+const rateTried = new Map();
+
+export async function loadRates(days) {
+  const now = Date.now();
+  const missing = [...new Set(days)]
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !state.rates.get(d) && !(now - (rateTried.get(d) || 0) < 600_000))
+    .slice(0, 40);
+  if (!missing.length) return false;
+  missing.forEach((d) => rateTried.set(d, now));
+  try {
+    const res = await request(`/api/rates?days=${missing.join(',')}`);
+    let added = false;
+    for (const d of missing) {
+      const r = res.rates?.[d];
+      if (r && Number.isFinite(r.kesPerEur)) {
+        state.rates.set(d, r);
+        added = true;
+      }
+    }
+    return added;
+  } catch {
+    return false;
+  }
 }
 
 export async function archive(ids, ledger) {

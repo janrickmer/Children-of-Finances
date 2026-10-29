@@ -36,3 +36,12 @@ CREATE TABLE IF NOT EXISTS tombstones (
   id TEXT PRIMARY KEY,
   at INTEGER NOT NULL
 );
+
+-- Zwischengespeicherte Tageskurse für die ungefähren Euro-Werte der Geldeingänge (KSh je Euro).
+-- rate_day ist der Tag, von dem der Kurs tatsächlich stammt (am Wochenende ggf. ein früherer).
+CREATE TABLE IF NOT EXISTS fx_rates (
+  day TEXT PRIMARY KEY,
+  kes_per_eur REAL NOT NULL,
+  rate_day TEXT NOT NULL,
+  fetched_at INTEGER NOT NULL
+);

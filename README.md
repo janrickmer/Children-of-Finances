@@ -2,15 +2,15 @@
 
 Finanzprotokoll für **Children of Mathare Kenya** und **Children of Mathare Germany**.
 Das Team in Kenia erfasst Geldeingänge und jede Ausgabe mit Rechnungsfoto. Der Schatzmeister
-in Deutschland sieht alles ein, genehmigt Ausnahmen, lädt eine PDF-Sicherung herunter und
-löscht danach die gesicherten Einträge.
+in Deutschland sieht alles ein, bestätigt die Geldeingänge, genehmigt Ausnahmen, lädt eine
+PDF-Sicherung herunter und löscht danach die gesicherten Einträge.
 
 ## Zugänge
 
 | Passwort (GitHub-Secret) | Wer | Was |
 |---|---|---|
 | `PASSWORD_USER` | Team in Kenia | Name eingeben, Geldeingänge und Bezahlungen erfassen, unvollständige Einträge ergänzen |
-| `PASSWORD_ADMIN` | Schatzmeister | Alles einsehen, ausnahmsweise genehmigen, PDF herunterladen, Einträge löschen, Sicherungen einlesen |
+| `PASSWORD_ADMIN` | Schatzmeister | Alles einsehen, Geldeingänge bestätigen oder (z. B. doppelte) löschen, ausnahmsweise genehmigen, PDF herunterladen, Einträge löschen, Sicherungen einlesen |
 
 Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte GitHub-Secrets vor.
 
@@ -27,11 +27,29 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   bevor das Passwort geprüft wird. Während eines Angriffs können sich deshalb auch berechtigte
   Personen kurzzeitig nicht neu anmelden; bestehende Anmeldungen laufen weiter.
 - **Rollen werden serverseitig erzwungen:** Abgeschlossene Einträge kann niemand mehr ändern.
-  Nur der Schatzmeister kann genehmigen und löschen.
+  Nur der Schatzmeister kann genehmigen, Geldeingänge bestätigen und löschen.
+- **Wechselkurse:** Für die ungefähren Euro-Werte fragt der Worker Tageskurse (EUR/KES) bei einem
+  freien Kursdienst ab und speichert sie zwischen. Dabei erfährt der Worker die Daten der
+  Geldeingänge, nicht ihre Beträge; der Kursdienst erfährt nur Kalendertage.
 - Die Anmeldung gilt nur im aktuellen Browser-Tab, höchstens 12 Stunden.
 - **Datenstandort:** Die D1-Datenbank wird mit `jurisdiction: eu` angelegt, die Daten bleiben in der EU.
 - **Ehrlicher Hinweis:** Kurze, erratbare Passwörter bleiben die Schwachstelle. Wer ein Passwort
   kennt, hat den vollen Zugang dieser Rolle. Längere Passwörter erhöhen den Schutz deutlich.
+
+## Geldeingänge bestätigen
+
+- Das Team trägt Geldeingänge ein. Sie zählen sofort für das Budget, tragen aber überall den
+  Hinweis „noch nicht bestätigt“, bis der Schatzmeister sie bestätigt.
+- Der Schatzmeister bestätigt in seiner Seitenleiste „Geldeingänge“, dass ein Eintrag zu einer
+  Zahlung von Children of Mathare Germany passt. Gleicher Betrag und gleiches Datum wie ein anderer
+  Geldeingang werden als „doppelt eingetragen?“ markiert.
+- Falsche oder doppelte Geldeingänge kann der Schatzmeister löschen, auch bereits bestätigte
+  (mit Sicherheitsabfrage). Die Ausgaben dieses Zeitraums zählen dann zum vorherigen Geldeingang.
+- Hinter dem KSh-Betrag eines Geldeingangs steht beim Schatzmeister klein ein ungefährer
+  Euro-Wert, z. B. „(ca. 1.071 €)“. Grundlage ist der Tagesmittelkurs am Datum des Geldeingangs
+  (freier Kursdienst [fawazahmed0/currency-api](https://github.com/fawazahmed0/exchange-api),
+  Kurse ab 2.3.2024; fehlt ein Tag, gilt der letzte davor). Das ist nur eine Erinnerungshilfe,
+  keine genaue Umrechnung. Ausgaben bleiben in KSh.
 
 ## Speichern
 

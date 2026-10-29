@@ -350,11 +350,21 @@ export function periodTitle(group) {
 }
 
 // Das Band: ein Geldeingang als Kassettenseite mit fester Länge, die nicht überlaufen darf.
-export function tapeBand(period) {
+// opts (nur Schatzmeister): rate = { kesPerEur, rateDay } für den ungefähren Euro-Wert des Geldeingangs,
+// duplicate = Hinweis auf einen möglicherweise doppelt eingetragenen Geldeingang,
+// onVerify / onRemove = Knöpfe „Bestätigen“ und „Löschen“.
+export function tapeBand(period, opts = {}) {
   if (!period) {
     return h('div', { class: 'tape-band empty', role: 'group', 'aria-label': t('band.label') }, t('band.none'));
   }
   const inc = period.income;
+  const entry = inc && !inc.archived ? inc.entry : null;
+  // Noch nicht bestätigt: offener Geldeingang mit Status „complete“ oder gesicherter mit verified === false.
+  const unverified = entry ? entry.status === 'complete' : inc?.verified === false;
+  const eur = inc && opts.rate ? h('small', {
+    class: 'tape-eur',
+    title: t('band.rateTitle', { date: fmtDate(opts.rate.rateDay), rate: fmtAmount(Math.round(opts.rate.kesPerEur * 100) / 100) }),
+  }, t('band.eur', { eur: fmtAmount(Math.round(inc.amount / opts.rate.kesPerEur)) })) : null;
   const amount = inc ? inc.amount : 0;
   const left = amount - period.spent;
   const over = left < 0;
@@ -367,13 +377,24 @@ export function tapeBand(period) {
       h('div', { class: 'tape-source' },
         h('strong', {}, inc ? inc.from || '–' : t('period.pre')),
         inc ? t('band.since', { date: fmtDate(inc.date) }) : null,
-        inc?.archived ? ` · ${t('admin.archivedIncome')}` : null),
-      inc ? h('div', { class: 'tape-total' }, `KSh ${fmtAmount(amount)}`) : null),
+        inc?.archived ? ` · ${t('admin.archivedIncome')}` : null,
+        inc && (unverified || (opts.onVerify && entry))
+          ? h('span', { class: 'tape-status' }, statusBadge({ kind: 'income', status: unverified ? 'complete' : 'approved' }))
+          : null),
+      inc ? h('div', { class: 'tape-amount' }, h('div', { class: 'tape-total' }, `KSh ${fmtAmount(amount)}`), eur) : null),
     inc ? h('div', { class: 'tape-track', 'aria-hidden': 'true' }, fill) : null,
     h('div', { class: 'tape-foot' },
       h('span', { class: 'tape-spent' }, h('small', {}, t('band.paid')), h('b', {}, `KSh ${fmtAmount(period.spent)}`)),
       inc ? h('span', { class: 'tape-left' }, h('small', {}, t(over ? 'band.over' : 'band.left')),
-        h('b', {}, `KSh ${fmtAmount(over ? -left : left)}`)) : null));
+        h('b', {}, `KSh ${fmtAmount(over ? -left : left)}`)) : null),
+    opts.duplicate && entry ? h('p', { class: 'tape-dup' }, icon('alert', { size: 16 }), t('admin.incomeDuplicate')) : null,
+    entry && (opts.onVerify || opts.onRemove) ? h('div', { class: 'tape-actions' },
+      entry.status === 'complete' && opts.onVerify
+        ? h('button', { type: 'button', class: 'btn btn-small btn-primary', onclick: () => opts.onVerify(entry) }, icon('check', { size: 16 }), t('admin.verifyIncome'))
+        : null,
+      opts.onRemove
+        ? h('button', { type: 'button', class: 'btn btn-small btn-danger', onclick: () => opts.onRemove(entry) }, icon('trash', { size: 16 }), t('admin.removeIncome'))
+        : null) : null);
 }
 
 export function currentPeriod() {
@@ -381,7 +402,10 @@ export function currentPeriod() {
   return periods[periods.length - 1] || null;
 }
 
+// Bei Geldeingängen heißt „complete“: noch nicht vom Schatzmeister bestätigt, „approved“: bestätigt.
 export function statusBadge(e) {
+  if (e.kind === 'income' && e.status === 'complete') return h('span', { class: 'badge badge-unverified' }, t('status.incomeOpen'));
+  if (e.kind === 'income' && e.status === 'approved') return h('span', { class: 'badge badge-verified' }, t('status.incomeVerified'));
   return h('span', { class: `badge badge-${e.status}` }, t(`status.${e.status}`));
 }
 

@@ -483,6 +483,40 @@ select.in { cursor: pointer; }
   font-variant-numeric: tabular-nums;
 }
 
+/* Betrag des Geldeingangs, darunter beim Schatzmeister klein der ungefähre Euro-Wert */
+.tape-amount { display: grid; justify-items: end; gap: 3px; }
+.tape-eur {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+}
+
+.tape-status { display: block; margin-top: 6px; }
+
+/* Möglicherweise doppelt eingetragener Geldeingang */
+.tape-dup {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--amber);
+}
+.tape-dup .icon { flex: none; margin-top: 2px; }
+
+/* Knöpfe des Schatzmeisters: Bestätigen und Löschen */
+.tape-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+.tape-actions .btn { min-height: 44px; }
+
 .tape-track {
   height: 14px;
   border: 2px solid var(--pen);
@@ -518,6 +552,8 @@ select.in { cursor: pointer; }
 .tape-left b { font-weight: 800; }
 
 @container (max-width: 420px) {
+  .tape-amount { justify-items: start; }
+  .tape-actions .btn { flex: 1 1 auto; }
   .tape-head { flex-direction: column-reverse; align-items: flex-start; gap: 6px; padding-right: 0; }
   .tape-total { font-size: 1.75rem; }
   .tape-foot > span { flex-direction: column; gap: 0; }
@@ -751,6 +787,24 @@ select.in { cursor: pointer; }
 
 .badge-complete { background: var(--green-wash); color: var(--green); }
 .badge-approved { background: var(--amber-wash); color: var(--amber); }
+/* Geldeingänge: noch nicht bestätigt (gelb) / vom Schatzmeister bestätigt (grün) */
+.badge-unverified { background: var(--amber-wash); color: var(--amber); }
+.badge-verified { background: var(--green-wash); color: var(--green); }
+
+/* Hinweis in der Seitenleiste: Geldeingänge warten auf Bestätigung */
+.pending-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--amber-wash);
+  color: var(--amber);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+.pending-note .icon { flex: none; margin-top: 2px; }
 .badge-incomplete { background: var(--red-wash); color: var(--red-ink); }
 .badge-draft { background: transparent; color: var(--pencil); box-shadow: inset 0 0 0 1.5px var(--pencil-line); }
 

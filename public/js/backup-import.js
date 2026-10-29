@@ -2,7 +2,7 @@
 // sortierbare Tabelle mit aufklappbaren Zeilen.
 import { h, clear, fmtDate, fmtDateTime, fmtAmount, isoFromTs, ensurePdfLib } from './util.js';
 import { t } from './i18n.js';
-import { thumb } from './components.js';
+import { thumb, statusBadge } from './components.js';
 import { BACKUP_FORMAT, ATTACHMENT_NAME } from './pdf-export.js';
 import { sha256Hex } from './kdf.js';
 import { icon } from './icons.js';
@@ -250,7 +250,7 @@ export function mountBackupView(panel, files, onClose) {
       h('td', { class: 'num' }, fmtAmount(e.amount)),
       h('td', {}, e.createdBy || '–'),
       h('td', { class: 'wrap' }, e.note || '–'),
-      h('td', {}, h('span', { class: `badge badge-${e.status}` }, t(`status.${e.status}`))),
+      h('td', {}, statusBadge(e)),
       h('td', { class: 'small' }, e.file));
       const toggle = () => {
         if (open) state.expanded.delete(e.id);

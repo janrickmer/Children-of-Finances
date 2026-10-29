@@ -287,6 +287,12 @@ const T = {
     en: 'cropped and resized',
     sw: 'imekatwa na kupunguzwa ukubwa',
   },
+  'band.eur': { de: '(ca. {eur} €)', en: '(approx. €{eur})', sw: '(takriban €{eur})' },
+  'band.rateTitle': {
+    de: 'Tagesmittelkurs vom {date}: 1 € = {rate} KSh (freier Kursdienst currency-api)',
+    en: 'Daily mid rate of {date}: €1 = KSh {rate} (free rate service currency-api)',
+    sw: 'Kiwango cha wastani cha tarehe {date}: €1 = KSh {rate} (huduma huria ya viwango currency-api)',
+  },
   'band.none': {
     de: 'Noch kein Geldeingang erfasst. Sobald einer eingetragen ist, siehst du hier, wie viel davon übrig ist.',
     en: 'No money received recorded yet. Once one is entered, you will see here how much of it is left.',
@@ -306,6 +312,8 @@ const T = {
 
   'status.complete': { de: 'vollständig', en: 'complete', sw: 'kamili' },
   'status.approved': { de: 'ausnahmsweise genehmigt', en: 'approved as an exception', sw: 'imeidhinishwa kwa hali maalum' },
+  'status.incomeOpen': { de: 'noch nicht bestätigt', en: 'not yet confirmed', sw: 'bado haijathibitishwa' },
+  'status.incomeVerified': { de: 'bestätigt', en: 'confirmed', sw: 'imethibitishwa' },
   'status.draft': { de: 'Entwurf', en: 'Draft', sw: 'Rasimu' },
   'status.incomplete': { de: 'unvollständig', en: 'incomplete', sw: 'haijakamilika' },
   'kind.income': { de: 'Geldeingang', en: 'Money received', sw: 'Pesa zilizopokelewa' },
@@ -361,6 +369,52 @@ const T = {
     ],
   },
   'admin.approve': { de: 'ausnahmsweise genehmigen', en: 'approve as an exception', sw: 'idhinisha kwa hali maalum' },
+  'admin.incomesPending': {
+    de: ['1 Geldeingang wartet auf deine Bestätigung.', '{n} Geldeingänge warten auf deine Bestätigung.'],
+    en: ['1 money received entry is waiting for your confirmation.', '{n} money received entries are waiting for your confirmation.'],
+    sw: ['Ingizo 1 la pesa zilizopokelewa linasubiri uthibitisho wako.', 'Maingizo {n} ya pesa zilizopokelewa yanasubiri uthibitisho wako.'],
+  },
+  'admin.verifyIncome': { de: 'Bestätigen', en: 'Confirm', sw: 'Thibitisha' },
+  'admin.verifyIncomeConfirm': {
+    de: 'Geldeingang von {from} vom {date} über KSh {amount}{eur}: Passt er zu einer Zahlung von euch? Dann bestätige ihn.',
+    en: 'Money received from {from} on {date}, KSh {amount}{eur}: does it match one of your payments? Then confirm it.',
+    sw: 'Pesa zilizopokelewa kutoka {from} tarehe {date}, KSh {amount}{eur}: je, zinalingana na mojawapo ya malipo yenu? Basi zithibitishe.',
+  },
+  'admin.incomeVerified': { de: 'Geldeingang bestätigt.', en: 'Money received confirmed.', sw: 'Pesa zilizopokelewa zimethibitishwa.' },
+  'admin.removeIncome': { de: 'Löschen', en: 'Delete', sw: 'Futa' },
+  'admin.removeIncomeConfirm': {
+    de: 'Geldeingang von {from} vom {date} über KSh {amount}{eur} endgültig löschen? Die Ausgaben dieses Zeitraums zählen dann zum vorherigen Geldeingang. Das kann nicht rückgängig gemacht werden.',
+    en: 'Permanently delete the money received from {from} on {date}, KSh {amount}{eur}? The expenses of this period will then count towards the previous money received. This cannot be undone.',
+    sw: 'Futa kabisa pesa zilizopokelewa kutoka {from} tarehe {date}, KSh {amount}{eur}? Matumizi ya kipindi hiki yatahesabiwa kwenye pesa zilizopokelewa kabla yake. Hili haliwezi kutenduliwa.',
+  },
+  'admin.removeIncomeCheck': {
+    de: 'Ja, dieser Geldeingang ist falsch oder doppelt eingetragen.',
+    en: 'Yes, this money received entry is wrong or entered twice.',
+    sw: 'Ndiyo, ingizo hili la pesa zilizopokelewa si sahihi au limeingizwa mara mbili.',
+  },
+  'admin.removeIncomeYes': { de: 'Endgültig löschen', en: 'Delete permanently', sw: 'Futa kabisa' },
+  'admin.incomeRemoved': { de: 'Geldeingang gelöscht.', en: 'Money received entry deleted.', sw: 'Ingizo la pesa zilizopokelewa limefutwa.' },
+  'admin.incomeChanged': {
+    de: 'Der Geldeingang wurde inzwischen geändert, gelöscht oder gesichert. Die Ansicht ist jetzt aktuell.',
+    en: 'The money received entry has been changed, deleted or backed up in the meantime. The view is now up to date.',
+    sw: 'Ingizo la pesa zilizopokelewa limebadilishwa, limefutwa au limehifadhiwa kwa sasa. Mwonekano sasa umesasishwa.',
+  },
+  'admin.incomeDuplicate': {
+    de: 'Gleicher Betrag und gleiches Datum wie ein anderer Geldeingang – doppelt eingetragen?',
+    en: 'Same amount and date as another money received entry – entered twice?',
+    sw: 'Kiasi na tarehe sawa na ingizo lingine la pesa zilizopokelewa – limeingizwa mara mbili?',
+  },
+  'admin.eurHint': {
+    de: '€-Werte in Klammern sind ungefähr: Tagesmittelkurs am Datum des Geldeingangs (freier Kursdienst currency-api).',
+    en: '€ values in brackets are approximate: daily mid rate on the date of the money received (free rate service currency-api).',
+    sw: 'Thamani za € kwenye mabano ni za takriban: kiwango cha wastani cha siku ya pesa zilizopokelewa (huduma huria ya viwango currency-api).',
+  },
+  'admin.unverifiedExport': {
+    de: ['1 Geldeingang ist noch nicht bestätigt. Er wird trotzdem gesichert und steht in der PDF als „noch nicht bestätigt“. Jetzt herunterladen?', '{n} Geldeingänge sind noch nicht bestätigt. Sie werden trotzdem gesichert und stehen in der PDF als „noch nicht bestätigt“. Jetzt herunterladen?'],
+    en: ['1 money received entry is not yet confirmed. It will still be backed up and appears in the PDF as “not yet confirmed”. Download now?', '{n} money received entries are not yet confirmed. They will still be backed up and appear in the PDF as “not yet confirmed”. Download now?'],
+    sw: ['Ingizo 1 la pesa zilizopokelewa bado halijathibitishwa. Bado litahifadhiwa na litaonekana kwenye PDF kama “bado haijathibitishwa”. Pakua sasa?', 'Maingizo {n} ya pesa zilizopokelewa bado hayajathibitishwa. Bado yatahifadhiwa na yataonekana kwenye PDF kama “bado haijathibitishwa”. Pakua sasa?'],
+  },
+  'admin.downloadAnyway': { de: 'Trotzdem herunterladen', en: 'Download anyway', sw: 'Pakua hata hivyo' },
   'admin.approveConfirm': {
     de: 'Diesen Eintrag trotz fehlender Angaben ausnahmsweise genehmigen? Er wird dann zu den erfolgreichen Einträgen verschoben.',
     en: 'Approve this entry as an exception despite missing information? It will then be moved to the successful entries.',

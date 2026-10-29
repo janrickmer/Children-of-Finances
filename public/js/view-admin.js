@@ -1,8 +1,8 @@
 // Ansicht für den Schatzmeister von Children of Mathare Germany.
-import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes } from './util.js';
+import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes, parseAmount } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
-import { computePeriods, ledgerAfterArchive } from './ledger.js';
+import { computePeriods, ledgerAfterArchive, ledgerAfterIncomeRemoval } from './ledger.js';
 import {
   thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand,
 } from './components.js';
@@ -45,11 +45,78 @@ export function mountAdmin(root) {
   // ---------------------------------------------------------------- Geldeingänge links
   function renderSidebar() {
     const { pre, periods } = computePeriods(store.list(), store.state.ledger);
+    const live = periods.filter((p) => !p.income.archived && p.income.entry);
+    const pending = live.filter((p) => p.income.entry.status === 'complete').length;
+    // Gleiches Datum und gleicher Betrag wie ein anderer offener Geldeingang: vermutlich doppelt eingetragen.
+    const twins = new Map();
+    for (const p of live) {
+      const k = `${p.income.date}|${p.income.amount}`;
+      twins.set(k, (twins.get(k) || 0) + 1);
+    }
     clear(sidebar).append(h('h2', { class: 'section-title' }, t('admin.incomes')));
+    if (pending) sidebar.append(h('p', { class: 'pending-note', role: 'status' }, icon('info', { size: 18 }), t('admin.incomesPending', { n: pending })));
     if (!periods.length) sidebar.append(h('p', { class: 'muted' }, t('admin.noIncome')));
-    for (const p of [...periods].reverse()) sidebar.append(tapeBand(p));
+    for (const p of [...periods].reverse()) {
+      sidebar.append(tapeBand(p, {
+        rate: store.state.rates.get(p.income.date) || null,
+        duplicate: twins.get(`${p.income.date}|${p.income.amount}`) > 1,
+        onVerify: verifyIncome,
+        onRemove: removeIncome,
+      }));
+    }
     if (pre.spent > 0) sidebar.append(tapeBand(pre));
     sidebar.append(h('p', { class: 'muted small' }, t('admin.sumHint')));
+    if (periods.length) sidebar.append(h('p', { class: 'muted small' }, t('admin.eurHint')));
+    // Fehlende Tageskurse nachladen und danach neu zeichnen
+    store.loadRates(periods.map((p) => p.income.date)).then((added) => { if (added) renderSidebar(); });
+  }
+
+  function incomeFacts(e) {
+    const rate = store.state.rates.get(e.d.date);
+    return {
+      from: e.d.from || '–',
+      date: fmtDate(e.d.date),
+      amount: fmtAmount(e.d.amount),
+      eur: rate ? ` ${t('band.eur', { eur: fmtAmount(Math.round(parseAmount(e.d.amount) / rate.kesPerEur)) })}` : '',
+    };
+  }
+
+  async function verifyIncome(e) {
+    const ok = await confirmDialog({ message: t('admin.verifyIncomeConfirm', incomeFacts(e)), confirmLabel: t('admin.verifyIncome') });
+    if (!ok) return;
+    try {
+      await store.verifyIncome(e);
+      toast(t('admin.incomeVerified'), 'success');
+    } catch (err) {
+      incomeActionFailed(err);
+    }
+  }
+
+  async function removeIncome(e) {
+    const ok = await confirmDialog({
+      message: t('admin.removeIncomeConfirm', incomeFacts(e)),
+      confirmLabel: t('admin.removeIncomeYes'),
+      checkboxLabel: t('admin.removeIncomeCheck'),
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await store.removeIncome(e, ledgerAfterIncomeRemoval(store.list(), store.state.ledger, e.id));
+      toast(t('admin.incomeRemoved'), 'success');
+    } catch (err) {
+      incomeActionFailed(err);
+    }
+  }
+
+  // Inzwischen bestätigt, gelöscht oder gesichert (z. B. in einem anderen Fenster): Ansicht auffrischen.
+  function incomeActionFailed(err) {
+    console.error(err);
+    if (err?.status === 409) {
+      toast(t('admin.incomeChanged'), 'error');
+      store.refresh(true).catch(() => {});
+    } else {
+      toast(t('error.generic'), 'error');
+    }
   }
 
   // ---------------------------------------------------------------- Rote Tabelle
@@ -152,6 +219,15 @@ export function mountAdmin(root) {
     if (!entries.length) {
       toast(t('admin.nothingToDownload'));
       return;
+    }
+    const unverified = entries.filter((e) => e.kind === 'income' && e.status === 'complete').length;
+    if (unverified) {
+      const ok = await confirmDialog({
+        message: t('admin.unverifiedExport', { n: unverified }),
+        confirmLabel: t('admin.downloadAnyway'),
+        cancelLabel: t('back'),
+      });
+      if (!ok) return;
     }
     downloadBtn.disabled = true;
     try {
