@@ -357,7 +357,11 @@ async function doRefresh(full) {
   state.requests = await readRequests(res.requests || []);
   // Antwort beim Senden verloren gegangen? Steht die Anfrage schon auf dem Server, ist der Entwurf erledigt.
   if (!sendingRequest) {
-    for (const d of [...state.requestDrafts.values()]) if (state.requests.some((r) => r.id === d.id)) clearRequestDraft(d);
+    for (const d of [...state.requestDrafts.values()]) {
+      if (!state.requests.some((r) => r.id === d.id)) continue;
+      clearRequestDraft(d);
+      arrived.push(d);
+    }
   }
   state.ledger = res.ledger ? await decryptJson(res.ledger, 'ledger').catch(() => emptyLedger()) : emptyLedger();
   state.ledgerRaw = res.ledger || null;
@@ -424,6 +428,7 @@ export function reset() {
   state.requestDrafts.clear();
   requestCache.clear();
   dirtyDrafts.clear();
+  arrived = [];
   clearTimeout(draftTimer);
   state.lastArchive = null;
   state.seq = null;
@@ -504,6 +509,7 @@ export async function archive(ids, ledger, ledgerRaw) {
 const requestCache = new Map();
 const dirtyDrafts = new Set();
 let draftTimer = null;
+let arrived = []; // Entwürfe, deren Anfrage sich beim Abgleich als angekommen herausstellte (für eine Meldung)
 let sendingRequest = false;
 
 async function readRequests(rows) {
@@ -573,10 +579,13 @@ async function flushDrafts() {
 
 // Verschlüsselt auf dem Gerät sichern, damit beim Neuladen nichts verloren geht.
 // Schlüssel ist die zufällige ID des Entwurfs, damit dort kein Name im Klartext steht.
+// Ist der Entwurf nicht mehr im Speicher (gesendet oder abgemeldet), bleibt die Gerätekopie unberührt:
+// Nach dem Senden löscht clearRequestDraft sie selbst, nach dem Abmelden wird sie noch gebraucht.
 async function saveRequestDraft(d) {
   const key = `request-draft:${d.id}`;
   const current = () => state.requestDrafts.get(normName(d.createdBy)) === d;
-  if (!current() || requestDraftEmpty(d)) {
+  if (!current()) return;
+  if (requestDraftEmpty(d)) {
     await idb.remove('deletes', key);
     return;
   }
@@ -602,11 +611,21 @@ async function refreshWhenIdle() {
   await refresh(true);
 }
 
-// Geldanfrage an CoM Germany schicken. Liefert den Stand auf dem Server ({ status, ... }).
-// Kommt keine Antwort, ist unklar, ob die Anfrage angekommen ist: Der Entwurf wird dann gesperrt
-// (pending) und kann nur unverändert erneut gesendet werden. So landet nie eine geänderte Fassung
-// unter derselben ID, und die Anfrage gibt es höchstens einmal.
+// Entwürfe der angegebenen Person, deren Anfrage sich beim Abgleich als angekommen herausstellte.
+export function takeArrived(name) {
+  const mine = arrived.filter((d) => normName(d.createdBy) === normName(name));
+  arrived = arrived.filter((d) => !mine.includes(d));
+  return mine;
+}
+
+// Geldanfrage an CoM Germany schicken. Liefert den Stand auf dem Server ({ status, ... };
+// status 'gone': war schon angekommen und ist inzwischen zurückgezogen oder gelöscht).
+// Der Entwurf wird vor dem Senden gesperrt (pending) und so gesichert. Kommt keine Antwort (oder wird
+// die Seite neu geladen), ist unklar, ob die Anfrage angekommen ist; sie kann dann nur unverändert
+// erneut gesendet werden. So landet nie eine geänderte Fassung unter derselben ID.
 export async function sendRequest(draft) {
+  draft.pending = true;
+  await saveRequestDraft(draft);
   const { id, pending, ...d } = draft;
   const data = await encryptJson({ ...d, sentAt: Date.now() }, `request:${id}`);
   sendingRequest = true;
@@ -615,8 +634,11 @@ export async function sendRequest(draft) {
     clearRequestDraft(draft);
     return row;
   } catch (err) {
-    draft.pending = err instanceof NetworkError;
-    await saveRequestDraft(draft);
+    // Eine Antwort des Servers (z. B. 409) heißt: nicht gespeichert, der Entwurf ist wieder frei.
+    if (!(err instanceof NetworkError)) {
+      draft.pending = false;
+      await saveRequestDraft(draft);
+    }
     throw err;
   } finally {
     sendingRequest = false;

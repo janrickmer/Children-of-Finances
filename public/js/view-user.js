@@ -120,6 +120,7 @@ export function mountUser(root, { getName }) {
   const submitLabel = (sending) => clear(reqSubmit).append(icon(sending ? 'saving' : 'send', { size: 18 }), t(sending ? 'request.sending' : 'request.submit'));
   submitLabel(false);
   let reqShowMissing = false; // Fehlendes erst nach dem ersten Absendeversuch rot zeigen
+  let sending = false; // Anfrage ist unterwegs: Felder gesperrt, Knopf „Wird gesendet …“
   const reqFields = {
     person: h('div', { class: 'field' }, h('label', { for: 'req-person' }, t('request.person'), requiredMark()), reqPerson),
     purpose: h('div', { class: 'field' },
@@ -135,10 +136,10 @@ export function mountUser(root, { getName }) {
     deadline: h('div', { class: 'field' }, h('label', { for: 'req-deadline' }, t('request.deadline'), requiredMark()), reqDeadline),
   };
   const requestForm = h('div', { class: 'form-card request-form', hidden: true },
+    reqPending,
     Object.values(reqFields),
     reqError,
     reqUnsent,
-    reqPending,
     h('div', { class: 'actions' }, reqSubmit));
 
   // Welche Felder fehlen oder passen nicht? (für Markierung und Fehlermeldung)
@@ -162,13 +163,15 @@ export function mountUser(root, { getName }) {
   function refreshRequestForm() {
     const d = myRequestDraft();
     const locked = Boolean(d?.pending);
-    for (const input of reqInputs) input.disabled = locked;
-    reqPending.hidden = !locked;
-    reqUnsent.hidden = locked || store.requestDraftEmpty(d);
+    for (const input of reqInputs) input.disabled = locked || sending;
+    reqPending.hidden = !locked || sending;
+    reqUnsent.hidden = locked || sending || store.requestDraftEmpty(d);
     reqTo.min = d?.from || '';
     reqDeadline.min = todayIso();
-    if (!reqShowMissing) return;
-    const { bad, message } = requestProblems(d || {});
+    // Ein gesperrter Entwurf wurde vor dem ersten Versuch geprüft und wird unverändert gesendet:
+    // keine Prüfung mehr (sonst hielte ihn z. B. ein inzwischen vergangener Tag für immer fest).
+    const check = reqShowMissing && !locked && !sending;
+    const { bad, message } = check ? requestProblems(d || {}) : { bad: new Set(), message: '' };
     for (const [key, field] of Object.entries(reqFields)) {
       field.classList.toggle('is-missing', bad.has(key));
       field.querySelectorAll('.in').forEach((input) => input.setAttribute('aria-invalid', String(bad.has(key))));
@@ -187,35 +190,37 @@ export function mountUser(root, { getName }) {
 
   async function sendRequest() {
     const d = myRequestDraft();
-    reqShowMissing = true;
-    refreshRequestForm();
-    if (!d || requestProblems(d).message) {
-      firstProblem()?.focus();
-      return;
-    }
-    // Ein erneuter Versuch nach Verbindungsabbruch sendet unverändert und braucht keine zweite Rückfrage.
-    if (!d.pending) {
+    if (sending) return;
+    // Ein erneuter Versuch nach ausgebliebener Antwort sendet unverändert: keine Prüfung, keine zweite Rückfrage.
+    if (!d?.pending) {
+      reqShowMissing = true;
+      refreshRequestForm();
+      if (!d || requestProblems(d).message) {
+        firstProblem()?.focus();
+        return;
+      }
       const ok = await confirmDialog({ message: t('request.confirm'), confirmLabel: t('request.confirmYes'), cancelLabel: t('back') });
       if (!ok) return;
     }
+    sending = true;
     reqSubmit.disabled = true;
     submitLabel(true);
+    refreshRequestForm();
     try {
-      await store.sendRequest(d);
-      toast(t('request.sent'), 'success', 10000);
+      const row = await store.sendRequest(d);
+      const gone = row.status === 'gone' || row.status === 'removed';
+      toast(t(gone ? 'request.alreadyGone' : 'request.sent'), gone ? 'info' : 'success', 10000);
       requestSent();
     } catch (err) {
-      if (store.state.requests.some((r) => r.id === d.id)) {
-        // Die Antwort ging verloren, die Anfrage ist aber angekommen.
-        toast(t('request.sent'), 'success', 10000);
-        requestSent();
-      } else if (err instanceof NetworkError) {
-        toast(t('request.offline'), 'error', 12000);
-      } else {
+      // Die Antwort ging verloren, die Anfrage ist aber angekommen: Das meldet schon update() (takeArrived).
+      if (store.state.requests.some((r) => r.id === d.id)) return;
+      if (err instanceof NetworkError) toast(t('request.offline'), 'error', 12000);
+      else {
         console.error(err);
         toast(t('error.generic'), 'error');
       }
     } finally {
+      sending = false;
       reqSubmit.disabled = false;
       submitLabel(false);
       refreshRequestForm();
@@ -236,8 +241,10 @@ export function mountUser(root, { getName }) {
     // Nur wenn das Formular noch offen ist (wer inzwischen etwas anderes einträgt, wird nicht gestört)
     if (mode !== 'request') return;
     setMode(null);
-    requestsTitle.focus({ preventScroll: true });
-    requestsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Steht die Anfrage schon in der Liste, dorthin; sonst (Abgleich folgt gleich) zurück zur Auswahl.
+    const target = requestsSection.hidden ? requestChoice : requestsTitle;
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function withdrawRequest(r) {
@@ -444,6 +451,11 @@ export function mountUser(root, { getName }) {
 
   function update(reason) {
     if (reason === 'sync') return;
+    // Anfrage, deren Antwort verloren ging, ist doch angekommen (beim Abgleich festgestellt)
+    if (store.takeArrived(getName()).length) {
+      toast(t('request.sent'), 'success', 10000);
+      requestSent();
+    }
     clear(bandSlot).append(tapeBand(currentPeriod()));
     renderIncomplete();
     if (mode === 'expense') renderDrafts();

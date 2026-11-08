@@ -151,14 +151,19 @@ const T = {
     sw: 'Ombi lako limetumwa kwa CoM Germany.',
   },
   'request.offline': {
-    de: 'Keine Verbindung. Ob die Anfrage angekommen ist, ist noch unklar – bitte versuche es gleich noch einmal.',
-    en: 'No connection. It is not yet clear whether the request arrived – please try again in a moment.',
-    sw: 'Hakuna mtandao. Bado haijulikani kama ombi limefika – tafadhali jaribu tena baada ya muda mfupi.',
+    de: 'Keine Antwort vom Server. Ob die Anfrage angekommen ist, ist noch unklar – bitte versuche es gleich noch einmal.',
+    en: 'No answer from the server. It is not yet clear whether the request arrived – please try again in a moment.',
+    sw: 'Hakuna jibu kutoka kwa seva. Bado haijulikani kama ombi limefika – tafadhali jaribu tena baada ya muda mfupi.',
   },
   'request.pending': {
-    de: 'Beim Senden ist die Verbindung abgebrochen. Bis klar ist, ob die Anfrage angekommen ist, lässt sie sich nicht ändern. Tippe noch einmal auf „Anfragen, ob dieses Budget realisierbar ist“, sobald du wieder Netz hast.',
-    en: 'The connection was lost while sending. Until it is clear whether the request arrived, it cannot be changed. Tap “Ask whether this budget is feasible” again as soon as you have a connection.',
-    sw: 'Mtandao ulikatika wakati wa kutuma. Hadi ijulikane kama ombi limefika, haliwezi kubadilishwa. Bonyeza tena “Uliza kama bajeti hii inawezekana” mara tu utakapopata mtandao.',
+    de: 'Beim Senden kam keine Antwort. Bis klar ist, ob die Anfrage angekommen ist, lässt sie sich nicht ändern. Tippe unten noch einmal auf „Anfragen, ob dieses Budget realisierbar ist“, am besten bei gutem Netz.',
+    en: 'No answer came while sending. Until it is clear whether the request arrived, it cannot be changed. Tap “Ask whether this budget is feasible” below again, ideally with a good connection.',
+    sw: 'Hakuna jibu lililokuja wakati wa kutuma. Hadi ijulikane kama ombi limefika, haliwezi kubadilishwa. Bonyeza tena “Uliza kama bajeti hii inawezekana” hapa chini, ikiwezekana ukiwa na mtandao mzuri.',
+  },
+  'request.alreadyGone': {
+    de: 'Diese Anfrage war schon angekommen und ist inzwischen zurückgezogen oder gelöscht worden.',
+    en: 'This request had already arrived and has since been withdrawn or deleted.',
+    sw: 'Ombi hili lilikuwa limeshafika na tayari limeondolewa au kufutwa.',
   },
   'request.badAmount': {
     de: 'Bitte gib einen Betrag größer als 0 ein.',

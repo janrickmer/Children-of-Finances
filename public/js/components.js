@@ -458,8 +458,8 @@ export function requestCard(r, opts = {}) {
   const d = r.d;
   if (!d) {
     // Nicht lesbare Anfrage (beschädigt): nur der Schatzmeister sieht sie, um sie zu löschen.
-    return h('article', { class: 'req-card is-open', dataset: { id: r.id } },
-      h('p', { class: 'req-status is-open' }, icon('alert', { size: 18 }), h('span', {}, t('request.unreadable'))),
+    return h('article', { class: 'req-card is-broken', dataset: { id: r.id } },
+      h('p', { class: 'req-status is-error' }, icon('alert', { size: 18 }), h('span', {}, t('request.unreadable'))),
       h('p', { class: 'req-meta' }, fmtDateTime(r.createdAt)),
       opts.onRemove ? h('div', { class: 'req-actions' },
         h('button', { type: 'button', class: 'btn btn-small btn-danger', onclick: () => opts.onRemove(r) }, icon('trash', { size: 16 }), t('admin.removeRequest')))

@@ -209,7 +209,7 @@ async function login(request, env) {
   await env.DB.batch([
     env.DB.prepare(UNCOUNT_ATTEMPT).bind(key),
     env.DB.prepare(UNCOUNT_ATTEMPT).bind('*'),
-    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    ...purgeRequests(env, now),
   ]);
 
   const expires = now + SESSION_MS;
@@ -509,8 +509,16 @@ function shiftDay(day, n) {
 
 // ---------------------------------------------------------------- Geldanfragen
 
-// Abgelaufene Hinweise auf entfernte Anfragen löschen (läuft bei jedem Schreiben und jeder Anmeldung mit).
+// Abgelaufene Hinweise auf entfernte Anfragen löschen. Läuft bei jeder Anmeldung, jeder Änderung an
+// Geldanfragen und beim Sichern & Löschen mit.
 const PURGE_REQUESTS = "DELETE FROM requests WHERE status = 'removed' AND removed_at < ?";
+// Grabstein für zurückgezogene und endgültig gelöschte Anfragen: Ein Gerät, das die Antwort auf sein
+// Senden nie bekam, darf sie beim erneuten Versuch nicht wieder anlegen.
+const TOMB_PURGED = "INSERT OR IGNORE INTO tombstones (id, at) SELECT id, ?1 FROM requests WHERE status = 'removed' AND removed_at < ?2";
+
+function purgeRequests(env, now) {
+  return [env.DB.prepare(TOMB_PURGED).bind(now, now - REQUEST_NOTICE_MS), env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS)];
+}
 
 // Das Team schickt eine Geldanfrage. Die ID erzeugt der Browser. Eine gesendete Anfrage ist unveränderlich:
 // Kommt dieselbe ID erneut (z. B. weil die Antwort unterwegs verloren ging), bleibt die erste Fassung.
@@ -526,24 +534,29 @@ async function putRequest(request, env, session, id) {
   }
   const now = Date.now();
   await env.DB.batch([
-    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    ...purgeRequests(env, now),
     env.DB.prepare(
       "INSERT INTO requests (id, status, created_at, updated_at, data) SELECT ?1, 'open', ?2, ?2, ?3 "
-      + "WHERE (SELECT COUNT(*) FROM requests WHERE status IN ('open', 'read')) < ?4 ON CONFLICT(id) DO NOTHING",
+      + "WHERE (SELECT COUNT(*) FROM requests WHERE status IN ('open', 'read')) < ?4 AND NOT EXISTS (SELECT 1 FROM tombstones WHERE id = ?1) "
+      + 'ON CONFLICT(id) DO NOTHING',
     ).bind(id, now, data, MAX_REQUESTS),
     env.DB.prepare(BUMP_SEQ),
   ]);
   const row = await env.DB.prepare('SELECT status, created_at, updated_at FROM requests WHERE id = ?').bind(id).first();
-  if (!row) throw new HttpError(409, 'too_many');
-  return json(row);
+  if (row) return json(row);
+  // Schon einmal angekommen und inzwischen zurückgezogen oder endgültig gelöscht
+  if (await env.DB.prepare('SELECT 1 FROM tombstones WHERE id = ?').bind(id).first()) return json({ status: 'gone' });
+  throw new HttpError(409, 'too_many');
 }
 
 // Das Team zieht eine Anfrage zurück – nur, solange das deutsche Team sie noch nicht gelesen hat.
 async function withdrawRequest(env, session, id) {
   requireRole(session, 'user');
   checkId(id);
-  const [, res] = await env.DB.batch([
-    env.DB.prepare(PURGE_REQUESTS).bind(Date.now() - REQUEST_NOTICE_MS),
+  const now = Date.now();
+  const [, , , res] = await env.DB.batch([
+    ...purgeRequests(env, now),
+    env.DB.prepare("INSERT OR IGNORE INTO tombstones (id, at) SELECT id, ? FROM requests WHERE id = ? AND status = 'open'").bind(now, id),
     env.DB.prepare("DELETE FROM requests WHERE id = ? AND status = 'open'").bind(id),
     env.DB.prepare(BUMP_SEQ),
   ]);
@@ -559,8 +572,8 @@ async function markRequestRead(env, session, id) {
   requireRole(session, 'admin');
   checkId(id);
   const now = Date.now();
-  const [, res] = await env.DB.batch([
-    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+  const [, , res] = await env.DB.batch([
+    ...purgeRequests(env, now),
     env.DB.prepare("UPDATE requests SET status = 'read', updated_at = MAX(?1, updated_at + 1) WHERE id = ?2 AND status = 'open'").bind(now, id),
     env.DB.prepare(BUMP_SEQ),
   ]);
@@ -577,8 +590,8 @@ async function removeRequest(env, session, id) {
   requireRole(session, 'admin');
   checkId(id);
   const now = Date.now();
-  const [, res] = await env.DB.batch([
-    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+  const [, , res] = await env.DB.batch([
+    ...purgeRequests(env, now),
     env.DB.prepare(
       "UPDATE requests SET status = 'removed', removed_at = ?1, updated_at = MAX(?1, updated_at + 1) WHERE id = ?2 AND status IN ('open', 'read')",
     ).bind(now, id),
@@ -669,7 +682,7 @@ async function archive(request, env, session) {
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('ledger', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1").bind(ledger),
     // Die Kurse gesicherter Geldeingänge stehen ab jetzt verschlüsselt im Ledger; die Tabelle verrät sonst ihre Daten.
     env.DB.prepare('DELETE FROM fx_rates'),
-    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    ...purgeRequests(env, now),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('last_archive', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1")
       .bind(JSON.stringify({ at: now, count: deleted })),
     env.DB.prepare(BUMP_SEQ),

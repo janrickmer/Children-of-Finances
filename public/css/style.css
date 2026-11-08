@@ -934,6 +934,9 @@ select.in { cursor: pointer; }
 .req-status .icon { flex: none; margin-top: 2px; }
 .req-status.is-open { background: var(--amber-wash); color: var(--amber); }
 .req-status.is-read { background: var(--green-wash); color: var(--green); }
+/* Nicht lesbare (beschädigte) Anfrage beim Schatzmeister: ein Fehler, also Rot */
+.req-card.is-broken { border-color: var(--red); }
+.req-status.is-error { background: var(--red-wash); color: var(--red-ink); }
 
 .req-actions { display: flex; flex-wrap: wrap; gap: 8px 12px; }
 .req-actions .btn { min-height: 44px; }
@@ -1506,4 +1509,4 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
 
 /* Gesperrte Eingabe (z. B. Geldanfrage, deren Sendeversuch noch ungeklärt ist) */
 .in:disabled { background: var(--paper-2); color: var(--ink-2); border-color: var(--pencil-line); cursor: not-allowed; opacity: 1; }
-.request-form .pending-note { margin: 0 0 4px; }
+.request-form .pending-note { margin: 0 0 16px; }

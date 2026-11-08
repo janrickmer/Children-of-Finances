@@ -51,7 +51,7 @@ export function mountAdmin(root) {
     const list = store.state.requests.filter((r) => r.status === 'open' || r.status === 'read')
       .sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1)
         || String(a.d?.deadline).localeCompare(String(b.d?.deadline)) || a.createdAt - b.createdAt);
-    const fresh = list.filter((r) => r.status === 'open').length;
+    const fresh = list.filter((r) => r.status === 'open' && r.d).length; // nicht lesbare lassen sich nicht markieren
     clear(requestsBox).append(h('h2', { class: 'section-title', id: 'requests-title' }, t('admin.requests')));
     if (!list.length) {
       requestsBox.append(h('p', { class: 'muted' }, t('admin.requestsNone')));
