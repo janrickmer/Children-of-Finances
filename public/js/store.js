@@ -16,7 +16,7 @@ export const state = {
   ledgerRaw: null, // verschlüsselte Fassung, wie sie der Server hält (für die Versionsprüfung beim Löschen)
   rates: new Map(), // Tag (JJJJ-MM-TT) → { kesPerEur, rateDay } oder null, nur beim Schatzmeister
   requests: [], // Geldanfragen: { id, status (open | read | removed), createdAt, updatedAt, removedAt, d }
-  requestDraft: null, // noch nicht gesendete Geldanfrage auf diesem Gerät (nur Team)
+  requestDrafts: new Map(), // normName → noch nicht gesendete Geldanfrage auf diesem Gerät (nur Team, je Person eine)
   lastArchive: null,
   dbSize: null,
   seq: null,
@@ -154,7 +154,8 @@ export async function loadFromDevice() {
     if (item.type === 'entry') pendingDeletes.add(item.id);
     if (item.type === 'request-draft') {
       try {
-        state.requestDraft = await decryptJson(item.cipher, 'request-draft');
+        const d = await decryptJson(item.cipher, 'request-draft');
+        state.requestDrafts.set(normName(d.createdBy), d);
       } catch (err) {
         console.warn('Entwurf der Geldanfrage nicht lesbar', err);
       }
@@ -355,7 +356,9 @@ async function doRefresh(full) {
 
   state.requests = await readRequests(res.requests || []);
   // Antwort beim Senden verloren gegangen? Steht die Anfrage schon auf dem Server, ist der Entwurf erledigt.
-  if (state.requestDraft && state.requests.some((r) => r.id === state.requestDraft.id) && !sendingRequest) clearRequestDraft();
+  if (!sendingRequest) {
+    for (const d of [...state.requestDrafts.values()]) if (state.requests.some((r) => r.id === d.id)) clearRequestDraft(d);
+  }
   state.ledger = res.ledger ? await decryptJson(res.ledger, 'ledger').catch(() => emptyLedger()) : emptyLedger();
   state.ledgerRaw = res.ledger || null;
   state.lastArchive = res.lastArchive;
@@ -418,8 +421,9 @@ export function reset() {
   state.rates.clear();
   rateTried.clear();
   state.requests = [];
-  state.requestDraft = null;
+  state.requestDrafts.clear();
   requestCache.clear();
+  dirtyDrafts.clear();
   clearTimeout(draftTimer);
   state.lastArchive = null;
   state.seq = null;
@@ -498,6 +502,7 @@ export async function archive(ids, ledger, ledgerRaw) {
 
 // Entschlüsselte Inhalte merken, damit nicht bei jeder Abfrage alles neu entschlüsselt wird.
 const requestCache = new Map();
+const dirtyDrafts = new Set();
 let draftTimer = null;
 let sendingRequest = false;
 
@@ -509,8 +514,10 @@ async function readRequests(rows) {
       try {
         cached = { updatedAt: row.updated_at, d: await decryptJson(row.data, `request:${row.id}`) };
       } catch (err) {
+        // Nicht lesbar (beschädigt oder nicht mit dem Datenschlüssel verschlüsselt): ohne Inhalt zeigen,
+        // damit der Schatzmeister sie löschen kann und sie nicht unsichtbar Platz belegt.
         console.warn('Geldanfrage nicht entschlüsselbar', row.id, err);
-        continue;
+        cached = { updatedAt: row.updated_at, d: null };
       }
       requestCache.set(row.id, cached);
     }
@@ -525,21 +532,21 @@ async function readRequests(rows) {
 
 export const REQUEST_FIELDS = ['person', 'purpose', 'from', 'to', 'amount', 'deadline'];
 
-// Der Entwurf gehört der Person, die ihn begonnen hat (mehrere Leute können dasselbe Gerät nutzen).
+// Jede Person hat auf dem Gerät ihren eigenen Entwurf (mehrere Leute können dasselbe Gerät nutzen).
 export function getRequestDraft(name) {
-  const d = state.requestDraft;
-  return d && normName(d.createdBy) === normName(name) ? d : null;
+  return state.requestDrafts.get(normName(name)) || null;
 }
 
 export function updateRequestDraft(name, patch) {
-  let d = getRequestDraft(name);
+  const key = normName(name);
+  let d = state.requestDrafts.get(key);
+  if (d?.pending) return d; // Ausgang des letzten Sendeversuchs unklar: Inhalt bleibt, wie er gesendet wurde
   if (!d) {
     d = { id: crypto.randomUUID(), createdBy: name, ...Object.fromEntries(REQUEST_FIELDS.map((k) => [k, ''])) };
-    state.requestDraft = d;
+    state.requestDrafts.set(key, d);
   }
   Object.assign(d, patch);
-  clearTimeout(draftTimer);
-  draftTimer = setTimeout(saveRequestDraft, 400);
+  saveDraftSoon(d);
   return d;
 }
 
@@ -547,40 +554,73 @@ export function requestDraftEmpty(d) {
   return !d || REQUEST_FIELDS.every((k) => !String(d[k] || '').trim());
 }
 
-// Welche Angaben fehlen? (alle Felder sind Pflicht)
+// Welche Angaben fehlen? (alle Felder sind Pflicht; ein Betrag muss größer als 0 sein)
 export function requestMissing(d) {
   return REQUEST_FIELDS.filter((k) => (k === 'amount' ? !(Number.parseFloat(d?.amount) > 0) : !String(d?.[k] || '').trim()));
 }
 
+function saveDraftSoon(d) {
+  dirtyDrafts.add(d);
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(flushDrafts, 400);
+}
+
+async function flushDrafts() {
+  const list = [...dirtyDrafts];
+  dirtyDrafts.clear();
+  for (const d of list) await saveRequestDraft(d);
+}
+
 // Verschlüsselt auf dem Gerät sichern, damit beim Neuladen nichts verloren geht.
-async function saveRequestDraft() {
-  const d = state.requestDraft;
-  if (!d || requestDraftEmpty(d)) {
-    await idb.remove('deletes', 'request-draft');
+// Schlüssel ist die zufällige ID des Entwurfs, damit dort kein Name im Klartext steht.
+async function saveRequestDraft(d) {
+  const key = `request-draft:${d.id}`;
+  const current = () => state.requestDrafts.get(normName(d.createdBy)) === d;
+  if (!current() || requestDraftEmpty(d)) {
+    await idb.remove('deletes', key);
     return;
   }
   const cipher = await encryptJson(d, 'request-draft');
-  if (state.requestDraft === d) await idb.put('deletes', 'request-draft', { type: 'request-draft', cipher });
+  if (current()) await idb.put('deletes', key, { type: 'request-draft', cipher });
 }
 
-function clearRequestDraft() {
-  clearTimeout(draftTimer);
-  state.requestDraft = null;
-  idb.remove('deletes', 'request-draft');
+function clearRequestDraft(d) {
+  dirtyDrafts.delete(d);
+  const key = normName(d.createdBy);
+  if (state.requestDrafts.get(key) === d) state.requestDrafts.delete(key);
+  idb.remove('deletes', `request-draft:${d.id}`);
+}
+
+// Abfragen erst, wenn gerade keine Einträge gesendet werden (sonst kann eine ältere Antwort einen eben
+// gespeicherten Eintrag kurz verdrängen). Dauert das Senden länger, holt tick() den Stand danach.
+async function refreshWhenIdle() {
+  for (let i = 0; busy && i < 30; i++) await new Promise((r) => setTimeout(r, 100));
+  if (busy) {
+    refreshNeeded = true;
+    return;
+  }
+  await refresh(true);
 }
 
 // Geldanfrage an CoM Germany schicken. Liefert den Stand auf dem Server ({ status, ... }).
+// Kommt keine Antwort, ist unklar, ob die Anfrage angekommen ist: Der Entwurf wird dann gesperrt
+// (pending) und kann nur unverändert erneut gesendet werden. So landet nie eine geänderte Fassung
+// unter derselben ID, und die Anfrage gibt es höchstens einmal.
 export async function sendRequest(draft) {
-  const { id, ...d } = draft;
+  const { id, pending, ...d } = draft;
   const data = await encryptJson({ ...d, sentAt: Date.now() }, `request:${id}`);
   sendingRequest = true;
   try {
     const row = await request(`/api/requests/${id}`, { method: 'PUT', body: { data } });
-    if (state.requestDraft?.id === id) clearRequestDraft();
+    clearRequestDraft(draft);
     return row;
+  } catch (err) {
+    draft.pending = err instanceof NetworkError;
+    await saveRequestDraft(draft);
+    throw err;
   } finally {
     sendingRequest = false;
-    await refresh(true).catch(() => {});
+    await refreshWhenIdle().catch(() => {});
   }
 }
 
@@ -589,7 +629,7 @@ export async function withdrawRequest(r) {
   try {
     await request(`/api/requests/${r.id}`, { method: 'DELETE' });
   } finally {
-    await refresh(true).catch(() => {});
+    await refreshWhenIdle().catch(() => {});
   }
 }
 
@@ -602,11 +642,11 @@ export async function markRequestRead(r) {
   }
 }
 
-// Schatzmeister: Anfrage löschen. Liefert false, wenn das Team sie schon zurückgezogen hatte.
+// Schatzmeister: Anfrage löschen. Liefert { removed, status }: removed=false und status=null heißt,
+// das Team hatte sie schon zurückgezogen; status='removed' heißt, sie war schon gelöscht.
 export async function removeRequest(r) {
   try {
-    const res = await request(`/api/requests/${r.id}/remove`, { method: 'POST' });
-    return res.removed !== false;
+    return await request(`/api/requests/${r.id}/remove`, { method: 'POST' });
   } finally {
     await refresh(true).catch(() => {});
   }

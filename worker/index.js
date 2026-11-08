@@ -205,7 +205,12 @@ async function login(request, env) {
 
   // Ein erfolgreicher Versuch zählt nicht als Fehlversuch, setzt den Zähler aber auch nicht zurück
   // (sonst könnte man mit dem Team-Passwort beliebig oft das Schatzmeister-Passwort raten).
-  await env.DB.batch([env.DB.prepare(UNCOUNT_ATTEMPT).bind(key), env.DB.prepare(UNCOUNT_ATTEMPT).bind('*')]);
+  // Nebenbei: abgelaufene Hinweise auf entfernte Geldanfragen endgültig löschen.
+  await env.DB.batch([
+    env.DB.prepare(UNCOUNT_ATTEMPT).bind(key),
+    env.DB.prepare(UNCOUNT_ATTEMPT).bind('*'),
+    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+  ]);
 
   const expires = now + SESSION_MS;
   const payload = b64url(enc.encode(JSON.stringify({ r: role, e: expires, v: cfg.pw_version || '1' })));
@@ -504,23 +509,28 @@ function shiftDay(day, n) {
 
 // ---------------------------------------------------------------- Geldanfragen
 
-// Abgelaufene Hinweise auf entfernte Anfragen löschen (läuft bei jedem Schreiben mit).
+// Abgelaufene Hinweise auf entfernte Anfragen löschen (läuft bei jedem Schreiben und jeder Anmeldung mit).
 const PURGE_REQUESTS = "DELETE FROM requests WHERE status = 'removed' AND removed_at < ?";
 
-// Das Team schickt eine Geldanfrage. Die ID erzeugt der Browser; kommt dieselbe Anfrage erneut
-// (z. B. weil die Antwort unterwegs verloren ging), gilt die neue Fassung, solange sie noch nicht gelesen ist.
+// Das Team schickt eine Geldanfrage. Die ID erzeugt der Browser. Eine gesendete Anfrage ist unveränderlich:
+// Kommt dieselbe ID erneut (z. B. weil die Antwort unterwegs verloren ging), bleibt die erste Fassung.
+// Die Obergrenze zählt nur offene und gelesene Anfragen, damit entfernte das Senden nicht blockieren.
 async function putRequest(request, env, session, id) {
   requireRole(session, 'user');
   checkId(id);
   const body = await readJson(request, MAX_REQUEST_CHARS + 1000);
-  if (typeof body.data !== 'string' || !body.data || body.data.length > MAX_REQUEST_CHARS) throw new HttpError(400, 'bad_request');
+  const { data } = body;
+  // Nur verschlüsselte Inhalte (Base64 aus IV, Daten und Prüfwert), keine beliebigen Texte
+  if (typeof data !== 'string' || data.length < 40 || data.length > MAX_REQUEST_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(data)) {
+    throw new HttpError(400, 'bad_request');
+  }
   const now = Date.now();
   await env.DB.batch([
     env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
     env.DB.prepare(
-      "INSERT INTO requests (id, status, created_at, updated_at, data) SELECT ?1, 'open', ?2, ?2, ?3 WHERE (SELECT COUNT(*) FROM requests) < ?4 "
-      + "ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = MAX(excluded.updated_at, requests.updated_at + 1) WHERE requests.status = 'open'",
-    ).bind(id, now, body.data, MAX_REQUESTS),
+      "INSERT INTO requests (id, status, created_at, updated_at, data) SELECT ?1, 'open', ?2, ?2, ?3 "
+      + "WHERE (SELECT COUNT(*) FROM requests WHERE status IN ('open', 'read')) < ?4 ON CONFLICT(id) DO NOTHING",
+    ).bind(id, now, data, MAX_REQUESTS),
     env.DB.prepare(BUMP_SEQ),
   ]);
   const row = await env.DB.prepare('SELECT status, created_at, updated_at FROM requests WHERE id = ?').bind(id).first();
@@ -574,7 +584,10 @@ async function removeRequest(env, session, id) {
     ).bind(now, id),
     env.DB.prepare(BUMP_SEQ),
   ]);
-  return json({ removed: res.meta.changes > 0 }); // false: inzwischen zurückgezogen oder schon entfernt
+  if (res.meta.changes) return json({ removed: true });
+  // Nichts geändert: vom Team zurückgezogen (status null) oder schon entfernt (z. B. in einem anderen Fenster)
+  const row = await env.DB.prepare('SELECT status FROM requests WHERE id = ?').bind(id).first();
+  return json({ removed: false, status: row?.status || null });
 }
 
 // ---------------------------------------------------------------- Bilder

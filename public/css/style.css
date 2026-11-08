@@ -1503,3 +1503,7 @@ th[aria-sort="descending"] .sort-btn .icon { color: var(--pen); }
 .user-top { display: grid; gap: 14px; }
 .section-tight { margin-top: 18px; }
 .section-intro { margin: -4px 0 8px; }
+
+/* Gesperrte Eingabe (z. B. Geldanfrage, deren Sendeversuch noch ungeklärt ist) */
+.in:disabled { background: var(--paper-2); color: var(--ink-2); border-color: var(--pencil-line); cursor: not-allowed; opacity: 1; }
+.request-form .pending-note { margin: 0 0 4px; }

@@ -50,7 +50,7 @@ export function mountAdmin(root) {
     const rate = store.state.rates.get(today) || null;
     const list = store.state.requests.filter((r) => r.status === 'open' || r.status === 'read')
       .sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1)
-        || String(a.d.deadline).localeCompare(String(b.d.deadline)) || a.createdAt - b.createdAt);
+        || String(a.d?.deadline).localeCompare(String(b.d?.deadline)) || a.createdAt - b.createdAt);
     const fresh = list.filter((r) => r.status === 'open').length;
     clear(requestsBox).append(h('h2', { class: 'section-title', id: 'requests-title' }, t('admin.requests')));
     if (!list.length) {
@@ -62,7 +62,15 @@ export function mountAdmin(root) {
       h('div', { class: 'req-list' }, list.map((r) => requestCard(r, { admin: true, rate, onRead: markRequestRead, onRemove: removeRequest }))),
       h('p', { class: 'muted small' }, t('admin.requestEurHint')));
     // Euro-Wert zum Kurs von heute; fehlt der Kurs noch, nachladen und neu zeichnen.
-    if (!rate) store.loadRates([today]).then((added) => { if (added) renderRequests(); });
+    if (!rate) store.loadRates([today]).then(ratesArrived);
+  }
+
+  // Neue Tageskurse: Geldanfragen und Seitenleiste neu zeichnen (beide können auf denselben Tag warten,
+  // etwa einen Geldeingang von heute, und nur eine der beiden Abfragen holt ihn).
+  function ratesArrived(added) {
+    if (!added) return;
+    renderRequests();
+    renderSidebar();
   }
 
   async function markRequestRead(r) {
@@ -80,15 +88,17 @@ export function mountAdmin(root) {
 
   async function removeRequest(r) {
     const ok = await confirmDialog({
-      message: t('admin.removeRequestConfirm', { person: r.d.person || '–', amount: fmtAmount(r.d.amount) }),
+      message: r.d ? t('admin.removeRequestConfirm', { person: r.d.person || '–', amount: fmtAmount(r.d.amount) }) : t('admin.removeUnreadableConfirm'),
       confirmLabel: t('admin.removeRequestYes'),
       cancelLabel: t('back'),
       danger: true,
     });
     if (!ok) return;
     try {
-      const removed = await store.removeRequest(r);
-      toast(t(removed ? 'admin.requestRemoved' : 'admin.requestGone'), removed ? 'success' : 'info');
+      const res = await store.removeRequest(r);
+      // removed=false: schon gelöscht (anderes Fenster) oder vom Team zurückgezogen
+      if (res.removed || res.status === 'removed') toast(t('admin.requestRemoved'), 'success');
+      else toast(t('admin.requestGone'), 'info');
     } catch (err) {
       requestActionFailed(err);
     }
@@ -129,7 +139,7 @@ export function mountAdmin(root) {
     sidebar.append(h('p', { class: 'muted small' }, t('admin.sumHint')));
     if (periods.length) sidebar.append(h('p', { class: 'muted small' }, t('admin.eurHint')));
     // Fehlende Tageskurse nachladen und danach neu zeichnen. Gesicherte Geldeingänge tragen ihren Kurs im Ledger.
-    store.loadRates(periods.filter((p) => !p.income.rate).map((p) => p.income.date)).then((added) => { if (added) renderSidebar(); });
+    store.loadRates(periods.filter((p) => !p.income.rate).map((p) => p.income.date)).then(ratesArrived);
   }
 
   function incomeFacts(e) {

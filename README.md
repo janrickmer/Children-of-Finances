@@ -70,7 +70,11 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   zurückziehen; ändern lässt sie sich nach dem Senden nicht mehr.
 - Löscht der Schatzmeister eine Anfrage, steht beim Team vier Tage lang oben der Hinweis, dass das
   deutsche Team sie entfernt hat und ein trotzdem eingehender Geldeingang unbedingt korrekt
-  eingetragen werden muss. Danach wird die Anfrage endgültig gelöscht.
+  eingetragen werden muss. Danach wird die Anfrage endgültig gelöscht (spätestens bei der nächsten
+  Anmeldung oder Änderung).
+- Eine gesendete Anfrage lässt sich nicht mehr ändern. Bricht beim Senden die Verbindung ab, bleibt
+  das Formular gesperrt, bis ein erneuter Versuch klärt, ob die Anfrage angekommen ist; so entsteht
+  weder eine doppelte noch eine nachträglich veränderte Anfrage.
 - Geldanfragen gehören nicht zur PDF-Sicherung und zählen nicht zum Budget.
 
 ## Speichern

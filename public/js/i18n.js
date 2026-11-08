@@ -151,14 +151,24 @@ const T = {
     sw: 'Ombi lako limetumwa kwa CoM Germany.',
   },
   'request.offline': {
-    de: 'Keine Verbindung. Deine Eingaben bleiben erhalten – bitte versuche es gleich noch einmal.',
-    en: 'No connection. Your entries are kept – please try again in a moment.',
-    sw: 'Hakuna mtandao. Ulichoandika kimehifadhiwa – tafadhali jaribu tena baada ya muda mfupi.',
+    de: 'Keine Verbindung. Ob die Anfrage angekommen ist, ist noch unklar – bitte versuche es gleich noch einmal.',
+    en: 'No connection. It is not yet clear whether the request arrived – please try again in a moment.',
+    sw: 'Hakuna mtandao. Bado haijulikani kama ombi limefika – tafadhali jaribu tena baada ya muda mfupi.',
   },
-  'request.alreadyHandled': {
-    de: 'Diese Anfrage war schon angekommen und wurde inzwischen vom deutschen Team bearbeitet. Spätere Änderungen wurden nicht übernommen.',
-    en: 'This request had already arrived and has since been handled by the German team. Later changes were not applied.',
-    sw: 'Ombi hili lilikuwa limeshafika na tayari limeshughulikiwa na timu ya Ujerumani. Mabadiliko ya baadaye hayakuhifadhiwa.',
+  'request.pending': {
+    de: 'Beim Senden ist die Verbindung abgebrochen. Bis klar ist, ob die Anfrage angekommen ist, lässt sie sich nicht ändern. Tippe noch einmal auf „Anfragen, ob dieses Budget realisierbar ist“, sobald du wieder Netz hast.',
+    en: 'The connection was lost while sending. Until it is clear whether the request arrived, it cannot be changed. Tap “Ask whether this budget is feasible” again as soon as you have a connection.',
+    sw: 'Mtandao ulikatika wakati wa kutuma. Hadi ijulikane kama ombi limefika, haliwezi kubadilishwa. Bonyeza tena “Uliza kama bajeti hii inawezekana” mara tu utakapopata mtandao.',
+  },
+  'request.badAmount': {
+    de: 'Bitte gib einen Betrag größer als 0 ein.',
+    en: 'Please enter an amount greater than 0.',
+    sw: 'Tafadhali weka kiasi kikubwa kuliko 0.',
+  },
+  'request.unreadable': {
+    de: 'Diese Anfrage lässt sich nicht lesen (beschädigt).',
+    en: 'This request cannot be read (damaged).',
+    sw: 'Ombi hili haliwezi kusomeka (limeharibika).',
   },
   'requests.title': { de: 'Anfragen an CoM Germany', en: 'Requests to CoM Germany', sw: 'Maombi kwa CoM Germany' },
   'request.lblPerson': { de: 'Für', en: 'For', sw: 'Kwa ajili ya' },
@@ -189,12 +199,12 @@ const T = {
   'request.removedTitle': {
     de: 'Das deutsche Team hat die Anfrage für {person} über KSh {amount} entfernt.',
     en: 'The German team has removed the request for {person} of KSh {amount}.',
-    sw: 'Timu ya Ujerumani imeondoa ombi la {person} la KSh {amount}.',
+    sw: 'Timu ya Ujerumani imeondoa ombi la KSh {amount} kwa ajili ya {person}.',
   },
   'request.removedText': {
-    de: 'Falls trotzdem Geld dafür auf dem Konto von CoM Kenya eingeht, muss dieser Geldeingang unbedingt korrekt unter „Geldeingang“ eingetragen werden.',
-    en: 'If money for it still arrives in the CoM Kenya account, this money received must be recorded correctly under “Money received”.',
-    sw: 'Ikiwa hata hivyo pesa kwa ajili yake zitaingia kwenye akaunti ya CoM Kenya, pesa hizo lazima ziingizwe kwa usahihi chini ya “Pesa zilizopokelewa”.',
+    de: 'Falls es zu einem Geldeingang auf dem Konto von CoM Kenya kommen sollte, muss dieser Geldeingang unbedingt korrekt unter „Geldeingang“ eingetragen werden.',
+    en: 'If any money arrives in the CoM Kenya account, this money received must be recorded correctly under “Money received”.',
+    sw: 'Ikiwa pesa zozote zitaingia kwenye akaunti ya CoM Kenya, pesa hizo lazima ziingizwe kwa usahihi chini ya “Pesa zilizopokelewa”.',
   },
   'request.removedUntil': {
     de: 'Dieser Hinweis verschwindet am {date}.',
@@ -549,7 +559,7 @@ const T = {
   'admin.markReadConfirm': {
     de: 'Die Anfrage für {person} als „gelesen und in Absprache“ markieren? Das Team in Kenia sieht das sofort und kann die Anfrage danach nicht mehr zurückziehen.',
     en: 'Mark the request for {person} as “read and under discussion”? The team in Kenya sees this immediately and can no longer withdraw the request afterwards.',
-    sw: 'Ungependa kuweka alama kwenye ombi la {person} kuwa “limesomwa na linajadiliwa”? Timu ya Kenya itaona hili mara moja na haitaweza tena kuliondoa ombi hilo.',
+    sw: 'Ungependa kuweka alama kwenye ombi kwa ajili ya {person} kuwa “limesomwa na linajadiliwa”? Timu ya Kenya itaona hili mara moja na haitaweza tena kuliondoa ombi hilo.',
   },
   'admin.markReadYes': { de: 'Markieren', en: 'Mark', sw: 'Weka alama' },
   'admin.requestRead': {
@@ -561,7 +571,12 @@ const T = {
   'admin.removeRequestConfirm': {
     de: 'Die Anfrage für {person} über KSh {amount} löschen? Das Team in Kenia sieht vier Tage lang den Hinweis, dass ihr die Anfrage entfernt habt.',
     en: 'Delete the request for {person} of KSh {amount}? For four days the team in Kenya will see a notice that you removed the request.',
-    sw: 'Ungependa kufuta ombi la {person} la KSh {amount}? Kwa siku nne timu ya Kenya itaona taarifa kwamba mmeondoa ombi hilo.',
+    sw: 'Ungependa kufuta ombi la KSh {amount} kwa ajili ya {person}? Kwa siku nne timu ya Kenya itaona taarifa kwamba mmeondoa ombi hilo.',
+  },
+  'admin.removeUnreadableConfirm': {
+    de: 'Diese nicht lesbare Anfrage löschen?',
+    en: 'Delete this unreadable request?',
+    sw: 'Ungependa kufuta ombi hili lisilosomeka?',
   },
   'admin.removeRequestYes': { de: 'Anfrage löschen', en: 'Delete request', sw: 'Futa ombi' },
   'admin.requestRemoved': { de: 'Die Anfrage wurde gelöscht.', en: 'The request has been deleted.', sw: 'Ombi limefutwa.' },

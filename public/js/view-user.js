@@ -6,7 +6,7 @@ import * as images from './images.js';
 import { NetworkError } from './session.js';
 import {
   ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable, tapeBand, currentPeriod,
-  requestCard, requestRemovedNotice, REQUEST_NOTICE_MS,
+  requestCard, requestRemovedNotice, requiredMark, REQUEST_NOTICE_MS,
 } from './components.js';
 import { icon } from './icons.js';
 import { emptyState } from './photos.js';
@@ -109,39 +109,45 @@ export function mountUser(root, { getName }) {
   const reqTo = dateInput((v) => setRequest({ to: v }), { max: null });
   const reqAmount = amountInput((v) => setRequest({ amount: v }));
   const reqDeadline = dateInput((v) => setRequest({ deadline: v }), { min: todayIso(), max: null });
-  reqFrom.id = 'req-from';
-  reqTo.id = 'req-to';
-  reqAmount.id = 'req-amount';
-  reqDeadline.id = 'req-deadline';
+  const reqInputs = [reqPerson, reqPurpose, reqFrom, reqTo, reqAmount, reqDeadline];
+  for (const [input, id] of [[reqFrom, 'req-from'], [reqTo, 'req-to'], [reqAmount, 'req-amount'], [reqDeadline, 'req-deadline']]) input.id = id;
+  for (const input of reqInputs) input.setAttribute('aria-required', 'true');
   const reqError = h('p', { class: 'form-error', role: 'alert' });
   const reqUnsent = h('p', { class: 'unsaved-hint', hidden: true }, icon('info', { size: 18 }), t('request.unsent'));
-  const reqSubmit = h('button', { type: 'button', class: 'btn btn-primary btn-wrap', onclick: sendRequest }, icon('send', { size: 18 }), t('request.submit'));
+  // Verbindung beim Senden abgebrochen: unklar, ob die Anfrage angekommen ist; bis dahin nicht änderbar
+  const reqPending = h('p', { class: 'pending-note', role: 'status', hidden: true }, icon('alert', { size: 18 }), t('request.pending'));
+  const reqSubmit = h('button', { type: 'button', class: 'btn btn-primary btn-wrap', onclick: sendRequest });
+  const submitLabel = (sending) => clear(reqSubmit).append(icon(sending ? 'saving' : 'send', { size: 18 }), t(sending ? 'request.sending' : 'request.submit'));
+  submitLabel(false);
   let reqShowMissing = false; // Fehlendes erst nach dem ersten Absendeversuch rot zeigen
   const reqFields = {
-    person: h('div', { class: 'field' }, h('label', { for: 'req-person' }, t('request.person')), reqPerson),
+    person: h('div', { class: 'field' }, h('label', { for: 'req-person' }, t('request.person'), requiredMark()), reqPerson),
     purpose: h('div', { class: 'field' },
-      h('label', { for: 'req-purpose' }, t('request.purpose')),
+      h('label', { for: 'req-purpose' }, t('request.purpose'), requiredMark()),
       h('p', { class: 'field-hint', id: 'req-purpose-hint' }, t('request.purposeHint')),
       reqPurpose),
     period: h('fieldset', { class: 'field field-set' },
-      h('legend', {}, t('request.period')),
+      h('legend', {}, t('request.period'), requiredMark()),
       h('div', { class: 'field-pair' },
         h('label', { class: 'field-sub', for: 'req-from' }, h('span', {}, t('request.periodFrom')), reqFrom),
         h('label', { class: 'field-sub', for: 'req-to' }, h('span', {}, t('request.periodTo')), reqTo))),
-    amount: h('div', { class: 'field' }, h('label', { for: 'req-amount' }, t('request.amount')), reqAmount),
-    deadline: h('div', { class: 'field' }, h('label', { for: 'req-deadline' }, t('request.deadline')), reqDeadline),
+    amount: h('div', { class: 'field' }, h('label', { for: 'req-amount' }, t('request.amount'), requiredMark()), reqAmount),
+    deadline: h('div', { class: 'field' }, h('label', { for: 'req-deadline' }, t('request.deadline'), requiredMark()), reqDeadline),
   };
   const requestForm = h('div', { class: 'form-card request-form', hidden: true },
     Object.values(reqFields),
     reqError,
     reqUnsent,
+    reqPending,
     h('div', { class: 'actions' }, reqSubmit));
 
   // Welche Felder fehlen oder passen nicht? (für Markierung und Fehlermeldung)
   function requestProblems(d) {
     const miss = store.requestMissing(d);
     const bad = new Set(miss.map((k) => (k === 'from' || k === 'to' ? 'period' : k)));
-    let message = miss.length ? t('request.missing') : '';
+    // Ein ausgefüllter Betrag von 0 oder weniger fehlt nicht, sondern ist falsch: eigene Meldung
+    const empty = miss.filter((k) => k !== 'amount' || !String(d.amount ?? '').trim());
+    let message = empty.length ? t('request.missing') : miss.length ? t('request.badAmount') : '';
     if (!message && d.to < d.from) {
       bad.add('period');
       message = t('request.badRange');
@@ -155,7 +161,10 @@ export function mountUser(root, { getName }) {
 
   function refreshRequestForm() {
     const d = myRequestDraft();
-    reqUnsent.hidden = store.requestDraftEmpty(d);
+    const locked = Boolean(d?.pending);
+    for (const input of reqInputs) input.disabled = locked;
+    reqPending.hidden = !locked;
+    reqUnsent.hidden = locked || store.requestDraftEmpty(d);
     reqTo.min = d?.from || '';
     reqDeadline.min = todayIso();
     if (!reqShowMissing) return;
@@ -184,12 +193,16 @@ export function mountUser(root, { getName }) {
       firstProblem()?.focus();
       return;
     }
-    const ok = await confirmDialog({ message: t('request.confirm'), confirmLabel: t('request.confirmYes'), cancelLabel: t('back') });
-    if (!ok) return;
+    // Ein erneuter Versuch nach Verbindungsabbruch sendet unverändert und braucht keine zweite Rückfrage.
+    if (!d.pending) {
+      const ok = await confirmDialog({ message: t('request.confirm'), confirmLabel: t('request.confirmYes'), cancelLabel: t('back') });
+      if (!ok) return;
+    }
     reqSubmit.disabled = true;
+    submitLabel(true);
     try {
-      const row = await store.sendRequest(d);
-      toast(t(row.status === 'open' ? 'request.sent' : 'request.alreadyHandled'), row.status === 'open' ? 'success' : 'error', 10000);
+      await store.sendRequest(d);
+      toast(t('request.sent'), 'success', 10000);
       requestSent();
     } catch (err) {
       if (store.state.requests.some((r) => r.id === d.id)) {
@@ -204,6 +217,8 @@ export function mountUser(root, { getName }) {
       }
     } finally {
       reqSubmit.disabled = false;
+      submitLabel(false);
+      refreshRequestForm();
     }
   }
 
@@ -216,9 +231,12 @@ export function mountUser(root, { getName }) {
     reqShowMissing = false;
     reqError.textContent = '';
     for (const field of Object.values(reqFields)) field.classList.remove('is-missing');
-    setMode(null);
     fillRequest();
     renderRequests();
+    // Nur wenn das Formular noch offen ist (wer inzwischen etwas anderes einträgt, wird nicht gestört)
+    if (mode !== 'request') return;
+    setMode(null);
+    requestsTitle.focus({ preventScroll: true });
     requestsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -240,16 +258,23 @@ export function mountUser(root, { getName }) {
 
   // ---------------------------------------------------------------- Anfragen an CoM Germany (Liste)
   const requestsList = h('div', { class: 'req-list' });
-  const requestsSection = h('section', { class: 'section', hidden: true },
-    h('h2', { class: 'section-title' }, t('requests.title')),
-    requestsList);
+  const requestsTitle = h('h2', { class: 'section-title', tabindex: '-1' }, t('requests.title'));
+  const requestsSection = h('section', { class: 'section', hidden: true }, requestsTitle, requestsList);
+  let noticeTimer = null;
 
   function renderRequests() {
     const now = Date.now();
-    const removed = store.state.requests.filter((r) => r.status === 'removed' && now - r.removedAt < REQUEST_NOTICE_MS)
+    const readable = store.state.requests.filter((r) => r.d);
+    const removed = readable.filter((r) => r.status === 'removed' && now - r.removedAt < REQUEST_NOTICE_MS)
       .sort((a, b) => b.removedAt - a.removedAt);
     clear(noticeSlot).append(...removed.map(requestRemovedNotice));
-    const live = store.state.requests.filter((r) => r.status === 'open' || r.status === 'read')
+    // Der Hinweis verschwindet pünktlich, auch wenn sich sonst nichts ändert.
+    clearTimeout(noticeTimer);
+    if (removed.length) {
+      const next = Math.min(...removed.map((r) => r.removedAt + REQUEST_NOTICE_MS)) - now;
+      noticeTimer = setTimeout(renderRequests, Math.min(Math.max(next, 0) + 1000, 2_000_000_000));
+    }
+    const live = readable.filter((r) => r.status === 'open' || r.status === 'read')
       .sort((a, b) => String(a.d.deadline).localeCompare(String(b.d.deadline)) || a.createdAt - b.createdAt);
     clear(requestsList).append(...live.map((r) => requestCard(r, { onWithdraw: withdrawRequest })));
     requestsSection.hidden = !live.length;
