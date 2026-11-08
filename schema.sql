@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS login_attempts (
   locked_until INTEGER NOT NULL
 );
 
--- IDs gesicherter und gelöschter Einträge, damit veraltete Geräte sie nicht neu anlegen
+-- IDs gesicherter und gelöschter Einträge sowie zurückgezogener und endgültig gelöschter Geldanfragen,
+-- damit veraltete Geräte sie nicht neu anlegen (eine erneut gesendete Anfrage bekommt dann status 'gone')
 CREATE TABLE IF NOT EXISTS tombstones (
   id TEXT PRIMARY KEY,
   at INTEGER NOT NULL
@@ -48,7 +49,8 @@ CREATE TABLE IF NOT EXISTS fx_rates (
 
 -- Geldanfragen des Teams in Kenia an CoM Germany (Inhalt verschlüsselt in "data").
 -- status: open = noch nicht gesehen, read = gelesen und in Absprache, removed = vom Schatzmeister entfernt.
--- Entfernte Anfragen bleiben vier Tage stehen, damit das Team den Hinweis sieht, und werden danach gelöscht.
+-- Entfernte Anfragen bleiben vier Tage stehen, damit das Team den Hinweis sieht, und werden danach gelöscht;
+-- zurückgezogene und endgültig gelöschte hinterlassen einen Eintrag in tombstones.
 CREATE TABLE IF NOT EXISTS requests (
   id TEXT PRIMARY KEY,
   status TEXT NOT NULL,

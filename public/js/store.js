@@ -355,14 +355,7 @@ async function doRefresh(full) {
   }
 
   state.requests = await readRequests(res.requests || []);
-  // Antwort beim Senden verloren gegangen? Steht die Anfrage schon auf dem Server, ist der Entwurf erledigt.
-  if (!sendingRequest) {
-    for (const d of [...state.requestDrafts.values()]) {
-      if (!state.requests.some((r) => r.id === d.id)) continue;
-      clearRequestDraft(d);
-      arrived.push(d);
-    }
-  }
+  settleDrafts();
   state.ledger = res.ledger ? await decryptJson(res.ledger, 'ledger').catch(() => emptyLedger()) : emptyLedger();
   state.ledgerRaw = res.ledger || null;
   state.lastArchive = res.lastArchive;
@@ -429,6 +422,7 @@ export function reset() {
   requestCache.clear();
   dirtyDrafts.clear();
   arrived = [];
+  sendingIds.clear();
   clearTimeout(draftTimer);
   state.lastArchive = null;
   state.seq = null;
@@ -509,8 +503,23 @@ export async function archive(ids, ledger, ledgerRaw) {
 const requestCache = new Map();
 const dirtyDrafts = new Set();
 let draftTimer = null;
-let arrived = []; // Entwürfe, deren Anfrage sich beim Abgleich als angekommen herausstellte (für eine Meldung)
-let sendingRequest = false;
+let arrived = []; // { d, gone }: Entwürfe, deren Anfrage sich beim Abgleich als angekommen herausstellte
+const sendingIds = new Set(); // Entwürfe, die gerade gesendet werden
+
+// Antwort beim Senden verloren gegangen? Steht die Anfrage schon auf dem Server, ist der Entwurf erledigt.
+// gone: inzwischen vom deutschen Team gelöscht.
+function settleDrafts() {
+  for (const d of [...state.requestDrafts.values()]) {
+    const row = sendingIds.has(d.id) ? null : state.requests.find((r) => r.id === d.id);
+    if (!row) continue;
+    clearRequestDraft(d);
+    arrived.push({ d, gone: row.status === 'removed' });
+  }
+}
+
+export function isSending(draft) {
+  return Boolean(draft) && sendingIds.has(draft.id);
+}
 
 async function readRequests(rows) {
   const out = [];
@@ -613,8 +622,8 @@ async function refreshWhenIdle() {
 
 // Entwürfe der angegebenen Person, deren Anfrage sich beim Abgleich als angekommen herausstellte.
 export function takeArrived(name) {
-  const mine = arrived.filter((d) => normName(d.createdBy) === normName(name));
-  arrived = arrived.filter((d) => !mine.includes(d));
+  const mine = arrived.filter((a) => normName(a.d.createdBy) === normName(name));
+  arrived = arrived.filter((a) => !mine.includes(a));
   return mine;
 }
 
@@ -624,12 +633,13 @@ export function takeArrived(name) {
 // die Seite neu geladen), ist unklar, ob die Anfrage angekommen ist; sie kann dann nur unverändert
 // erneut gesendet werden. So landet nie eine geänderte Fassung unter derselben ID.
 export async function sendRequest(draft) {
-  draft.pending = true;
-  await saveRequestDraft(draft);
-  const { id, pending, ...d } = draft;
-  const data = await encryptJson({ ...d, sentAt: Date.now() }, `request:${id}`);
-  sendingRequest = true;
+  if (sendingIds.has(draft.id)) return null; // läuft schon (z. B. aus einer vorher angezeigten Ansicht)
+  sendingIds.add(draft.id);
   try {
+    draft.pending = true;
+    await saveRequestDraft(draft);
+    const { id, pending, ...d } = draft;
+    const data = await encryptJson({ ...d, sentAt: Date.now() }, `request:${id}`);
     const row = await request(`/api/requests/${id}`, { method: 'PUT', body: { data } });
     clearRequestDraft(draft);
     return row;
@@ -641,8 +651,11 @@ export async function sendRequest(draft) {
     }
     throw err;
   } finally {
-    sendingRequest = false;
+    sendingIds.delete(draft.id);
     await refreshWhenIdle().catch(() => {});
+    // Auch ohne neuen Abgleich: Steht die Anfrage schon im bekannten Stand, ist der Entwurf erledigt.
+    settleDrafts();
+    emit('local');
   }
 }
 
