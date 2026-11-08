@@ -24,6 +24,10 @@ const FX_MAX_DAYS = 40; // Tage pro Anfrage
 const FX_MAX_FETCHES = 24; // Abrufe beim Kursdienst pro Anfrage …
 const FX_DEADLINE_MS = 12_000; // … und höchstens so lange (der Browser wartet 30 s)
 const FX_FETCH_MS = 4000; // pro Abruf
+// Geldanfragen: Inhalt verschlüsselt; vom Schatzmeister entfernte Anfragen sieht das Team noch vier Tage.
+const MAX_REQUEST_CHARS = 20_000;
+const MAX_REQUESTS = 300;
+const REQUEST_NOTICE_MS = 4 * 24 * 60 * 60 * 1000;
 
 const enc = new TextEncoder();
 let authCache = null;
@@ -90,7 +94,7 @@ async function handleApi(request, env, url) {
 
   const session = await authenticate(request, env);
 
-  if (route === 'GET state') return getState(env, url);
+  if (route === 'GET state') return getState(env, session, url);
   if (parts[0] === 'entries' && parts.length === 2 && method === 'GET') return getEntry(env, parts[1]);
   if (parts[0] === 'entries' && parts.length === 2 && method === 'PUT') return putEntry(request, env, session, parts[1]);
   if (parts[0] === 'entries' && parts.length === 2 && method === 'DELETE') return deleteEntry(env, session, parts[1]);
@@ -104,6 +108,14 @@ async function handleApi(request, env, url) {
     return removeIncome(request, env, session, parts[1]);
   }
   if (route === 'GET rates') return getRates(env, session, url);
+  if (parts[0] === 'requests' && parts.length === 2 && method === 'PUT') return putRequest(request, env, session, parts[1]);
+  if (parts[0] === 'requests' && parts.length === 2 && method === 'DELETE') return withdrawRequest(env, session, parts[1]);
+  if (parts[0] === 'requests' && parts.length === 3 && parts[2] === 'read' && method === 'POST') {
+    return markRequestRead(env, session, parts[1]);
+  }
+  if (parts[0] === 'requests' && parts.length === 3 && parts[2] === 'remove' && method === 'POST') {
+    return removeRequest(env, session, parts[1]);
+  }
   if (parts[0] === 'images' && parts.length === 2 && method === 'PUT') return putImage(request, env, session, parts[1], url);
   if (parts[0] === 'images' && parts.length === 2 && method === 'GET') return getImage(env, parts[1]);
   if (parts[0] === 'images' && parts.length === 2 && method === 'DELETE') return deleteImage(env, session, parts[1]);
@@ -230,7 +242,7 @@ function requireRole(session, role) {
 
 // ---------------------------------------------------------------- Daten lesen
 
-async function getState(env, url) {
+async function getState(env, session, url) {
   const knownSeq = url.searchParams.get('seq');
   const since = Number(url.searchParams.get('since') || 0);
   const seqRes = await env.DB.prepare("SELECT v FROM config WHERE k = 'seq'").all();
@@ -238,17 +250,22 @@ async function getState(env, url) {
   const dbSize = seqRes.meta?.size_after ?? null;
   if (knownSeq !== null && knownSeq === seq) return json({ unchanged: true, seq, dbSize });
 
-  const [entries, extra] = await env.DB.batch([
+  // Entfernte Geldanfragen bekommt nur das Team, und nur in den vier Tagen nach dem Entfernen.
+  const [entries, extra, requests] = await env.DB.batch([
     env.DB.prepare(
       'SELECT id, kind, status, created_at, updated_at, CASE WHEN updated_at >= ?1 THEN data END AS data FROM entries',
     ).bind(since),
     env.DB.prepare("SELECT k, v FROM config WHERE k IN ('ledger', 'last_archive')"),
+    env.DB.prepare(
+      "SELECT id, status, created_at, updated_at, removed_at, data FROM requests WHERE status IN ('open', 'read') OR (?1 AND status = 'removed' AND removed_at >= ?2)",
+    ).bind(session.role === 'user' ? 1 : 0, Date.now() - REQUEST_NOTICE_MS),
   ]);
   const cfg = Object.fromEntries(extra.results.map((r) => [r.k, r.v]));
   return json({
     seq,
     dbSize,
     entries: entries.results,
+    requests: requests.results,
     ledger: cfg.ledger || null,
     lastArchive: cfg.last_archive ? JSON.parse(cfg.last_archive) : null,
   });
@@ -485,6 +502,81 @@ function shiftDay(day, n) {
   return isoDay(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000);
 }
 
+// ---------------------------------------------------------------- Geldanfragen
+
+// Abgelaufene Hinweise auf entfernte Anfragen löschen (läuft bei jedem Schreiben mit).
+const PURGE_REQUESTS = "DELETE FROM requests WHERE status = 'removed' AND removed_at < ?";
+
+// Das Team schickt eine Geldanfrage. Die ID erzeugt der Browser; kommt dieselbe Anfrage erneut
+// (z. B. weil die Antwort unterwegs verloren ging), gilt die neue Fassung, solange sie noch nicht gelesen ist.
+async function putRequest(request, env, session, id) {
+  requireRole(session, 'user');
+  checkId(id);
+  const body = await readJson(request, MAX_REQUEST_CHARS + 1000);
+  if (typeof body.data !== 'string' || !body.data || body.data.length > MAX_REQUEST_CHARS) throw new HttpError(400, 'bad_request');
+  const now = Date.now();
+  await env.DB.batch([
+    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    env.DB.prepare(
+      "INSERT INTO requests (id, status, created_at, updated_at, data) SELECT ?1, 'open', ?2, ?2, ?3 WHERE (SELECT COUNT(*) FROM requests) < ?4 "
+      + "ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = MAX(excluded.updated_at, requests.updated_at + 1) WHERE requests.status = 'open'",
+    ).bind(id, now, body.data, MAX_REQUESTS),
+    env.DB.prepare(BUMP_SEQ),
+  ]);
+  const row = await env.DB.prepare('SELECT status, created_at, updated_at FROM requests WHERE id = ?').bind(id).first();
+  if (!row) throw new HttpError(409, 'too_many');
+  return json(row);
+}
+
+// Das Team zieht eine Anfrage zurück – nur, solange das deutsche Team sie noch nicht gelesen hat.
+async function withdrawRequest(env, session, id) {
+  requireRole(session, 'user');
+  checkId(id);
+  const [, res] = await env.DB.batch([
+    env.DB.prepare(PURGE_REQUESTS).bind(Date.now() - REQUEST_NOTICE_MS),
+    env.DB.prepare("DELETE FROM requests WHERE id = ? AND status = 'open'").bind(id),
+    env.DB.prepare(BUMP_SEQ),
+  ]);
+  if (!res.meta.changes) {
+    const row = await env.DB.prepare('SELECT status FROM requests WHERE id = ?').bind(id).first();
+    if (row) throw new HttpError(409, 'not_withdrawable', { status: row.status });
+  }
+  return json({ ok: true });
+}
+
+// Der Schatzmeister markiert eine Anfrage als „gelesen und in Absprache“.
+async function markRequestRead(env, session, id) {
+  requireRole(session, 'admin');
+  checkId(id);
+  const now = Date.now();
+  const [, res] = await env.DB.batch([
+    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    env.DB.prepare("UPDATE requests SET status = 'read', updated_at = MAX(?1, updated_at + 1) WHERE id = ?2 AND status = 'open'").bind(now, id),
+    env.DB.prepare(BUMP_SEQ),
+  ]);
+  if (!res.meta.changes) {
+    const row = await env.DB.prepare('SELECT status FROM requests WHERE id = ?').bind(id).first();
+    if (row?.status !== 'read') throw new HttpError(409, 'request_changed', { status: row?.status || null });
+  }
+  return json({ ok: true });
+}
+
+// Der Schatzmeister entfernt eine Anfrage. Der verschlüsselte Inhalt bleibt vier Tage stehen,
+// damit das Team sieht, welche Anfrage entfernt wurde; danach wird die Zeile gelöscht.
+async function removeRequest(env, session, id) {
+  requireRole(session, 'admin');
+  checkId(id);
+  const now = Date.now();
+  const [, res] = await env.DB.batch([
+    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
+    env.DB.prepare(
+      "UPDATE requests SET status = 'removed', removed_at = ?1, updated_at = MAX(?1, updated_at + 1) WHERE id = ?2 AND status IN ('open', 'read')",
+    ).bind(now, id),
+    env.DB.prepare(BUMP_SEQ),
+  ]);
+  return json({ removed: res.meta.changes > 0 }); // false: inzwischen zurückgezogen oder schon entfernt
+}
+
 // ---------------------------------------------------------------- Bilder
 
 async function putImage(request, env, session, id, url) {
@@ -564,6 +656,7 @@ async function archive(request, env, session) {
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('ledger', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1").bind(ledger),
     // Die Kurse gesicherter Geldeingänge stehen ab jetzt verschlüsselt im Ledger; die Tabelle verrät sonst ihre Daten.
     env.DB.prepare('DELETE FROM fx_rates'),
+    env.DB.prepare(PURGE_REQUESTS).bind(now - REQUEST_NOTICE_MS),
     env.DB.prepare("INSERT INTO config (k, v) VALUES ('last_archive', ?1) ON CONFLICT(k) DO UPDATE SET v = ?1")
       .bind(JSON.stringify({ at: now, count: deleted })),
     env.DB.prepare(BUMP_SEQ),

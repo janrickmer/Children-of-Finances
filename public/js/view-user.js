@@ -1,10 +1,12 @@
 // Ansicht für CoM Kenya (Passwort des Teams).
-import { h, clear, toast, confirmDialog, fmtDate, normName } from './util.js';
+import { h, clear, toast, confirmDialog, fmtDate, normName, todayIso } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
 import * as images from './images.js';
+import { NetworkError } from './session.js';
 import {
   ExpenseRow, expenseHead, reconcile, dateInput, amountInput, successGroups, periodTitle, successTable, tapeBand, currentPeriod,
+  requestCard, requestRemovedNotice, REQUEST_NOTICE_MS,
 } from './components.js';
 import { icon } from './icons.js';
 import { emptyState } from './photos.js';
@@ -21,6 +23,7 @@ export function mountUser(root, { getName }) {
   // ---------------------------------------------------------------- Warnhinweis
   const warning = h('section', { class: 'warning-box', role: 'note' }, icon('alert', { size: 22 }), h('p', {}, t('warning.text')));
   const bandSlot = h('div', { class: 'band-slot' });
+  const noticeSlot = h('div', { class: 'notice-slot' });
 
   // ---------------------------------------------------------------- Unvollständige Eingaben
   const incBody = h('tbody');
@@ -41,6 +44,10 @@ export function mountUser(root, { getName }) {
   const expenseChoice = h('button', { type: 'button', class: 'choice choice-expense', 'aria-pressed': 'false', onclick: () => setMode('expense') },
     h('span', { class: 'choice-icon' }, icon('money-out', { size: 22 })),
     h('span', { class: 'choice-title' }, t('choose.expense')));
+  const requestChoice = h('button', { type: 'button', class: 'choice choice-request', 'aria-pressed': 'false', onclick: () => setMode('request') },
+    h('span', { class: 'choice-icon' }, icon('calendar', { size: 22 })),
+    h('span', { class: 'choice-title' }, t('choose.request')),
+    h('span', { class: 'choice-hint' }, t('choose.requestHint')));
 
   // ---------------------------------------------------------------- Geldeingang
   const incomeDraft = (create) => myDrafts('income')[0] || (create ? store.createEntry('income', getName()) : null);
@@ -86,6 +93,166 @@ export function mountUser(root, { getName }) {
     store.changed();
     store.flushNow();
     toast(t('income.saved'), 'success');
+  }
+
+  // ---------------------------------------------------------------- Geldanfrage an CoM Germany
+  const myRequestDraft = () => store.getRequestDraft(getName());
+  const setRequest = (patch) => {
+    store.updateRequestDraft(getName(), patch);
+    refreshRequestForm();
+  };
+  const reqPerson = h('input', { type: 'text', class: 'in', id: 'req-person', maxlength: 200, autocomplete: 'off' });
+  reqPerson.addEventListener('input', () => setRequest({ person: reqPerson.value }));
+  const reqPurpose = h('textarea', { class: 'in', id: 'req-purpose', rows: 4, maxlength: 4000, 'aria-describedby': 'req-purpose-hint' });
+  reqPurpose.addEventListener('input', () => setRequest({ purpose: reqPurpose.value }));
+  const reqFrom = dateInput((v) => setRequest({ from: v }), { max: null });
+  const reqTo = dateInput((v) => setRequest({ to: v }), { max: null });
+  const reqAmount = amountInput((v) => setRequest({ amount: v }));
+  const reqDeadline = dateInput((v) => setRequest({ deadline: v }), { min: todayIso(), max: null });
+  reqFrom.id = 'req-from';
+  reqTo.id = 'req-to';
+  reqAmount.id = 'req-amount';
+  reqDeadline.id = 'req-deadline';
+  const reqError = h('p', { class: 'form-error', role: 'alert' });
+  const reqUnsent = h('p', { class: 'unsaved-hint', hidden: true }, icon('info', { size: 18 }), t('request.unsent'));
+  const reqSubmit = h('button', { type: 'button', class: 'btn btn-primary btn-wrap', onclick: sendRequest }, icon('send', { size: 18 }), t('request.submit'));
+  let reqShowMissing = false; // Fehlendes erst nach dem ersten Absendeversuch rot zeigen
+  const reqFields = {
+    person: h('div', { class: 'field' }, h('label', { for: 'req-person' }, t('request.person')), reqPerson),
+    purpose: h('div', { class: 'field' },
+      h('label', { for: 'req-purpose' }, t('request.purpose')),
+      h('p', { class: 'field-hint', id: 'req-purpose-hint' }, t('request.purposeHint')),
+      reqPurpose),
+    period: h('fieldset', { class: 'field field-set' },
+      h('legend', {}, t('request.period')),
+      h('div', { class: 'field-pair' },
+        h('label', { class: 'field-sub', for: 'req-from' }, h('span', {}, t('request.periodFrom')), reqFrom),
+        h('label', { class: 'field-sub', for: 'req-to' }, h('span', {}, t('request.periodTo')), reqTo))),
+    amount: h('div', { class: 'field' }, h('label', { for: 'req-amount' }, t('request.amount')), reqAmount),
+    deadline: h('div', { class: 'field' }, h('label', { for: 'req-deadline' }, t('request.deadline')), reqDeadline),
+  };
+  const requestForm = h('div', { class: 'form-card request-form', hidden: true },
+    Object.values(reqFields),
+    reqError,
+    reqUnsent,
+    h('div', { class: 'actions' }, reqSubmit));
+
+  // Welche Felder fehlen oder passen nicht? (für Markierung und Fehlermeldung)
+  function requestProblems(d) {
+    const miss = store.requestMissing(d);
+    const bad = new Set(miss.map((k) => (k === 'from' || k === 'to' ? 'period' : k)));
+    let message = miss.length ? t('request.missing') : '';
+    if (!message && d.to < d.from) {
+      bad.add('period');
+      message = t('request.badRange');
+    }
+    if (!message && d.deadline < todayIso()) {
+      bad.add('deadline');
+      message = t('request.pastDeadline');
+    }
+    return { bad, message };
+  }
+
+  function refreshRequestForm() {
+    const d = myRequestDraft();
+    reqUnsent.hidden = store.requestDraftEmpty(d);
+    reqTo.min = d?.from || '';
+    reqDeadline.min = todayIso();
+    if (!reqShowMissing) return;
+    const { bad, message } = requestProblems(d || {});
+    for (const [key, field] of Object.entries(reqFields)) {
+      field.classList.toggle('is-missing', bad.has(key));
+      field.querySelectorAll('.in').forEach((input) => input.setAttribute('aria-invalid', String(bad.has(key))));
+    }
+    reqError.textContent = message;
+  }
+
+  function fillRequest() {
+    const d = myRequestDraft();
+    for (const [input, value] of [[reqPerson, d?.person], [reqPurpose, d?.purpose], [reqFrom, d?.from], [reqTo, d?.to],
+      [reqAmount, d?.amount], [reqDeadline, d?.deadline]]) {
+      if (document.activeElement !== input && input.value !== (value || '')) input.value = value || '';
+    }
+    refreshRequestForm();
+  }
+
+  async function sendRequest() {
+    const d = myRequestDraft();
+    reqShowMissing = true;
+    refreshRequestForm();
+    if (!d || requestProblems(d).message) {
+      firstProblem()?.focus();
+      return;
+    }
+    const ok = await confirmDialog({ message: t('request.confirm'), confirmLabel: t('request.confirmYes'), cancelLabel: t('back') });
+    if (!ok) return;
+    reqSubmit.disabled = true;
+    try {
+      const row = await store.sendRequest(d);
+      toast(t(row.status === 'open' ? 'request.sent' : 'request.alreadyHandled'), row.status === 'open' ? 'success' : 'error', 10000);
+      requestSent();
+    } catch (err) {
+      if (store.state.requests.some((r) => r.id === d.id)) {
+        // Die Antwort ging verloren, die Anfrage ist aber angekommen.
+        toast(t('request.sent'), 'success', 10000);
+        requestSent();
+      } else if (err instanceof NetworkError) {
+        toast(t('request.offline'), 'error', 12000);
+      } else {
+        console.error(err);
+        toast(t('error.generic'), 'error');
+      }
+    } finally {
+      reqSubmit.disabled = false;
+    }
+  }
+
+  // Erstes Feld mit einem Problem (zum Hinspringen)
+  function firstProblem() {
+    return requestForm.querySelector('.is-missing .in');
+  }
+
+  function requestSent() {
+    reqShowMissing = false;
+    reqError.textContent = '';
+    for (const field of Object.values(reqFields)) field.classList.remove('is-missing');
+    setMode(null);
+    fillRequest();
+    renderRequests();
+    requestsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function withdrawRequest(r) {
+    const ok = await confirmDialog({ message: t('request.withdrawConfirm'), confirmLabel: t('request.withdraw'), cancelLabel: t('back'), danger: true });
+    if (!ok) return;
+    try {
+      await store.withdrawRequest(r);
+      toast(t('request.withdrawn'), 'success');
+    } catch (err) {
+      if (err?.status === 409) toast(t('request.changed'), 'error');
+      else if (err instanceof NetworkError) toast(t('error.offline'), 'error');
+      else {
+        console.error(err);
+        toast(t('error.generic'), 'error');
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- Anfragen an CoM Germany (Liste)
+  const requestsList = h('div', { class: 'req-list' });
+  const requestsSection = h('section', { class: 'section', hidden: true },
+    h('h2', { class: 'section-title' }, t('requests.title')),
+    requestsList);
+
+  function renderRequests() {
+    const now = Date.now();
+    const removed = store.state.requests.filter((r) => r.status === 'removed' && now - r.removedAt < REQUEST_NOTICE_MS)
+      .sort((a, b) => b.removedAt - a.removedAt);
+    clear(noticeSlot).append(...removed.map(requestRemovedNotice));
+    const live = store.state.requests.filter((r) => r.status === 'open' || r.status === 'read')
+      .sort((a, b) => String(a.d.deadline).localeCompare(String(b.d.deadline)) || a.createdAt - b.createdAt);
+    clear(requestsList).append(...live.map((r) => requestCard(r, { onWithdraw: withdrawRequest })));
+    requestsSection.hidden = !live.length;
   }
 
   // ---------------------------------------------------------------- Bezahlungen
@@ -171,15 +338,20 @@ export function mountUser(root, { getName }) {
     mode = next;
     incomeChoice.setAttribute('aria-pressed', String(mode === 'income'));
     expenseChoice.setAttribute('aria-pressed', String(mode === 'expense'));
+    requestChoice.setAttribute('aria-pressed', String(mode === 'request'));
     incomeForm.hidden = mode !== 'income';
     expenseForm.hidden = mode !== 'expense';
+    requestForm.hidden = mode !== 'request';
     // kurzer Seitenwechsel wie beim Umdrehen einer Kassette
-    const shown = mode === 'income' ? incomeForm : expenseForm;
-    shown.classList.remove('flip-in');
-    void shown.offsetWidth;
-    shown.classList.add('flip-in');
+    const shown = { income: incomeForm, expense: expenseForm, request: requestForm }[mode];
+    if (shown) {
+      shown.classList.remove('flip-in');
+      void shown.offsetWidth;
+      shown.classList.add('flip-in');
+    }
     if (mode === 'expense') renderDrafts();
     if (mode === 'income') fillIncome();
+    if (mode === 'request') fillRequest();
   }
 
   // ---------------------------------------------------------------- Erfolgreiche Einträge
@@ -205,13 +377,15 @@ export function mountUser(root, { getName }) {
 
   // ---------------------------------------------------------------- Aufbau
   clear(root).append(
-    h('div', { class: 'user-top' }, bandSlot, warning),
+    h('div', { class: 'user-top' }, bandSlot, noticeSlot, warning),
     h('section', { class: 'section section-tight' }, incWrap, allGood),
     h('section', { class: 'section' },
       h('h2', { class: 'section-title' }, t('choose.title')),
-      h('div', { class: 'choices' }, incomeChoice, expenseChoice),
+      h('div', { class: 'choices' }, incomeChoice, expenseChoice, requestChoice),
       incomeForm,
-      expenseForm),
+      expenseForm,
+      requestForm),
+    requestsSection,
     h('section', { class: 'section' },
       h('h2', { class: 'section-title' }, t('success.title')),
       h('p', { class: 'muted section-intro' }, t('success.intro')),
@@ -249,11 +423,14 @@ export function mountUser(root, { getName }) {
     renderIncomplete();
     if (mode === 'expense') renderDrafts();
     if (mode === 'income') fillIncome();
+    if (mode === 'request') fillRequest();
+    renderRequests();
     renderSuccess();
   }
 
   update();
   if (myDrafts('expense').some((e) => !store.isEmpty(e))) setMode('expense');
   else if (myDrafts('income').some((e) => !store.isEmpty(e))) setMode('income');
+  else if (!store.requestDraftEmpty(myRequestDraft())) setMode('request');
   return { update };
 }

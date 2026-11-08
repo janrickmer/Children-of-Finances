@@ -1,5 +1,5 @@
 // Wiederverwendbare Bausteine: Eingabezeile für Zahlungen, Bildfelder, Vorschaubilder, Erfolgstabelle.
-import { h, clear, append, openLightbox, infoButton, fmtDate, fmtAmount, fmtDateTime, todayIso } from './util.js';
+import { h, clear, append, openLightbox, infoButton, fmtDate, fmtAmount, fmtDateTime, todayIso, parseAmount } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
 import * as images from './images.js';
@@ -58,8 +58,9 @@ export function thumbList(ids, caption) {
 // ------------------------------------------------------------------ Eingabefelder
 
 // Datumsfeld, das nur über den Kalender befüllt wird (keine Texteingabe).
-export function dateInput(onChange) {
-  const input = h('input', { type: 'date', class: 'in in-date', max: todayIso() });
+// Standard: höchstens heute. Für Tage in der Zukunft { max: null }, ggf. mit min.
+export function dateInput(onChange, { min = null, max = todayIso() } = {}) {
+  const input = h('input', { type: 'date', class: 'in in-date', min, max });
   const openPicker = () => {
     try {
       input.showPicker();
@@ -447,4 +448,54 @@ export function successTable(items, { admin = false } = {}) {
     );
   }));
   return h('div', { class: 'table-scroll' }, h('table', { class: 'data-table track-table' }, head, body));
+}
+
+// ------------------------------------------------------------------ Geldanfragen
+
+// Eine Geldanfrage als Karte. opts: admin (Schatzmeister-Ansicht), rate = { kesPerEur, rateDay } für den
+// ungefähren Euro-Wert, onRead / onRemove (Schatzmeister), onWithdraw (Team, nur solange ungelesen).
+export function requestCard(r, opts = {}) {
+  const d = r.d;
+  const amount = parseAmount(d.amount);
+  const eur = opts.rate && amount > 0 ? h('small', {
+    class: 'req-eur',
+    title: t('band.rateTitle', { date: fmtDate(opts.rate.rateDay), rate: fmtAmount(Math.round(opts.rate.kesPerEur * 100) / 100) }),
+  }, t('band.eur', { eur: fmtAmount(Math.round(amount / opts.rate.kesPerEur)) })) : null;
+  const read = r.status === 'read';
+  const fact = (label, value, cls) => h('div', {}, h('dt', {}, label), h('dd', { class: cls }, value || '–'));
+  return h('article', { class: read ? 'req-card' : 'req-card is-open', dataset: { id: r.id } },
+    h('div', { class: 'req-head' },
+      h('div', { class: 'req-who' }, t('request.lblPerson'), h('strong', {}, d.person || '–')),
+      h('div', { class: 'req-amount' }, h('div', { class: 'req-total' }, `KSh ${fmtAmount(amount)}`), eur)),
+    h('dl', { class: 'req-facts' },
+      fact(t('request.lblPurpose'), d.purpose, 'req-purpose'),
+      fact(t('request.lblPeriod'), t('request.periodValue', { from: fmtDate(d.from), to: fmtDate(d.to) })),
+      fact(t('request.lblDeadline'), fmtDate(d.deadline))),
+    h('p', { class: 'req-meta' }, t('request.by', { name: d.createdBy || '–', date: fmtDateTime(r.createdAt) })),
+    h('p', { class: read ? 'req-status is-read' : 'req-status is-open' },
+      icon(read ? 'check' : 'info', { size: 18 }),
+      h('span', {}, t(read ? 'request.statusRead' : opts.admin ? 'request.statusNew' : 'request.statusOpen'))),
+    opts.onRead || opts.onRemove || (opts.onWithdraw && !read) ? h('div', { class: 'req-actions' },
+      opts.onRead && !read
+        ? h('button', { type: 'button', class: 'btn btn-small btn-primary', onclick: () => opts.onRead(r) }, icon('check', { size: 16 }), t('admin.markRead'))
+        : null,
+      opts.onRemove
+        ? h('button', { type: 'button', class: 'btn btn-small btn-danger', onclick: () => opts.onRemove(r) }, icon('trash', { size: 16 }), t('admin.removeRequest'))
+        : null,
+      opts.onWithdraw && !read
+        ? h('button', { type: 'button', class: 'btn btn-small btn-danger', onclick: () => opts.onWithdraw(r) }, icon('x', { size: 16 }), t('request.withdraw'))
+        : null) : null);
+}
+
+// Hinweis beim Team: Das deutsche Team hat eine Anfrage entfernt (steht vier Tage lang da).
+export const REQUEST_NOTICE_MS = 4 * 24 * 60 * 60 * 1000;
+
+export function requestRemovedNotice(r) {
+  const until = new Date(r.removedAt + REQUEST_NOTICE_MS);
+  return h('section', { class: 'req-removed', role: 'note' },
+    icon('alert', { size: 22 }),
+    h('div', {},
+      h('p', { class: 'req-removed-title' }, t('request.removedTitle', { person: r.d.person || '–', amount: fmtAmount(r.d.amount) })),
+      h('p', {}, t('request.removedText')),
+      h('p', { class: 'req-removed-until' }, t('request.removedUntil', { date: fmtDateTime(until.getTime()) }))));
 }

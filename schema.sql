@@ -45,3 +45,15 @@ CREATE TABLE IF NOT EXISTS fx_rates (
   rate_day TEXT NOT NULL,
   fetched_at INTEGER NOT NULL
 );
+
+-- Geldanfragen des Teams in Kenia an CoM Germany (Inhalt verschlüsselt in "data").
+-- status: open = noch nicht gesehen, read = gelesen und in Absprache, removed = vom Schatzmeister entfernt.
+-- Entfernte Anfragen bleiben vier Tage stehen, damit das Team den Hinweis sieht, und werden danach gelöscht.
+CREATE TABLE IF NOT EXISTS requests (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  removed_at INTEGER,
+  data TEXT NOT NULL
+);

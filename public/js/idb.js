@@ -1,6 +1,8 @@
 // Lokale Sicherung auf dem Gerät (IndexedDB). Inhalte liegen auch hier nur verschlüsselt.
 
 const DB_NAME = 'children-of-finances';
+// 'deletes' hält ausstehende Löschungen ({ type: 'entry' | 'image' }) und den verschlüsselten
+// Entwurf einer Geldanfrage ({ type: 'request-draft' }); jeder Leser filtert nach type.
 const STORES = ['entries', 'images', 'deletes'];
 let dbPromise = null;
 

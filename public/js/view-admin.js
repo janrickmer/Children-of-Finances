@@ -1,10 +1,10 @@
 // Ansicht für den Schatzmeister von Children of Mathare Germany.
-import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes, parseAmount } from './util.js';
+import { h, clear, toast, confirmDialog, fmtDate, fmtAmount, fmtDateTime, fmtBytes, downloadBytes, parseAmount, todayIso } from './util.js';
 import { t } from './i18n.js';
 import * as store from './store.js';
 import { computePeriods, periodFor, ledgerAfterArchive, ledgerAfterIncomeRemoval } from './ledger.js';
 import {
-  thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand,
+  thumbList, successGroups, periodTitle, successTable, orderedSuccessEntries, statusBadge, tapeBand, requestCard,
 } from './components.js';
 import { icon } from './icons.js';
 import { emptyState } from './photos.js';
@@ -31,6 +31,7 @@ export function mountAdmin(root) {
     h('label', { class: 'btn' }, backupInput, icon('upload', { size: 18 }), t('admin.uploadBackups')));
 
   // ---------------------------------------------------------------- Bereiche
+  const requestsBox = h('section', { class: 'section requests-box', 'aria-labelledby': 'requests-title' });
   const sidebar = h('aside', { class: 'sidebar' });
   const redBox = h('section', { class: 'section' });
   const successBox = h('section', { class: 'section' });
@@ -39,8 +40,67 @@ export function mountAdmin(root) {
   clear(root).append(
     topBar,
     backupPanel,
+    requestsBox,
     h('div', { class: 'admin-grid' }, sidebar, h('div', { class: 'admin-main' }, redBox, successBox, downloadBox)),
   );
+
+  // ---------------------------------------------------------------- Geldanfragen ganz oben
+  function renderRequests() {
+    const today = todayIso();
+    const rate = store.state.rates.get(today) || null;
+    const list = store.state.requests.filter((r) => r.status === 'open' || r.status === 'read')
+      .sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1)
+        || String(a.d.deadline).localeCompare(String(b.d.deadline)) || a.createdAt - b.createdAt);
+    const fresh = list.filter((r) => r.status === 'open').length;
+    clear(requestsBox).append(h('h2', { class: 'section-title', id: 'requests-title' }, t('admin.requests')));
+    if (!list.length) {
+      requestsBox.append(h('p', { class: 'muted' }, t('admin.requestsNone')));
+      return;
+    }
+    if (fresh) requestsBox.append(h('p', { class: 'pending-note', role: 'status' }, icon('info', { size: 18 }), t('admin.requestsNew', { n: fresh })));
+    requestsBox.append(
+      h('div', { class: 'req-list' }, list.map((r) => requestCard(r, { admin: true, rate, onRead: markRequestRead, onRemove: removeRequest }))),
+      h('p', { class: 'muted small' }, t('admin.requestEurHint')));
+    // Euro-Wert zum Kurs von heute; fehlt der Kurs noch, nachladen und neu zeichnen.
+    if (!rate) store.loadRates([today]).then((added) => { if (added) renderRequests(); });
+  }
+
+  async function markRequestRead(r) {
+    const ok = await confirmDialog({
+      message: t('admin.markReadConfirm', { person: r.d.person || '–' }), confirmLabel: t('admin.markReadYes'), cancelLabel: t('back'),
+    });
+    if (!ok) return;
+    try {
+      await store.markRequestRead(r);
+      toast(t('admin.requestRead'), 'success');
+    } catch (err) {
+      requestActionFailed(err);
+    }
+  }
+
+  async function removeRequest(r) {
+    const ok = await confirmDialog({
+      message: t('admin.removeRequestConfirm', { person: r.d.person || '–', amount: fmtAmount(r.d.amount) }),
+      confirmLabel: t('admin.removeRequestYes'),
+      cancelLabel: t('back'),
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const removed = await store.removeRequest(r);
+      toast(t(removed ? 'admin.requestRemoved' : 'admin.requestGone'), removed ? 'success' : 'info');
+    } catch (err) {
+      requestActionFailed(err);
+    }
+  }
+
+  function requestActionFailed(err) {
+    if (err?.status === 409) toast(t('request.changed'), 'error');
+    else {
+      console.error(err);
+      toast(t('error.generic'), 'error');
+    }
+  }
 
   // ---------------------------------------------------------------- Geldeingänge links
   function renderSidebar() {
@@ -350,6 +410,7 @@ export function mountAdmin(root) {
   function update(reason) {
     renderStorage();
     if (reason === 'sync') return;
+    renderRequests();
     renderSidebar();
     renderRed();
     renderSuccess();

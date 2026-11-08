@@ -8,12 +8,15 @@ import * as images from './images.js';
 import * as idb from './idb.js';
 import { emptyLedger, SAVED } from './ledger.js';
 import { sha256Hex } from './kdf.js';
+import { normName } from './util.js';
 
 export const state = {
   entries: new Map(),
   ledger: emptyLedger(),
   ledgerRaw: null, // verschlüsselte Fassung, wie sie der Server hält (für die Versionsprüfung beim Löschen)
   rates: new Map(), // Tag (JJJJ-MM-TT) → { kesPerEur, rateDay } oder null, nur beim Schatzmeister
+  requests: [], // Geldanfragen: { id, status (open | read | removed), createdAt, updatedAt, removedAt, d }
+  requestDraft: null, // noch nicht gesendete Geldanfrage auf diesem Gerät (nur Team)
   lastArchive: null,
   dbSize: null,
   seq: null,
@@ -147,7 +150,16 @@ async function persistLocal() {
 
 export async function loadFromDevice() {
   await images.loadPendingFromDevice();
-  for (const item of await idb.getAll('deletes')) if (item.type === 'entry') pendingDeletes.add(item.id);
+  for (const item of await idb.getAll('deletes')) {
+    if (item.type === 'entry') pendingDeletes.add(item.id);
+    if (item.type === 'request-draft') {
+      try {
+        state.requestDraft = await decryptJson(item.cipher, 'request-draft');
+      } catch (err) {
+        console.warn('Entwurf der Geldanfrage nicht lesbar', err);
+      }
+    }
+  }
   for (const item of await idb.getAll('entries')) {
     try {
       const d = await decryptJson(item.cipher, `entry:${item.id}`);
@@ -341,6 +353,9 @@ async function doRefresh(full) {
     if (!seen.has(id) && e.onServer && !isDirty(e)) state.entries.delete(id);
   }
 
+  state.requests = await readRequests(res.requests || []);
+  // Antwort beim Senden verloren gegangen? Steht die Anfrage schon auf dem Server, ist der Entwurf erledigt.
+  if (state.requestDraft && state.requests.some((r) => r.id === state.requestDraft.id) && !sendingRequest) clearRequestDraft();
   state.ledger = res.ledger ? await decryptJson(res.ledger, 'ledger').catch(() => emptyLedger()) : emptyLedger();
   state.ledgerRaw = res.ledger || null;
   state.lastArchive = res.lastArchive;
@@ -402,6 +417,10 @@ export function reset() {
   state.ledgerRaw = null;
   state.rates.clear();
   rateTried.clear();
+  state.requests = [];
+  state.requestDraft = null;
+  requestCache.clear();
+  clearTimeout(draftTimer);
   state.lastArchive = null;
   state.seq = null;
   state.since = 0;
@@ -473,4 +492,122 @@ export async function archive(ids, ledger, ledgerRaw) {
   const res = await request('/api/archive', { method: 'POST', body: { ids, ledger: encrypted, ledgerBase: await ledgerHash(ledgerRaw) } });
   await refresh(true);
   return res.deleted;
+}
+
+// ------------------------------------------------------------------ Geldanfragen
+
+// Entschlüsselte Inhalte merken, damit nicht bei jeder Abfrage alles neu entschlüsselt wird.
+const requestCache = new Map();
+let draftTimer = null;
+let sendingRequest = false;
+
+async function readRequests(rows) {
+  const out = [];
+  for (const row of rows) {
+    let cached = requestCache.get(row.id);
+    if (!cached || cached.updatedAt !== row.updated_at) {
+      try {
+        cached = { updatedAt: row.updated_at, d: await decryptJson(row.data, `request:${row.id}`) };
+      } catch (err) {
+        console.warn('Geldanfrage nicht entschlüsselbar', row.id, err);
+        continue;
+      }
+      requestCache.set(row.id, cached);
+    }
+    out.push({
+      id: row.id, status: row.status, createdAt: row.created_at, updatedAt: row.updated_at, removedAt: row.removed_at, d: cached.d,
+    });
+  }
+  const ids = new Set(rows.map((r) => r.id));
+  for (const id of requestCache.keys()) if (!ids.has(id)) requestCache.delete(id);
+  return out;
+}
+
+export const REQUEST_FIELDS = ['person', 'purpose', 'from', 'to', 'amount', 'deadline'];
+
+// Der Entwurf gehört der Person, die ihn begonnen hat (mehrere Leute können dasselbe Gerät nutzen).
+export function getRequestDraft(name) {
+  const d = state.requestDraft;
+  return d && normName(d.createdBy) === normName(name) ? d : null;
+}
+
+export function updateRequestDraft(name, patch) {
+  let d = getRequestDraft(name);
+  if (!d) {
+    d = { id: crypto.randomUUID(), createdBy: name, ...Object.fromEntries(REQUEST_FIELDS.map((k) => [k, ''])) };
+    state.requestDraft = d;
+  }
+  Object.assign(d, patch);
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveRequestDraft, 400);
+  return d;
+}
+
+export function requestDraftEmpty(d) {
+  return !d || REQUEST_FIELDS.every((k) => !String(d[k] || '').trim());
+}
+
+// Welche Angaben fehlen? (alle Felder sind Pflicht)
+export function requestMissing(d) {
+  return REQUEST_FIELDS.filter((k) => (k === 'amount' ? !(Number.parseFloat(d?.amount) > 0) : !String(d?.[k] || '').trim()));
+}
+
+// Verschlüsselt auf dem Gerät sichern, damit beim Neuladen nichts verloren geht.
+async function saveRequestDraft() {
+  const d = state.requestDraft;
+  if (!d || requestDraftEmpty(d)) {
+    await idb.remove('deletes', 'request-draft');
+    return;
+  }
+  const cipher = await encryptJson(d, 'request-draft');
+  if (state.requestDraft === d) await idb.put('deletes', 'request-draft', { type: 'request-draft', cipher });
+}
+
+function clearRequestDraft() {
+  clearTimeout(draftTimer);
+  state.requestDraft = null;
+  idb.remove('deletes', 'request-draft');
+}
+
+// Geldanfrage an CoM Germany schicken. Liefert den Stand auf dem Server ({ status, ... }).
+export async function sendRequest(draft) {
+  const { id, ...d } = draft;
+  const data = await encryptJson({ ...d, sentAt: Date.now() }, `request:${id}`);
+  sendingRequest = true;
+  try {
+    const row = await request(`/api/requests/${id}`, { method: 'PUT', body: { data } });
+    if (state.requestDraft?.id === id) clearRequestDraft();
+    return row;
+  } finally {
+    sendingRequest = false;
+    await refresh(true).catch(() => {});
+  }
+}
+
+// Das Team zieht eine noch nicht gelesene Anfrage zurück.
+export async function withdrawRequest(r) {
+  try {
+    await request(`/api/requests/${r.id}`, { method: 'DELETE' });
+  } finally {
+    await refresh(true).catch(() => {});
+  }
+}
+
+// Schatzmeister: „gelesen und in Absprache“
+export async function markRequestRead(r) {
+  try {
+    await request(`/api/requests/${r.id}/read`, { method: 'POST' });
+  } finally {
+    await refresh(true).catch(() => {});
+  }
+}
+
+// Schatzmeister: Anfrage löschen. Liefert false, wenn das Team sie schon zurückgezogen hatte.
+export async function removeRequest(r) {
+  try {
+    const res = await request(`/api/requests/${r.id}/remove`, { method: 'POST' });
+    return res.removed !== false;
+  } finally {
+    await refresh(true).catch(() => {});
+  }
 }

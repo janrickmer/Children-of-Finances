@@ -328,7 +328,7 @@ Ein heller Karton mit drei Tinten (Tinte, Kugelschreiber, Bleistift), einem gedr
 - **Verblasstes Orange** (`orange-wash`) mit **Orange-Tinte** (`orange-ink`): der Warnkasten. Text darauf 12,52:1, das orange Warnsymbol 4,46:1.
 
 ### Secondary
-- **Kugelschreiber-Blau** (`pen`): alles, was Menschen eintragen, also Werte in Eingabefeldern und Daten in Tabellen. Dazu die Wortmarke, Links, die aktive Sprache und jeder 2-px-Rahmen. Auf Karton 10,17:1.
+- **Kugelschreiber-Blau** (`pen`): alles, was Menschen eintragen, also Werte in Eingabefeldern, Daten in Tabellen und die Angaben einer Geldanfrage. Dazu die Wortmarke, Links, die aktive Sprache, die gedrückte Kachel „Geldanfrage“ und jeder 2-px-Rahmen. Auf Karton 10,17:1.
 - **Verblasstes Blau** (`pen-faded`): Rahmen von Eingabefeldern, Vorschaubildern, Auswahlkacheln und Geister-Knöpfen in Ruhe, der Fokusring, die Bildlaufleiste sowie Sortier- und Aufklapp-Symbole in Ruhe. Auf Karton 3,53:1, ausreichend als Grenze eines Bedienelements.
 
 ### Tertiary
@@ -336,8 +336,8 @@ Die Pflichtfarben aus dem Auftrag.
 - **Prüfungs-Rot** (`red`): ausschließlich für Unvollständiges, Fehlendes, Überlauf und Gefahr. Dazu gehören die rote Tabelle „Unvollständige Eingaben“, Pflichtsternchen, Fehlermeldungen, „Bezahlt“ und die Füllung im Band, Ausgaben beim Schatzmeister, Lösch-Knöpfe und der Status „offline“. Auf Karton 6,44:1, weiße Schrift darauf 6,56:1.
 - **Rot-Hauch** (`red-wash`) mit **Rot-Tinte** (`red-ink`): fehlende Zellen, der Tabellenkopf der roten Tabelle beim Schatzmeister und die Plakette „unvollständig“ (7,69:1).
 - **Eingangs-Grün** (`green`): Geldeingänge (der Betrag im Band, Zeilen der Erfolgstabelle, die gedrückte Wahl „Geldeingang“), außerdem „vollständig“, „Alles gespeichert“ und der Danke-Satz. Auf Karton 6,04:1, weiße Schrift darauf 6,15:1.
-- **Grün-Hauch** (`green-wash`): Fläche des Danke-Satzes und der Plaketten „vollständig“ und „bestätigt“ (5,37:1).
-- **Bernstein** (`amber`) auf **Bernstein-Hauch** (`amber-wash`): für Vorbehalte, also die Plaketten „ausnahmsweise genehmigt“ und „noch nicht bestätigt“ sowie den Hinweis auf wartende Geldeingänge (6,60:1). Direkt auf Karton warnt Bernstein vor einem vielleicht doppelt eingetragenen Geldeingang (7,28:1).
+- **Grün-Hauch** (`green-wash`): Fläche des Danke-Satzes, der Plaketten „vollständig“ und „bestätigt“ und des Stands „Gelesen und in Absprache“ einer Geldanfrage (5,37:1).
+- **Bernstein** (`amber`) auf **Bernstein-Hauch** (`amber-wash`): für Vorbehalte, also die Plaketten „ausnahmsweise genehmigt“ und „noch nicht bestätigt“, den Hinweis auf wartende Geldeingänge und neue Geldanfragen, den Stand einer ungelesenen Geldanfrage und den Hinweis auf eine entfernte Geldanfrage (6,60:1). Direkt auf Karton warnt Bernstein vor einem vielleicht doppelt eingetragenen Geldeingang (7,28:1).
 
 ### Neutral
 - **Inlay-Karton** (`paper`): Seitengrund und Grund jeder gerahmten Fläche.
@@ -452,6 +452,7 @@ Fest und greifbar, wie ein Druckknopf am Kassettenrekorder.
 - **Plaketten:** 0.8125rem, 700, 4 px Rundung, 2 px × 9 px. „vollständig“ Grün auf Grün-Hauch, „ausnahmsweise genehmigt“ Bernstein auf Bernstein-Hauch, „unvollständig“ Rot-Tinte auf Rot-Hauch, „Entwurf“ Bleistift mit innerem Ring in Bleistiftlinie.
 - **Plaketten für Geldeingänge:** „noch nicht bestätigt“ steht in Bernstein auf Bernstein-Hauch (6,60:1), „bestätigt“ in Grün auf Grün-Hauch (5,37:1). Sie stehen in den Erfolgstabellen und am Band. Ausgaben behalten ihre Plaketten, und ein gesicherter (archivierter) Geldeingang trägt keine.
 - **Sprachwahl:** ein Segmentknopf mit 2-px-Rahmen in Kugelschreiber-Blau, die Segmente durch 2-px-Linien getrennt. Aktiv ist Kugelschreiber-Blau mit weißer Schrift. In der Kopfzeile am Handy stehen nur die Kürzel DE/EN/SW (40 px hoch), im Anmeldefenster drei gleich breite Knöpfe über die volle Breite (44 px).
+- **Geldanfrage-Kachel:** Die dritte Kachel „Bereits planbare Kosten der Zukunft eintragen und bei CoM Germany anfragen“ steht über die volle Breite unter den beiden anderen, mit Kalender-Symbol in Kugelschreiber-Blau und dem Hinweis „Zum Beispiel Schulgebühren oder Kosten für ein Internat.“ Gewählt ist sie ganz in Kugelschreiber-Blau gefüllt (weiße Schrift 10,17:1): Sie trägt nichts Geschehenes ein, sondern fragt nach der Zukunft.
 - **Auswahlkacheln „Geldeingang“ / „Bezahlung“:** Karton, 2-px-Rahmen in verblasstem Blau, 10 px Rundung, 14 px × 16 px, mindestens 56 px hoch und sonst so hoch wie ihr Inhalt. Der Pfeil (22 px, hinein in Grün, hinaus in Orange) steht ohne Hintergrund vor dem Titel in Blockschrift, der Hinweis in verdünnter Tinte darunter. Hover (feiner Zeiger): Rahmen in Kugelschreiber-Blau. Gewählt ist die Kachel ganz gefüllt, „Bezahlung“ in Orange und „Geldeingang“ in Grün, mit weißem Titel, Pfeil und Hinweis (5,35:1 und 6,15:1). Beim Drücken `scale(0.98)`. Das darunter erscheinende Formular dreht in 240 ms ein wie eine umgedrehte Kassette (`rotateX(-12deg)` aus 6 px Höhe, Drehpunkt oben); bei reduzierter Bewegung wird es nur eingeblendet (160 ms).
 
 ### Cards / Containers
@@ -510,6 +511,16 @@ Ein unvollständiger Eintrag des Teams zeigt am Handy (bis 760 px) zuerst nur, w
 - **Spaltenkopf:** Die Tabelle trägt dafür einen eigenen Kopf „Eintrag“. Am Handy ist er nur für Screenreader da, weil der Tabellenkopf dort sichtbar abgeschnitten ist.
 
 **Die Ruhige-Feld-Regel.** Wer in einem aufgeklappten Eintrag tippt, sieht über dem Feld nichts seine Höhe ändern. Was sich beim Tippen ändert, etwa die Liste „Fehlt: …“, steht zugeklappt in der Zusammenfassung und aufgeklappt unter den Feldern.
+
+### Geldanfrage (Formular, Karte, Hinweis)
+Bereits planbare Kosten, die das Team bei CoM Germany anfragt. Sie zählen nicht zum Budget und haben deshalb kein Band.
+- **Formular:** Formularkarte (höchstens 620 px) mit fünf Pflichtfragen in der Reihenfolge Person, „Was bezahlt dieses Budget …?“ mit Erklärung in verdünnter Tinte (0.875rem) „Zähle hier bitte alles auf …“ und mehrzeiligem Feld, Zeitraum als Feldgruppe (Legende in Label-Stil, darunter „von“ und „bis“ nebeneinander, am Handy untereinander), Betrag in KSH, spätester Tag. Die Daten liegen in der Zukunft (Kalender ohne Obergrenze, „bis“ nicht vor „von“, spätester Tag nicht vor heute). Erst nach dem ersten Absendeversuch werden Felder mit Problemen markiert: roter Feldrahmen, Beschriftung in Rot, Formularfehler darunter. Hauptknopf „Anfragen, ob dieses Budget realisierbar ist“ mit Papierflieger; er darf umbrechen (`btn-wrap`). Vor dem Senden fragt ein Dialog nach, weil die Anfrage danach feststeht.
+- **Karte:** Karton, 2-px-Rahmen in Kugelschreiber-Blau, 10 px Rundung, 12 px × 16 px. Kopf: links „Für“ (verdünnte Tinte) und die Person (Kugelschreiber-Blau, 600), rechts der Betrag „KSh …“ (Kugelschreiber-Blau, 700, Tabellenziffern), beim Schatzmeister darunter klein „(ca. … €)“ wie am Band. Nach einer 1-px-Zeilenlinie folgen Bezahlt (Zeilenumbrüche bleiben), Zeitraum und „Spätestens bei CoM Kenya“ als Begriff (0.8125rem, 600, verdünnte Tinte) und Wert (Kugelschreiber-Blau); breiter als 380 px nebeneinander, sonst untereinander. Dann „Angefragt von … am …“ (verdünnte Tinte, 0.875rem).
+- **Stand:** eine Zeile mit Symbol (6 px Rundung, 8 px × 10 px, 600): ungelesen Bernstein auf Bernstein-Hauch („Das deutsche Team hat diese Anfrage noch nicht gesehen“ beim Team, „Noch nicht als gelesen markiert“ beim Schatzmeister), gelesen Grün auf Grün-Hauch mit Häkchen („Gelesen und in Absprache“).
+- **Knöpfe:** kleine Knöpfe mit 44 px Höhe. Schatzmeister: „Gelesen und in Absprache“ (Hauptknopf, nur solange ungelesen) und „Löschen“ (Gefahrknopf). Team: „Zurückziehen“ (Gefahrknopf, nur solange ungelesen).
+- **Schatzmeister:** ganz oben unter der Titelzeile das Feld „Geldanfragen“: Überschrift, Bernstein-Hinweis „N neue Geldanfragen …“, Karten im Raster (mindestens 420 px breit, sonst eine Spalte), ungelesene zuerst, dann nach spätestem Tag; darunter die Erklärung zum Euro-Wert. Ohne Anfragen steht dort nur „Zurzeit gibt es keine Geldanfragen vom Team in Kenia.“
+- **Team:** eigener Abschnitt „Anfragen an CoM Germany“ unter „Was möchtest du tun?“, nur wenn es offene oder gelesene Anfragen gibt.
+- **Hinweis auf eine entfernte Anfrage (Team):** oben unter dem Band, vier Tage lang. Bernstein-Hauch mit gestricheltem 2-px-Rahmen in Bernstein (abgelegt), Warnsymbol (22 px), Titel in Bernstein (700) mit Person und Betrag, Text in Tinte („… muss dieser Geldeingang unbedingt korrekt unter „Geldeingang“ eingetragen werden.“), darunter in verdünnter Tinte, wann der Hinweis verschwindet.
 
 ### Erfolgstabelle und Titelzeilen
 - **Desktop:** Zeilenlinien in Zeilenlinie, Kopf in verdünnter Tinte auf getöntem Karton (Label klein). Werte stehen in Kugelschreiber-Blau (500), Art und Status in Tinte (400), Zeilen eines Geldeingangs in Grün. Beträge und ihre Spaltenköpfe stehen rechtsbündig, auch der sortierbare Betragskopf in der Tabelle der Sicherungen.

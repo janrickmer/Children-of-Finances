@@ -3,14 +3,15 @@
 Finanzprotokoll für **Children of Mathare Kenya** und **Children of Mathare Germany**.
 Das Team in Kenia erfasst Geldeingänge und jede Ausgabe mit Rechnungsfoto. Der Schatzmeister
 in Deutschland sieht alles ein, bestätigt die Geldeingänge, genehmigt Ausnahmen, lädt eine
-PDF-Sicherung herunter und löscht danach die gesicherten Einträge.
+PDF-Sicherung herunter und löscht danach die gesicherten Einträge. Bereits planbare Kosten der
+Zukunft (z. B. Schulgebühren) kann das Team als Geldanfrage an CoM Germany schicken.
 
 ## Zugänge
 
 | Passwort (GitHub-Secret) | Wer | Was |
 |---|---|---|
-| `PASSWORD_USER` | Team in Kenia | Name eingeben, Geldeingänge und Bezahlungen erfassen, unvollständige Einträge ergänzen |
-| `PASSWORD_ADMIN` | Schatzmeister | Alles einsehen, Geldeingänge bestätigen oder (z. B. doppelte) löschen, ausnahmsweise genehmigen, PDF herunterladen, Einträge löschen, Sicherungen einlesen |
+| `PASSWORD_USER` | Team in Kenia | Name eingeben, Geldeingänge und Bezahlungen erfassen, unvollständige Einträge ergänzen, Geldanfragen schicken (und zurückziehen, solange ungelesen) |
+| `PASSWORD_ADMIN` | Schatzmeister | Alles einsehen, Geldanfragen als „gelesen und in Absprache“ markieren oder löschen, Geldeingänge bestätigen oder (z. B. doppelte) löschen, ausnahmsweise genehmigen, PDF herunterladen, Einträge löschen, Sicherungen einlesen |
 
 Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte GitHub-Secrets vor.
 
@@ -27,7 +28,8 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   bevor das Passwort geprüft wird. Während eines Angriffs können sich deshalb auch berechtigte
   Personen kurzzeitig nicht neu anmelden; bestehende Anmeldungen laufen weiter.
 - **Rollen werden serverseitig erzwungen:** Abgeschlossene Einträge kann niemand mehr ändern.
-  Nur der Schatzmeister kann genehmigen, Geldeingänge bestätigen und löschen.
+  Nur der Schatzmeister kann genehmigen, Geldeingänge bestätigen und löschen sowie Geldanfragen
+  als gelesen markieren und löschen. Auch Geldanfragen liegen nur verschlüsselt auf dem Server.
 - **Wechselkurse:** Für die ungefähren Euro-Werte fragt der Worker Tageskurse (EUR/KES) bei einem
   freien Kursdienst ab und speichert sie zwischen. Dabei erfährt der Worker die Daten der offenen
   Geldeingänge, nicht ihre Beträge; der Kursdienst erfährt nur Kalendertage. Beim Sichern & Löschen
@@ -52,6 +54,24 @@ Die Passwörter stehen **nirgends im Code**. Sie liegen nur als verschlüsselte 
   (freier Kursdienst [fawazahmed0/currency-api](https://github.com/fawazahmed0/exchange-api),
   Kurse ab 2.3.2024; fehlt ein Tag, gilt der letzte davor). Das ist nur eine Erinnerungshilfe,
   keine genaue Umrechnung. Ausgaben bleiben in KSh.
+
+## Geldanfragen
+
+- Unter „Was möchtest du tun?“ wählt das Team „Bereits planbare Kosten der Zukunft eintragen und
+  bei CoM Germany anfragen“ und beantwortet fünf Pflichtfragen: für wen, was das Budget bezahlt
+  (alles einzeln aufzählen), für welchen Zeitraum (von … bis …), wie viel in KSh und an welchem Tag
+  das Geld spätestens bei CoM Kenya sein muss. „Anfragen, ob dieses Budget realisierbar ist“ schickt
+  die Anfrage ab. Bis dahin bleibt der Entwurf verschlüsselt auf dem Gerät.
+- Der Schatzmeister sieht die Anfragen ganz oben im Feld „Geldanfragen“, neue zuerst, mit einem
+  ungefähren Euro-Wert (Tagesmittelkurs von heute). Er kann jede Anfrage als „gelesen und in
+  Absprache“ markieren oder löschen.
+- Das Team sieht bei jeder Anfrage, ob sie „gelesen und in Absprache“ ist oder ob „das deutsche
+  Team diese Anfrage noch nicht gesehen“ hat. Solange sie ungelesen ist, kann das Team sie
+  zurückziehen; ändern lässt sie sich nach dem Senden nicht mehr.
+- Löscht der Schatzmeister eine Anfrage, steht beim Team vier Tage lang oben der Hinweis, dass das
+  deutsche Team sie entfernt hat und ein trotzdem eingehender Geldeingang unbedingt korrekt
+  eingetragen werden muss. Danach wird die Anfrage endgültig gelöscht.
+- Geldanfragen gehören nicht zur PDF-Sicherung und zählen nicht zum Budget.
 
 ## Speichern
 
@@ -136,7 +156,7 @@ public/                Oberfläche (ohne Build-Schritt)
   config.js            Adresse des Workers (wird beim Deployment eingetragen)
   js/kdf.js            Schlüsselableitung (Browser + Setup identisch)
   js/session.js        Anmeldung, Verschlüsselung, API
-  js/store.js          Datenbestand, sekündliches Speichern, Abgleich
+  js/store.js          Datenbestand, sekündliches Speichern, Abgleich, Geldanfragen
   js/images.js         Fotos verkleinern, verschlüsseln, hoch-/herunterladen
   js/view-user.js      Ansicht Kenia-Team
   js/view-admin.js     Ansicht Schatzmeister
